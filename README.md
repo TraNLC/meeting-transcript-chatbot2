@@ -19,47 +19,47 @@ An intelligent meeting analysis system using **Google Gemini AI** to generate su
 
 ---
 
-## 🚀 Cài đặt nhanh (5 phút)
+## 🚀 Quick Setup (5 minutes)
 
-### 1. Clone và cài đặt
+### 1. Clone and Install
 
 ```bash
 # Clone repository
 git clone <repository-url>
 cd meeting-transcript-chatbot
 
-# Tạo virtual environment
+# Create virtual environment
 python -m venv venv
 
-# Kích hoạt
+# Activate
 venv\Scripts\activate          # Windows
 source venv/bin/activate       # Linux/Mac
 
-# Cài đặt thư viện
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Cấu hình API Key
+### 2. Configure API Key
 
 ```bash
-# Tạo file .env
+# Create .env file
 copy .env.example .env         # Windows
 cp .env.example .env           # Linux/Mac
 ```
 
-**Lấy Gemini API Key (MIỄN PHÍ):**
-1. Truy cập: https://aistudio.google.com/app/apikey
-2. Đăng nhập bằng tài khoản Google
-3. Nhấn "Create API Key"
+**Get Gemini API Key (FREE):**
+1. Visit: https://aistudio.google.com/app/apikey
+2. Sign in with Google account
+3. Click "Create API Key"
 4. Copy API key
 
-**Mở file `.env` và dán API key:**
+**Open `.env` file and paste API key:**
 
 ```env
 # API Key
 GEMINI_API_KEY=your-gemini-api-key-here
 
-# Cấu hình (Đã cố định)
+# Configuration (Fixed)
 LLM_PROVIDER=gemini
 LLM_MODEL=gemini-1.5-flash
 TEMPERATURE=0.7
@@ -67,111 +67,111 @@ MAX_TOKENS=4000
 OUTPUT_LANGUAGE=vi
 ```
 
-### 3. Chạy ứng dụng
+### 3. Run Application
 
 ```bash
 python src/ui/gradio_app.py
 ```
 
-Trình duyệt sẽ tự động mở tại: **http://localhost:7861**
+Browser will automatically open at: **http://localhost:7861**
 
-### 4. Sử dụng
+### 4. Usage
 
-1. **Upload** file transcript (TXT hoặc DOCX)
-2. **Nhấn** "🚀 Xử lý Transcript"
-3. **Đợi** 30-60 giây (có loading indicator)
-4. **Xem** kết quả phân tích:
-   - 📝 Tóm tắt cuộc họp
-   - 🎯 Chủ đề chính
+1. **Upload** transcript file (TXT or DOCX)
+2. **Click** "🚀 Process Transcript"
+3. **Wait** 30-60 seconds (loading indicator shown)
+4. **View** analysis results:
+   - 📝 Meeting summary
+   - 🎯 Main topics
    - ✅ Action Items
-   - 🎯 Quyết định quan trọng
-5. **Xuất** kết quả:
-   - 📄 Xuất file TXT
-   - 📝 Xuất file DOCX
+   - 🎯 Important decisions
+5. **Export** results:
+   - 📄 Export TXT file
+   - 📝 Export DOCX file
 
 ---
 
-## 📁 Cấu trúc Project
+## 📁 Project Structure
 
 ```
 meeting-transcript-chatbot/
 ├── src/
-│   ├── config/          # Cấu hình
-│   ├── data/            # Load & xử lý dữ liệu
-│   ├── llm/             # Tích hợp Gemini
-│   ├── rag/             # Logic chatbot
-│   └── ui/              # Giao diện Gradio
+│   ├── config/          # Configuration
+│   ├── data/            # Data loading & processing
+│   ├── llm/             # Gemini integration
+│   ├── rag/             # Chatbot logic
+│   └── ui/              # Gradio interface
 ├── data/
-│   └── transcripts/     # File transcript mẫu
+│   └── transcripts/     # Sample transcript files
 ├── tests/               # Unit tests
-├── .env.example         # Template cấu hình
-├── requirements.txt     # Thư viện cần thiết
-└── README.md           # File này
+├── .env.example         # Configuration template
+├── requirements.txt     # Required dependencies
+└── README.md           # This file
 ```
 
 ---
-## 📖 Hướng dẫn chi tiết
+## 📖 Detailed Guide
 
-### File transcript mẫu
+### Sample Transcript File
 
-Sử dụng file: `data/transcripts/sample_meeting.txt`
+Use file: `data/transcripts/sample_meeting.txt`
 
-### Câu hỏi mẫu (nếu có tính năng Q&A)
+### Sample Questions (if Q&A feature available)
 
 ```
-- Ai phụ trách phần thiết kế?
-- Deadline của tích hợp thanh toán là khi nào?
-- Ngân sách marketing là bao nhiêu?
-- Ngày ra mắt chính thức là khi nào?
+- Who is responsible for the design part?
+- When is the payment integration deadline?
+- What is the marketing budget?
+- When is the official launch date?
 ```
 
-### Quy trình xử lý
+### Processing Flow
 
 ```
 1. Upload Transcript (TXT/DOCX)
    ↓
-2. Tiền xử lý: Làm sạch → Cắt ngắn → Lưu vào bộ nhớ
+2. Preprocessing: Clean → Truncate → Store in memory
    ↓
-3. Tạo Prompt (System + User)
+3. Create Prompt (System + User)
    ↓
-4. Gửi → Gemini API
+4. Send → Gemini API
    ↓
-5. AI tạo phản hồi
+5. AI generates response
    ↓
-6. Hiển thị kết quả
+6. Display results
    ↓
-7. Xuất file (TXT/DOCX)
+7. Export file (TXT/DOCX)
 ```
 
 ---
 
-## ❌ Xử lý lỗi
+## ❌ Error Handling
 
 ### "GEMINI_API_KEY not found"
 ```bash
-# Kiểm tra file .env tồn tại
-# Đảm bảo có dòng: GEMINI_API_KEY=...
-# Khởi động lại ứng dụng
+# Check that .env file exists
+# Ensure it contains: GEMINI_API_KEY=...
+# Restart the application
 ```
 
 ### "Module not found"
 ```bash
-# Kích hoạt virtual environment
+# Activate virtual environment
 venv\Scripts\activate
-# Cài lại thư viện
+# Reinstall dependencies
 pip install -r requirements.txt
 ```
 
 ### "Port 7861 already in use"
 ```bash
-# Đóng ứng dụng Gradio khác
-# Hoặc đổi port trong src/ui/gradio_app.py
+# Close other Gradio applications
+# Or change port in src/ui/gradio_app.py
 ```
 
 ### "Rate limit exceeded"
 ```bash
-# Gemini: Đợi 1 phút (giới hạn 15 requests/phút)
-# Kiểm tra usage: https://ai.dev/usage?tab=rate-limit
+# Gemini: Wait 1 minute (limit: 15 requests/minute)
+# Check usage: https://ai.dev/usage?tab=rate-limit
 ```
 
 ---
@@ -190,9 +190,9 @@ pytest tests/ --cov=src --cov-report=html
 
 ## 💡 Best Practices
 
-### Transcript tốt nhất
-- Độ dài: 500-15,000 ký tự
-- Đ
+### Best Transcript Format
+- Length: 500-15,000 characters
+- Format: Clear speaker labels and timestamps
 ## 📚 Documentation
 
 ### User Guides
@@ -217,8 +217,6 @@ pytest tests/ --cov=src --cov-report=html
 ```
 Upload → Clean → Truncate → Prompt → API → Response
 ```
-
-See `INSTRUCTIONS/` folder for detailed development guidelines.
 
 ---
 
