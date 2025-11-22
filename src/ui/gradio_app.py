@@ -84,6 +84,7 @@ def process_file(file):
         action_items = chatbot.extract_action_items()
         # After this, always use last_actions for action items
         decisions = chatbot.extract_decisions()
+        # After this, always use last_decisions for decisions ("Quyết định Quan trọng")
         
         # Save results globally for export
         last_summary = summary
@@ -457,14 +458,9 @@ def chat_with_ai(message, history):
                 response = "Không xác định được người tham gia."
         
         elif any(keyword in message_lower for keyword in ["quyết định", "decision", "kết luận"]):
-            # Extract decisions
-            result = executor.execute("extract_decisions", {})
-            function_called = "extract_decisions"
-            
-            import json
-            data = json.loads(result)
-            decisions = data.get("decisions", [])
-            
+            # Use cached decisions (last_decisions) from "Quyết định Quan trọng"
+            global last_decisions
+            decisions = last_decisions
             if decisions:
                 response = f"📋 Tìm thấy {len(decisions)} quyết định:\n\n"
                 for i, d in enumerate(decisions, 1):
