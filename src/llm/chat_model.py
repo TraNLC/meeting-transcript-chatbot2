@@ -58,12 +58,34 @@ class LLMManager:
                 max_output_tokens=self.max_tokens,
             )
             
+            # Configure safety settings
+            safety_settings = [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+            ]
+            
             response = self.client.generate_content(
                 full_prompt,
-                generation_config=generation_config
+                generation_config=generation_config,
+                safety_settings=safety_settings
             )
             
+            # Check if response was blocked
+            if not response.parts:
+                if hasattr(response, 'candidates') and response.candidates:
+                    finish_reason = response.candidates[0].finish_reason
+                    if finish_reason == 2:
+                        return "⚠️ Phản hồi bị chặn bởi bộ lọc an toàn. Vui lòng thử lại với câu hỏi khác."
+                return "⚠️ Không tạo được phản hồi. Vui lòng thử lại."
+            
             return response.text
+            
+        except AttributeError as e:
+            if "response.text" in str(e):
+                return "⚠️ Phản hồi bị chặn bởi bộ lọc an toàn. Vui lòng thử lại với câu hỏi khác."
+            raise RuntimeError(f"GEMINI API call failed: {str(e)}")
         except Exception as e:
             raise RuntimeError(f"GEMINI API call failed: {str(e)}")
 

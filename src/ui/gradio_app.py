@@ -13,6 +13,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from src.config import Settings
 from src.data import TranscriptLoader, TranscriptPreprocessor
+from src.data.history_manager import HistoryManager
 from src.llm import LLMManager
 from src.rag import Chatbot
 
@@ -25,11 +26,13 @@ last_topics = []
 last_actions = []
 last_decisions = []
 current_language = "vi"
+current_filename = ""
+history_manager = HistoryManager()
 
 
 def process_file(file):
     """Process uploaded transcript file."""
-    global chatbot, transcript_text, last_summary, last_topics, last_actions, last_decisions, current_language
+    global chatbot, transcript_text, last_summary, last_topics, last_actions, last_decisions, current_language, current_filename
     
     # Fixed configuration
     provider = "gemini"
@@ -85,6 +88,21 @@ def process_file(file):
         last_topics = topics
         last_actions = action_items
         last_decisions = decisions
+        current_filename = file.name
+        
+        # Save to history
+        try:
+            history_id = history_manager.save_analysis(
+                filename=file.name,
+                summary=summary,
+                topics=topics,
+                action_items=action_items,
+                decisions=decisions,
+                metadata={"language": language, "provider": provider, "model": model}
+            )
+            print(f"✅ Saved to history: {history_id}")
+        except Exception as e:
+            print(f"⚠️ Failed to save history: {e}")
         
         # Format outputs
         topics_text = format_topics(topics, language)
@@ -341,6 +359,194 @@ def export_to_txt():
     return str(filepath)
 
 
+def chat_with_ai(message, history):
+    """Chat with AI using function calling.
+    
+    Args:
+        message: User message
+        history: Chat history
+        
+    Returns:
+        Updated history
+    """
+    global chatbot, transcript_text, current_language
+    
+    if not transcript_text:
+        history.append((message, "⚠️ Vui lòng upload và xử lý transcript trước khi chat!"))
+        return history
+    
+    try:
+        from src.rag.function_executor import FunctionExecutor
+        from src.llm.prompts import FunctionCallingSchemas
+        
+        # Initialize function executor
+        executor = FunctionExecutor(transcript_text)
+        
+        # Detect if user wants specific function
+        message_lower = message.lower()
+        
+        # Simple rule-based function calling (Sprint 2 demo)
+        # In production, use LLM to decide which function to call
+        
+        response = ""
+        function_called = None
+        
+        if any(keyword in message_lower for keyword in ["task", "action", "nhiệm vụ", "việc"]):
+            # Extract action items
+            # Check if filtering by person
+            import re
+            name_match = re.search(r'\b([A-Z][a-z]+)\b', message)
+            assignee = name_match.group(1) if name_match else None
+            
+            result = executor.execute("extract_action_items", {"assignee": assignee})
+            function_called = "extract_action_items"
+            
+            # Format response
+            import json
+            data = json.loads(result)
+            items = data.get("action_items", [])
+            
+            if items:
+                response = f"🔍 Tìm thấy {len(items)} action items:\n\n"
+                for i, item in enumerate(items, 1):
+                    response += f"{i}. **{item['task']}**\n"
+                    response += f"   👤 {item['assignee']} | 📅 {item['deadline']}\n\n"
+            else:
+                response = "Không tìm thấy action items phù hợp."
+        
+        elif any(keyword in message_lower for keyword in ["tìm", "search", "keyword"]):
+            # Search transcript
+            import re
+            # Extract keyword from quotes or after "tìm"
+            keyword_match = re.search(r'["\']([^"\']+)["\']|tìm\s+(\w+)|search\s+(\w+)', message_lower)
+            keyword = None
+            if keyword_match:
+                keyword = keyword_match.group(1) or keyword_match.group(2) or keyword_match.group(3)
+            
+            if keyword:
+                result = executor.execute("search_transcript", {"keyword": keyword, "context_lines": 2})
+                function_called = "search_transcript"
+                
+                import json
+                data = json.loads(result)
+                total = data.get("total_matches", 0)
+                results = data.get("results", [])
+                
+                if total > 0:
+                    response = f"🔍 Tìm thấy '{keyword}' {total} lần:\n\n"
+                    for i, match in enumerate(results[:3], 1):  # Show first 3
+                        response += f"**{i}. Dòng {match['line_number']}:**\n"
+                        response += f"```\n{match['context']}\n```\n\n"
+                    
+                    if total > 3:
+                        response += f"_... và {total - 3} kết quả khác_"
+                else:
+                    response = f"Không tìm thấy '{keyword}' trong transcript."
+            else:
+                response = "Vui lòng cung cấp từ khóa cần tìm. Ví dụ: 'Tìm \"budget\"'"
+        
+        elif any(keyword in message_lower for keyword in ["người", "participant", "tham gia", "ai"]):
+            # Get participants
+            result = executor.execute("get_meeting_participants", {})
+            function_called = "get_meeting_participants"
+            
+            import json
+            data = json.loads(result)
+            participants = data.get("participants", [])
+            
+            if participants:
+                response = f"👥 Có {len(participants)} người tham gia:\n\n"
+                for i, p in enumerate(participants, 1):
+                    response += f"{i}. **{p['name']}** - {p['role']}\n"
+            else:
+                response = "Không xác định được người tham gia."
+        
+        elif any(keyword in message_lower for keyword in ["quyết định", "decision", "kết luận"]):
+            # Extract decisions
+            result = executor.execute("extract_decisions", {})
+            function_called = "extract_decisions"
+            
+            import json
+            data = json.loads(result)
+            decisions = data.get("decisions", [])
+            
+            if decisions:
+                response = f"📋 Tìm thấy {len(decisions)} quyết định:\n\n"
+                for i, d in enumerate(decisions, 1):
+                    response += f"{i}. **{d['decision']}**\n"
+                    response += f"   📝 {d['context']}\n\n"
+            else:
+                response = "Không tìm thấy quyết định rõ ràng."
+        
+        else:
+            # General Q&A using chatbot
+            result = chatbot.ask_question(message)
+            response = result.get("answer", "Xin lỗi, tôi không hiểu câu hỏi.")
+            function_called = "general_qa"
+        
+        # Add function call info
+        if function_called and function_called != "general_qa":
+            response = f"🔧 _Function called: `{function_called}`_\n\n{response}"
+        
+        history.append((message, response))
+        
+    except Exception as e:
+        history.append((message, f"❌ Lỗi: {str(e)}"))
+    
+    return history
+
+
+def clear_chat():
+    """Clear chat history."""
+    return []
+
+
+def refresh_history():
+    """Refresh history dropdown."""
+    history_list = history_manager.list_history(limit=20)
+    
+    if not history_list:
+        return gr.Dropdown(choices=[], value=None), "_Chưa có lịch sử_"
+    
+    choices = [
+        (f"{item['timestamp'][:10]} - {item['original_file']}", item['id'])
+        for item in history_list
+    ]
+    
+    info = f"📊 Tìm thấy {len(history_list)} phân tích đã lưu"
+    
+    return gr.Dropdown(choices=choices, value=None), info
+
+
+def load_history(history_id):
+    """Load analysis from history."""
+    global last_summary, last_topics, last_actions, last_decisions, current_language, transcript_text
+    
+    if not history_id:
+        return "⚠️ Vui lòng chọn phân tích từ danh sách", "", "", "", ""
+    
+    data = history_manager.load_analysis(history_id)
+    
+    if not data:
+        return "❌ Không tìm thấy phân tích", "", "", "", ""
+    
+    # Load data
+    last_summary = data.get("summary", "")
+    last_topics = data.get("topics", [])
+    last_actions = data.get("action_items", [])
+    last_decisions = data.get("decisions", [])
+    current_language = data.get("metadata", {}).get("language", "vi")
+    
+    # Format outputs
+    topics_text = format_topics(last_topics, current_language)
+    actions_text = format_actions(last_actions, current_language)
+    decisions_text = format_decisions(last_decisions, current_language)
+    
+    status = f"✅ Đã tải phân tích: {data.get('original_file')} ({data.get('timestamp')[:10]})"
+    
+    return status, last_summary, topics_text, actions_text, decisions_text
+
+
 def export_to_docx():
     """Export analysis results to DOCX file."""
     global last_summary, last_topics, last_actions, last_decisions, current_language
@@ -472,6 +678,20 @@ with gr.Blocks(title="Meeting Transcript Chatbot", theme=gr.themes.Default()) as
     ### Phân tích cuộc họp bằng AI
     """)
     
+    # History section
+    with gr.Accordion("📚 Lịch sử phân tích", open=False):
+        with gr.Row():
+            history_dropdown = gr.Dropdown(
+                label="Chọn phân tích đã lưu",
+                choices=[],
+                interactive=True,
+                scale=3
+            )
+            refresh_history_btn = gr.Button("🔄 Làm mới", scale=1)
+            load_history_btn = gr.Button("📂 Tải lại", variant="primary", scale=1)
+        
+        history_info = gr.Markdown("_Chưa có lịch sử_")
+    
 
     
     # Step 1: Upload
@@ -514,8 +734,61 @@ with gr.Blocks(title="Meeting Transcript Chatbot", theme=gr.themes.Default()) as
     
     gr.Markdown("---")
     
-    # Step 3: Export Results
-    gr.Markdown("## 💾 Bước 3: Xuất Kết quả")
+    # Step 3: Chat with AI (Function Calling)
+    gr.Markdown("## 💬 Bước 3: Hỏi Đáp với AI (Function Calling)")
+    
+    with gr.Row():
+        with gr.Column(scale=2):
+            chatbot_display = gr.Chatbot(
+                label="Cuộc trò chuyện",
+                height=400,
+                show_label=True
+            )
+            with gr.Row():
+                chat_input = gr.Textbox(
+                    label="Câu hỏi của bạn",
+                    placeholder="Ví dụ: Alice có những task gì? / Tìm từ 'budget' trong transcript / Ai tham gia meeting?",
+                    scale=4
+                )
+                chat_btn = gr.Button("📤 Gửi", variant="primary", scale=1)
+            
+            clear_chat_btn = gr.Button("🗑️ Xóa lịch sử chat", variant="secondary", size="sm")
+        
+        with gr.Column(scale=1):
+            gr.Markdown("""
+            ### 🔧 Functions Available
+            
+            AI có thể tự động gọi các functions:
+            
+            **1. extract_action_items**
+            - Trích xuất tasks
+            - Filter theo người
+            
+            **2. get_meeting_participants**
+            - Danh sách người tham gia
+            - Role của từng người
+            
+            **3. search_transcript**
+            - Tìm keyword
+            - Hiển thị context
+            
+            **4. extract_decisions**
+            - Quyết định quan trọng
+            - Bối cảnh quyết định
+            
+            ---
+            
+            **💡 Ví dụ câu hỏi:**
+            - "Alice có task gì?"
+            - "Tìm từ 'budget'"
+            - "Ai tham gia meeting?"
+            - "Quyết định gì được đưa ra?"
+            """)
+    
+    gr.Markdown("---")
+    
+    # Step 4: Export Results
+    gr.Markdown("## 💾 Bước 4: Xuất Kết quả")
     
     with gr.Row():
         export_txt_btn = gr.Button("📄 Xuất file TXT", variant="secondary", size="lg", scale=1)
@@ -525,14 +798,60 @@ with gr.Blocks(title="Meeting Transcript Chatbot", theme=gr.themes.Default()) as
     
     gr.Markdown("""
     ---
-    **💡 Hướng dẫn:** Upload file → Nhấn "Xử lý" → Xem kết quả → Xuất file
+    **💡 Hướng dẫn:** Upload file → Xử lý → Xem kết quả → Chat với AI → Xuất file
     """)
     
     # Event handlers
+    
+    # History handlers
+    refresh_history_btn.click(
+        fn=refresh_history,
+        outputs=[history_dropdown, history_info]
+    )
+    
+    load_history_btn.click(
+        fn=load_history,
+        inputs=[history_dropdown],
+        outputs=[status_output, summary_output, topics_output, actions_output, decisions_output]
+    )
+    
+    # Auto-refresh history on page load
+    demo.load(
+        fn=refresh_history,
+        outputs=[history_dropdown, history_info]
+    )
+    
     process_btn.click(
         fn=process_file,
         inputs=[file_input],
         outputs=[status_output, summary_output, topics_output, actions_output, decisions_output]
+    ).then(
+        fn=refresh_history,  # Refresh history after processing
+        outputs=[history_dropdown, history_info]
+    )
+    
+    # Chat handlers
+    chat_btn.click(
+        fn=chat_with_ai,
+        inputs=[chat_input, chatbot_display],
+        outputs=[chatbot_display]
+    ).then(
+        fn=lambda: "",  # Clear input after sending
+        outputs=[chat_input]
+    )
+    
+    chat_input.submit(  # Allow Enter key to send
+        fn=chat_with_ai,
+        inputs=[chat_input, chatbot_display],
+        outputs=[chatbot_display]
+    ).then(
+        fn=lambda: "",
+        outputs=[chat_input]
+    )
+    
+    clear_chat_btn.click(
+        fn=clear_chat,
+        outputs=[chatbot_display]
     )
     
     export_txt_btn.click(
@@ -549,6 +868,6 @@ with gr.Blocks(title="Meeting Transcript Chatbot", theme=gr.themes.Default()) as
 if __name__ == "__main__":
     demo.launch(
         server_name="0.0.0.0",
-        server_port=7861,
+        server_port=7862,
         share=False
     )

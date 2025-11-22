@@ -1,0 +1,40 @@
+Meeting Notes - Sprint Planning
+Date: November 22, 2025
+Attendees: Alice, Bob, Charlie, Diana
+
+Alice: Let's start with the sprint goals. We need to complete the user authentication feature.
+
+Bob: I will implement the login API by Friday. It should take about 3 days.
+
+Charlie: I can help with the frontend. I'll create the login form and integrate it with Bob's API.
+
+Diana: We also need to fix the critical bug in the payment module. Alice, can you handle that?
+
+Alice: Yes, I will fix the payment bug before Wednesday. It's high priority.
+
+Bob: What about the database migration? Who's responsible for that?
+
+Charlie: I'll take care of the database migration. Should be done by Thursday.
+
+Diana: Great. Let's also discuss the design review meeting.
+
+Action Items:
+- Bob: Implement login API (Deadline: Friday)
+- Alice: Fix payment bug (Deadline: Wednesday)  
+- Charlie: Create login form and database migration (Deadline: Thursday)
+- Diana: Schedule design review meeting
+
+Decisions:
+- Agreed to use JWT for authentication
+- Decided to postpone the mobile app release to next sprint
+- Team will have daily standups at 9 AM
+
+Alice: Any blockers?
+
+Bob: I need the API documentation from the backend team.
+
+Charlie: No blockers on my end.
+
+Diana: I'll follow up with the backend team about Bob's request.
+
+Meeting adjourned at 11:30 AM.

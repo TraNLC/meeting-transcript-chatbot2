@@ -2,5 +2,6 @@
 
 from .loader import TranscriptLoader
 from .preprocessor import TranscriptPreprocessor
+from .history_manager import HistoryManager
 
-__all__ = ["TranscriptLoader", "TranscriptPreprocessor"]
+__all__ = ["TranscriptLoader", "TranscriptPreprocessor", "HistoryManager"]

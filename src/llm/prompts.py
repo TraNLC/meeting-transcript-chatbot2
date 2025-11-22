@@ -670,3 +670,409 @@ TRANSCRIPT:
             return getattr(PromptTemplates, f"SYSTEM_EXTRACTOR{suffix}")
         else:
             return getattr(PromptTemplates, f"SYSTEM_ANALYST{suffix}")
+
+
+class AdvancedPrompts:
+    """Advanced prompting techniques: Few-shot, Chain-of-thought."""
+    
+    # ==================== FEW-SHOT LEARNING ====================
+    
+    @staticmethod
+    def get_few_shot_action_items_prompt(transcript: str, language: str = "vi") -> str:
+        """Few-shot prompt for action items extraction.
+        
+        Provides 2-3 examples before asking to extract from actual transcript.
+        """
+        if language == "vi":
+            return f"""Trích xuất action items từ transcript cuộc họp. Dưới đây là các ví dụ:
+
+EXAMPLE 1:
+Transcript: "Alice sẽ hoàn thành báo cáo vào thứ Sáu. Bob cần review code trước ngày 25/11."
+Output:
+[
+    {{"task": "Hoàn thành báo cáo", "assignee": "Alice", "deadline": "Thứ Sáu"}},
+    {{"task": "Review code", "assignee": "Bob", "deadline": "25/11"}}
+]
+
+EXAMPLE 2:
+Transcript: "Team cần chuẩn bị demo cho khách hàng. Chưa có người phụ trách."
+Output:
+[
+    {{"task": "Chuẩn bị demo cho khách hàng", "assignee": "Chưa phân công", "deadline": "Chưa xác định"}}
+]
+
+EXAMPLE 3:
+Transcript: "Cuộc họp chỉ thảo luận về chiến lược, không có nhiệm vụ cụ thể."
+Output:
+[]
+
+---
+
+Bây giờ hãy trích xuất action items từ transcript sau:
+
+TRANSCRIPT:
+{transcript}
+
+ACTION ITEMS:"""
+        else:  # English
+            return f"""Extract action items from meeting transcript. Here are examples:
+
+EXAMPLE 1:
+Transcript: "Alice will complete the report by Friday. Bob needs to review code before Nov 25."
+Output:
+[
+    {{"task": "Complete the report", "assignee": "Alice", "deadline": "Friday"}},
+    {{"task": "Review code", "assignee": "Bob", "deadline": "Nov 25"}}
+]
+
+EXAMPLE 2:
+Transcript: "Team needs to prepare demo for client. No one assigned yet."
+Output:
+[
+    {{"task": "Prepare demo for client", "assignee": "Not assigned", "deadline": "Not specified"}}
+]
+
+EXAMPLE 3:
+Transcript: "Meeting only discussed strategy, no specific tasks."
+Output:
+[]
+
+---
+
+Now extract action items from this transcript:
+
+TRANSCRIPT:
+{transcript}
+
+ACTION ITEMS:"""
+    
+    @staticmethod
+    def get_few_shot_decisions_prompt(transcript: str, language: str = "vi") -> str:
+        """Few-shot prompt for decisions extraction."""
+        if language == "vi":
+            return f"""Trích xuất quyết định từ transcript cuộc họp. Dưới đây là các ví dụ:
+
+EXAMPLE 1:
+Transcript: "Sau khi thảo luận, team quyết định sử dụng React thay vì Vue cho dự án mới."
+Output:
+[
+    {{"decision": "Sử dụng React cho dự án mới", "context": "Sau khi thảo luận, chọn React thay vì Vue"}}
+]
+
+EXAMPLE 2:
+Transcript: "Team đồng ý hoãn release lên tuần sau do phát hiện bug nghiêm trọng."
+Output:
+[
+    {{"decision": "Hoãn release lên tuần sau", "context": "Phát hiện bug nghiêm trọng"}}
+]
+
+EXAMPLE 3:
+Transcript: "Mọi người đưa ra nhiều ý kiến nhưng chưa có kết luận cuối cùng."
+Output:
+[]
+
+---
+
+Bây giờ hãy trích xuất quyết định từ transcript sau:
+
+TRANSCRIPT:
+{transcript}
+
+QUYẾT ĐỊNH:"""
+        else:  # English
+            return f"""Extract decisions from meeting transcript. Here are examples:
+
+EXAMPLE 1:
+Transcript: "After discussion, team decided to use React instead of Vue for the new project."
+Output:
+[
+    {{"decision": "Use React for new project", "context": "After discussion, chose React over Vue"}}
+]
+
+EXAMPLE 2:
+Transcript: "Team agreed to postpone release to next week due to critical bug found."
+Output:
+[
+    {{"decision": "Postpone release to next week", "context": "Critical bug found"}}
+]
+
+EXAMPLE 3:
+Transcript: "Many opinions were shared but no final conclusion reached."
+Output:
+[]
+
+---
+
+Now extract decisions from this transcript:
+
+TRANSCRIPT:
+{transcript}
+
+DECISIONS:"""
+    
+    # ==================== CHAIN-OF-THOUGHT ====================
+    
+    @staticmethod
+    def get_chain_of_thought_summary_prompt(transcript: str, language: str = "vi") -> str:
+        """Chain-of-thought prompt for summary generation.
+        
+        Asks AI to think step-by-step before generating summary.
+        """
+        if language == "vi":
+            return f"""Hãy tóm tắt cuộc họp sau bằng cách suy nghĩ từng bước:
+
+TRANSCRIPT:
+{transcript}
+
+Hãy làm theo các bước sau:
+
+BƯỚC 1: Xác định mục đích cuộc họp
+- Cuộc họp này về chủ đề gì?
+- Mục tiêu chính là gì?
+
+BƯỚC 2: Liệt kê các chủ đề chính được thảo luận
+- Chủ đề 1: ...
+- Chủ đề 2: ...
+- Chủ đề 3: ...
+
+BƯỚC 3: Tìm các điểm quan trọng
+- Quyết định nào được đưa ra?
+- Action items nào được giao?
+- Vấn đề nào cần giải quyết?
+
+BƯỚC 4: Tổng hợp thành bản tóm tắt
+Dựa trên phân tích trên, viết bản tóm tắt 3-5 câu:
+
+TÓM TẮT:"""
+        else:  # English
+            return f"""Summarize the following meeting by thinking step-by-step:
+
+TRANSCRIPT:
+{transcript}
+
+Follow these steps:
+
+STEP 1: Identify meeting purpose
+- What is this meeting about?
+- What is the main objective?
+
+STEP 2: List main topics discussed
+- Topic 1: ...
+- Topic 2: ...
+- Topic 3: ...
+
+STEP 3: Find key points
+- What decisions were made?
+- What action items were assigned?
+- What issues need to be resolved?
+
+STEP 4: Synthesize into summary
+Based on the analysis above, write a 3-5 sentence summary:
+
+SUMMARY:"""
+    
+    @staticmethod
+    def get_chain_of_thought_qa_prompt(transcript: str, question: str, language: str = "vi") -> str:
+        """Chain-of-thought prompt for Q&A."""
+        if language == "vi":
+            return f"""Trả lời câu hỏi về cuộc họp bằng cách suy nghĩ từng bước:
+
+TRANSCRIPT:
+{transcript}
+
+CÂU HỎI: {question}
+
+Hãy làm theo các bước sau:
+
+BƯỚC 1: Hiểu câu hỏi
+- Câu hỏi đang hỏi về điều gì?
+- Thông tin nào cần tìm?
+
+BƯỚC 2: Tìm kiếm trong transcript
+- Quét transcript để tìm thông tin liên quan
+- Ghi lại các đoạn có liên quan
+
+BƯỚC 3: Phân tích thông tin
+- Thông tin tìm được có trả lời đầy đủ câu hỏi không?
+- Có cần kết hợp nhiều phần thông tin không?
+
+BƯỚC 4: Đưa ra câu trả lời
+Dựa trên phân tích trên:
+
+TRẢ LỜI:"""
+        else:  # English
+            return f"""Answer the question about the meeting by thinking step-by-step:
+
+TRANSCRIPT:
+{transcript}
+
+QUESTION: {question}
+
+Follow these steps:
+
+STEP 1: Understand the question
+- What is being asked?
+- What information is needed?
+
+STEP 2: Search in transcript
+- Scan transcript for relevant information
+- Note relevant passages
+
+STEP 3: Analyze information
+- Does the information fully answer the question?
+- Need to combine multiple pieces of information?
+
+STEP 4: Provide answer
+Based on the analysis above:
+
+ANSWER:"""
+
+
+class FunctionCallingSchemas:
+    """Function calling schemas for OpenAI/LLM function calling feature."""
+    
+    @staticmethod
+    def get_action_items_function() -> dict:
+        """Function schema for extracting action items."""
+        return {
+            "name": "extract_action_items",
+            "description": "Extract all action items (tasks to be done) from meeting transcript",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action_items": {
+                        "type": "array",
+                        "description": "List of action items found in the meeting",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "task": {
+                                    "type": "string",
+                                    "description": "Description of the task to be done"
+                                },
+                                "assignee": {
+                                    "type": "string",
+                                    "description": "Person responsible for the task"
+                                },
+                                "deadline": {
+                                    "type": "string",
+                                    "description": "Deadline for completing the task"
+                                },
+                                "priority": {
+                                    "type": "string",
+                                    "enum": ["high", "medium", "low"],
+                                    "description": "Priority level of the task"
+                                }
+                            },
+                            "required": ["task", "assignee", "deadline"]
+                        }
+                    }
+                },
+                "required": ["action_items"]
+            }
+        }
+    
+    @staticmethod
+    def get_meeting_participants_function() -> dict:
+        """Function schema for extracting meeting participants."""
+        return {
+            "name": "get_meeting_participants",
+            "description": "Extract list of people who attended the meeting",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "participants": {
+                        "type": "array",
+                        "description": "List of meeting participants",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Name of the participant"
+                                },
+                                "role": {
+                                    "type": "string",
+                                    "description": "Role or title of the participant"
+                                },
+                                "contribution": {
+                                    "type": "string",
+                                    "description": "Brief summary of their contribution in the meeting"
+                                }
+                            },
+                            "required": ["name"]
+                        }
+                    }
+                },
+                "required": ["participants"]
+            }
+        }
+    
+    @staticmethod
+    def get_search_transcript_function() -> dict:
+        """Function schema for searching keywords in transcript."""
+        return {
+            "name": "search_transcript",
+            "description": "Search for specific keywords or phrases in the meeting transcript",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "keyword": {
+                        "type": "string",
+                        "description": "Keyword or phrase to search for"
+                    },
+                    "context_lines": {
+                        "type": "integer",
+                        "description": "Number of lines of context to include around matches",
+                        "default": 2
+                    }
+                },
+                "required": ["keyword"]
+            }
+        }
+    
+    @staticmethod
+    def get_extract_decisions_function() -> dict:
+        """Function schema for extracting decisions."""
+        return {
+            "name": "extract_decisions",
+            "description": "Extract all important decisions made during the meeting",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "decisions": {
+                        "type": "array",
+                        "description": "List of decisions made",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "decision": {
+                                    "type": "string",
+                                    "description": "The decision that was made"
+                                },
+                                "context": {
+                                    "type": "string",
+                                    "description": "Context or reason for the decision"
+                                },
+                                "impact": {
+                                    "type": "string",
+                                    "description": "Expected impact or consequences"
+                                }
+                            },
+                            "required": ["decision", "context"]
+                        }
+                    }
+                },
+                "required": ["decisions"]
+            }
+        }
+    
+    @staticmethod
+    def get_all_functions() -> list:
+        """Get all available function schemas."""
+        return [
+            FunctionCallingSchemas.get_action_items_function(),
+            FunctionCallingSchemas.get_meeting_participants_function(),
+            FunctionCallingSchemas.get_search_transcript_function(),
+            FunctionCallingSchemas.get_extract_decisions_function()
+        ]

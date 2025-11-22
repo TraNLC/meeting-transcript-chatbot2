@@ -60,12 +60,52 @@ class GeminiModel(BaseLLM):
                 max_output_tokens=self.max_tokens,
             )
             
+            # Configure safety settings to be less restrictive
+            safety_settings = [
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_NONE"
+                },
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "threshold": "BLOCK_NONE"
+                },
+                {
+                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "threshold": "BLOCK_NONE"
+                },
+                {
+                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "threshold": "BLOCK_NONE"
+                }
+            ]
+            
             response = self.client.generate_content(
                 full_prompt,
-                generation_config=generation_config
+                generation_config=generation_config,
+                safety_settings=safety_settings
             )
             
+            # Check if response was blocked
+            if not response.parts:
+                # Check finish reason
+                if hasattr(response, 'candidates') and response.candidates:
+                    finish_reason = response.candidates[0].finish_reason
+                    if finish_reason == 2:  # SAFETY
+                        return "⚠️ Response was blocked by safety filters. Please try rephrasing your question."
+                    elif finish_reason == 3:  # RECITATION
+                        return "⚠️ Response was blocked due to recitation. Please try a different question."
+                    else:
+                        return f"⚠️ Response generation stopped (reason: {finish_reason}). Please try again."
+                return "⚠️ No response generated. Please try again with a different prompt."
+            
             return response.text
+            
+        except AttributeError as e:
+            # Handle response.text access error
+            if "response.text" in str(e):
+                return "⚠️ Response was blocked by safety filters. Please try rephrasing your question."
+            raise RuntimeError(f"Gemini API call failed: {str(e)}")
         except Exception as e:
             raise RuntimeError(f"Gemini API call failed: {str(e)}")
     
