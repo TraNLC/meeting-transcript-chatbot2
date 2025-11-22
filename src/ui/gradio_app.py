@@ -372,7 +372,8 @@ def chat_with_ai(message, history):
     global chatbot, transcript_text, current_language
     
     if not transcript_text:
-        history.append((message, "⚠️ Vui lòng upload và xử lý transcript trước khi chat!"))
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": "⚠️ Vui lòng upload và xử lý transcript trước khi chat!"})
         return history
     
     try:
@@ -488,11 +489,12 @@ def chat_with_ai(message, history):
         if function_called and function_called != "general_qa":
             response = f"🔧 _Function called: `{function_called}`_\n\n{response}"
         
-        history.append((message, response))
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": response})
         
     except Exception as e:
-        history.append((message, f"❌ Lỗi: {str(e)}"))
-    
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": f"❌ Lỗi: {str(e)}"})
     return history
 
 
@@ -626,17 +628,17 @@ def export_to_docx():
     # Title
     title = doc.add_heading(lang["title"], 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
+
     # Date
     date_para = doc.add_paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     date_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
+
     doc.add_paragraph()
-    
+
     # Summary
     doc.add_heading(lang["summary"], 1)
     doc.add_paragraph(last_summary)
-    
+
     # Topics
     if last_topics:
         doc.add_heading(lang["topics"], 1)
@@ -644,7 +646,7 @@ def export_to_docx():
             p = doc.add_paragraph(style='List Number')
             p.add_run(f"{topic.get('topic', 'N/A')}").bold = True
             doc.add_paragraph(topic.get('description', ''), style='List Bullet 2')
-    
+
     # Action Items
     if last_actions:
         doc.add_heading(lang["actions"], 1)
@@ -653,7 +655,7 @@ def export_to_docx():
             p.add_run(f"{action.get('task', 'N/A')}").bold = True
             doc.add_paragraph(f"{lang['assignee']}: {action.get('assignee', 'N/A')}", style='List Bullet 2')
             doc.add_paragraph(f"{lang['deadline']}: {action.get('deadline', 'N/A')}", style='List Bullet 2')
-    
+
     # Decisions
     if last_decisions:
         doc.add_heading(lang["decisions"], 1)
@@ -661,23 +663,23 @@ def export_to_docx():
             p = doc.add_paragraph(style='List Number')
             p.add_run(f"{decision.get('decision', 'N/A')}").bold = True
             doc.add_paragraph(f"{lang['context']}: {decision.get('context', 'N/A')}", style='List Bullet 2')
-    
+
     # Save to file
     filename = f"meeting_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
     filepath = Path(filename)
     doc.save(str(filepath))
-    
+
     return str(filepath)
 
 
 # Simple and clean Gradio interface
-with gr.Blocks(title="Meeting Transcript Chatbot", theme=gr.themes.Default()) as demo:
-    
+with gr.Blocks(title="Meeting Transcript Chatbot") as demo:
+
     gr.Markdown("""
     # 💬 Meeting Transcript Chatbot
     ### Phân tích cuộc họp bằng AI
     """)
-    
+
     # History section
     with gr.Accordion("📚 Lịch sử phân tích", open=False):
         with gr.Row():
@@ -689,11 +691,11 @@ with gr.Blocks(title="Meeting Transcript Chatbot", theme=gr.themes.Default()) as
             )
             refresh_history_btn = gr.Button("🔄 Làm mới", scale=1)
             load_history_btn = gr.Button("📂 Tải lại", variant="primary", scale=1)
-        
-        history_info = gr.Markdown("_Chưa có lịch sử_")
-    
 
-    
+        history_info = gr.Markdown("_Chưa có lịch sử_")
+
+
+
     # Step 1: Upload
     gr.Markdown("## 📤 Bước 1: Upload File Transcript")
     with gr.Row():
@@ -702,14 +704,14 @@ with gr.Blocks(title="Meeting Transcript Chatbot", theme=gr.themes.Default()) as
             file_types=[".txt", ".docx"]
         )
         process_btn = gr.Button("🚀 Xử lý Transcript", variant="primary", size="lg")
-    
+
     status_output = gr.Textbox(label="Trạng thái", interactive=False)
-    
+
     gr.Markdown("---")
-    
+
     # Step 2: View Results
     gr.Markdown("## 📊 Bước 2: Xem Kết quả Phân tích")
-    
+
     with gr.Row():
         with gr.Column():
             gr.Markdown("### 📝 Tóm tắt Cuộc họp")
@@ -718,25 +720,25 @@ with gr.Blocks(title="Meeting Transcript Chatbot", theme=gr.themes.Default()) as
                 interactive=False,
                 placeholder="Tóm tắt sẽ hiển thị ở đây sau khi xử lý..."
             )
-        
+
         with gr.Column():
             gr.Markdown("### ✅ Action Items")
             actions_output = gr.Markdown("_Chưa có dữ liệu_")
-    
+
     with gr.Row():
         with gr.Column():
             gr.Markdown("### 🎯 Chủ đề Chính")
             topics_output = gr.Markdown("_Chưa có dữ liệu_")
-        
+
         with gr.Column():
             gr.Markdown("### 🎯 Quyết định Quan trọng")
             decisions_output = gr.Markdown("_Chưa có dữ liệu_")
-    
+
     gr.Markdown("---")
-    
+
     # Step 3: Chat with AI (Function Calling)
     gr.Markdown("## 💬 Bước 3: Hỏi Đáp với AI (Function Calling)")
-    
+
     with gr.Row():
         with gr.Column(scale=2):
             chatbot_display = gr.Chatbot(

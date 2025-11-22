@@ -359,13 +359,15 @@ def main():
                 with st.spinner("🤔 Đang suy nghĩ..."):
                     result = st.session_state.chatbot.ask_question(question)
 
-                    # Add to chat history
-                    st.session_state.chat_history.append(
-                        {
-                            "question": question,
-                            "answer": result["answer"],
-                        }
-                    )
+                    # Add to chat history in correct format for Gradio/LLM
+                    st.session_state.chat_history.append({
+                        "role": "user",
+                        "content": question
+                    })
+                    st.session_state.chat_history.append({
+                        "role": "assistant",
+                        "content": result["answer"]
+                    })
 
                     st.rerun()
 

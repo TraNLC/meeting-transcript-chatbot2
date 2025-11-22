@@ -79,10 +79,14 @@ class Chatbot:
         
         answer = self.llm_manager.generate(prompt, system_message)
 
-        # Add to conversation history
+        # Add to conversation history in correct format for Gradio/LLM
         self.conversation_history.append({
-            "question": question,
-            "answer": answer
+            "role": "user",
+            "content": question
+        })
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": answer
         })
 
         return {
