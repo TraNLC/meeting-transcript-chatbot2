@@ -80,7 +80,9 @@ def process_file(file):
         
         # Extract information
         topics = chatbot.extract_topics()
+        # Use only once, then cache for later use
         action_items = chatbot.extract_action_items()
+        # After this, always use last_actions for action items
         decisions = chatbot.extract_decisions()
         
         # Save results globally for export
@@ -377,11 +379,8 @@ def chat_with_ai(message, history):
         return history
     
     try:
-        from src.rag.function_executor import FunctionExecutor
         from src.llm.prompts import FunctionCallingSchemas
-        
-        # Initialize function executor
-        executor = FunctionExecutor(transcript_text)
+        # Use last_actions for action items
         
         # Detect if user wants specific function
         message_lower = message.lower()
@@ -393,20 +392,15 @@ def chat_with_ai(message, history):
         function_called = None
         
         if any(keyword in message_lower for keyword in ["task", "action", "nhiệm vụ", "việc"]):
-            # Extract action items
-            # Check if filtering by person
+            # Use cached action items (last_actions)
             import re
+            global last_actions
             name_match = re.search(r'\b([A-Z][a-z]+)\b', message)
             assignee = name_match.group(1) if name_match else None
-            
-            result = executor.execute("extract_action_items", {"assignee": assignee})
-            function_called = "extract_action_items"
-            
-            # Format response
-            import json
-            data = json.loads(result)
-            items = data.get("action_items", [])
-            
+            if assignee:
+                items = [item for item in last_actions if item.get("assignee", "").lower() == assignee.lower()]
+            else:
+                items = last_actions
             if items:
                 response = f"🔍 Tìm thấy {len(items)} action items:\n\n"
                 for i, item in enumerate(items, 1):
