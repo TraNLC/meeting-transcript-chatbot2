@@ -2,6 +2,34 @@
 
 An intelligent meeting analysis system using **Google Gemini AI** to generate summaries and extract important information from meeting transcripts.
 
+> 📚 **Course Project**: This project is developed through 5 sprints following the AI Application Engineer Learning Path.
+
+**Current Status**: Sprint 1 (Nov 10-14) 🔄 60% Complete
+
+**Quick Links:**
+- 📊 [**Dashboard**](dashboard.html) - Live progress tracking (Open in browser) ⭐
+- 📋 [Course Overview](COURSE_OVERVIEW.md) - Full learning path timeline
+- 🚀 [Sprint Planning](SPRINTS.md) - All sprints overview
+
+**Documentation:**
+- 📁 [Plans](docs/plans/) - Sprint plans & task breakdown
+- 📁 [Reports](docs/reports/) - Weekly effort reports
+- 📁 [Sprints](sprints/) - Sprint code snapshots
+- 📖 [Development Guide](docs/DEVELOPMENT_GUIDE.md) - How to develop across sprints ⭐
+
+**Sprint Plans:**
+- 📝 [Sprint 1](docs/plans/SPRINT1_PLAN.md) - Meeting Analyzer (Nov 16, 6h)
+- 📝 [Sprint 2](docs/plans/SPRINT2_PLAN.md) - Multi-turn Chatbot (Nov 23, 8h)
+- 📝 [Sprint 3](docs/plans/SPRINT3_PLAN.md) - TTS + ChromaDB (Nov 30, 6h)
+- 📝 [Sprint 4](docs/plans/SPRINT4_PLAN.md) - RAG + LangChain (Dec 7, 1h)
+
+**Weekly Reports:**
+- 📊 [Week 1](docs/reports/WEEK1_REPORT.md) - Nov 10-16 (Workshop 1)
+
+**Team Management:**
+- 👥 [Team Tasks](TEAM_TASKS.md) - Task assignments
+- 📝 [Daily Log](DAILY_LOG.md) - Work log & mentor review
+
 ## ✨ Features
 
 - 📝 **Automatic Summarization**: Generate concise summaries in Vietnamese
@@ -209,22 +237,49 @@ pytest tests/ --cov=src --cov-report=html
 - Never hardcode API keys
 - Validate user input
 
-### Technology Stack
-- **MUST USE**: Python 3.8+, Google Gemini SDK, Gradio
-- **NEVER USE**: LangChain, Vector databases
+### Technology Stack Evolution
 
-### Architecture Principles
+**Current (Sprint 1-2):**
+- Python 3.11+, Gemini/OpenAI API, Gradio
+- Build from scratch - no frameworks yet
+
+**Future (Sprint 3):**
+- Add: Hugging Face, custom RAG implementation
+- Still no LangChain - learn by building!
+
+**Future (Sprint 4):**
+- Add: LangChain, Pinecone
+- Compare custom vs framework approaches
+
+### Architecture Evolution
 ```
-Upload → Clean → Truncate → Prompt → API → Response
+Sprint 1-2: Upload → Clean → Prompt → LLM → Response
+
+Sprint 3:   Upload → Chunk → Embed → Vector Store
+                                    ↓
+            Query → Embed → Search → Context → LLM → Response
+
+Sprint 4:   Same as Sprint 3 but with LangChain + Pinecone
 ```
 
 ---
 
+## 📅 Sprint Development
+
+This project follows a 4-sprint development cycle:
+
+- **Sprint 1** (🔄 60%): Nov 16 - Meeting Analyzer (Workshop 6h)
+- **Sprint 2** (📅 Planned): Nov 23 - Multi-turn Chatbot (Workshop 8h)
+- **Sprint 3** (📅 Planned): Nov 30 - TTS + ChromaDB (Workshop 6h)
+- **Sprint 4** (📅 Planned): Dec 7 - RAG + LangChain (Workshop 1h)
+
+See [SPRINTS.md](SPRINTS.md) for detailed sprint planning and tasks.
+
 ## 🤝 Contributing
 
 ### Branch Strategy
-- `main`: Production code
-- `develop`: Integration branch
+- `main`: Production code (merged sprint code)
+- `sprint-1`, `sprint-2`, `sprint-3`, `sprint-4`: Sprint development branches
 - `feature/*`: New features
 - `bugfix/*`: Bug fixes
 - `hotfix/*`: Critical fixes
