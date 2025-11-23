@@ -146,7 +146,7 @@ def process_transcript(uploaded_file):
         # Extract key information
         with st.spinner("🔎 Đang trích xuất thông tin quan trọng..."):
             st.session_state.topics = st.session_state.chatbot.extract_topics()
-            st.session_state.action_items = st.session_state.chatbot.extract_action_items()
+            st.session_state.action_items = st.session_state.chatbot.extract_action_items_initially()
             st.session_state.decisions = st.session_state.chatbot.extract_decisions()
 
         st.session_state.transcript_loaded = True
@@ -359,13 +359,15 @@ def main():
                 with st.spinner("🤔 Đang suy nghĩ..."):
                     result = st.session_state.chatbot.ask_question(question)
 
-                    # Add to chat history
-                    st.session_state.chat_history.append(
-                        {
-                            "question": question,
-                            "answer": result["answer"],
-                        }
-                    )
+                    # Add to chat history in correct format for Gradio/LLM
+                    st.session_state.chat_history.append({
+                        "role": "user",
+                        "content": question
+                    })
+                    st.session_state.chat_history.append({
+                        "role": "assistant",
+                        "content": result["answer"]
+                    })
 
                     st.rerun()
 
