@@ -30,14 +30,14 @@ current_filename = ""
 history_manager = HistoryManager()
 
 
-def process_file(file):
+def process_file(file, meeting_type, output_language):
     """Process uploaded transcript file."""
     global chatbot, transcript_text, last_summary, last_topics, last_actions, last_decisions, current_language, current_filename
     
     # Fixed configuration
     provider = "gemini"
     model = "gemini-2.5-flash"
-    language = "vi"
+    language = output_language
     
     upload_msg = {
         "vi": "❌ Vui lòng upload file!",
@@ -717,12 +717,43 @@ with gr.Blocks(title="Meeting Transcript Chatbot") as demo:
 
     # Step 1: Upload
     gr.Markdown("## 📤 Bước 1: Upload File Transcript")
+    
     with gr.Row():
-        file_input = gr.File(
-            label="Chọn file TXT hoặc DOCX",
-            file_types=[".txt", ".docx"]
-        )
-        process_btn = gr.Button("🚀 Xử lý Transcript", variant="primary", size="lg")
+        with gr.Column(scale=2):
+            file_input = gr.File(
+                label="Chọn file TXT hoặc DOCX",
+                file_types=[".txt", ".docx"]
+            )
+        
+        with gr.Column(scale=1):
+            meeting_type_dropdown = gr.Dropdown(
+                label="🎯 Loại Cuộc Họp",
+                choices=[
+                    ("📋 Meeting - Cuộc họp thông thường", "meeting"),
+                    ("🎓 Workshop - Hội thảo/Đào tạo", "workshop"),
+                    ("💡 Brainstorming - Động não", "brainstorming")
+                ],
+                value="meeting",
+                interactive=True
+            )
+            
+            output_language_dropdown = gr.Dropdown(
+                label="🌍 Ngôn Ngữ Output",
+                choices=[
+                    ("🇻🇳 Tiếng Việt", "vi"),
+                    ("🇬🇧 English", "en"),
+                    ("🇯🇵 日本語 (Japanese)", "ja"),
+                    ("🇰🇷 한국어 (Korean)", "ko"),
+                    ("🇨🇳 中文 (Chinese)", "zh-CN"),
+                    ("🇪🇸 Español (Spanish)", "es"),
+                    ("🇫🇷 Français (French)", "fr"),
+                    ("🇩🇪 Deutsch (German)", "de")
+                ],
+                value="vi",
+                interactive=True
+            )
+    
+    process_btn = gr.Button("🚀 Xử lý Transcript", variant="primary", size="lg")
 
     status_output = gr.Textbox(label="Trạng thái", interactive=False)
 
@@ -776,34 +807,23 @@ with gr.Blocks(title="Meeting Transcript Chatbot") as demo:
             clear_chat_btn = gr.Button("🗑️ Xóa lịch sử chat", variant="secondary", size="sm")
         
         with gr.Column(scale=1):
+            gr.Markdown("### 💡 Câu hỏi gợi ý")
+            
+            # Quick question buttons
+            quick_q1 = gr.Button("📋 Ai có task gì?", size="sm")
+            quick_q2 = gr.Button("👥 Ai tham gia meeting?", size="sm")
+            quick_q3 = gr.Button("🔍 Tìm từ 'budget'", size="sm")
+            quick_q4 = gr.Button("✅ Quyết định gì được đưa ra?", size="sm")
+            quick_q5 = gr.Button("📊 Tóm tắt các action items", size="sm")
+            quick_q6 = gr.Button("🎯 Chủ đề chính là gì?", size="sm")
+            
             gr.Markdown("""
-            ### 🔧 Functions Available
-            
-            AI có thể tự động gọi các functions:
-            
-            **1. extract_action_items**
-            - Trích xuất tasks
-            - Filter theo người
-            
-            **2. get_meeting_participants**
-            - Danh sách người tham gia
-            - Role của từng người
-            
-            **3. search_transcript**
-            - Tìm keyword
-            - Hiển thị context
-            
-            **4. extract_decisions**
-            - Quyết định quan trọng
-            - Bối cảnh quyết định
-            
             ---
-            
-            **💡 Ví dụ câu hỏi:**
-            - "Alice có task gì?"
-            - "Tìm từ 'budget'"
-            - "Ai tham gia meeting?"
-            - "Quyết định gì được đưa ra?"
+            **💬 Hoặc tự do hỏi:**
+            - "Mai có nhiệm vụ gì?"
+            - "Tìm từ 'deadline'"
+            - "Liệt kê tất cả quyết định"
+            - "Ai phụ trách phần marketing?"
             """)
     
     gr.Markdown("---")
@@ -844,7 +864,7 @@ with gr.Blocks(title="Meeting Transcript Chatbot") as demo:
     
     process_btn.click(
         fn=process_file,
-        inputs=[file_input],
+        inputs=[file_input, meeting_type_dropdown, output_language_dropdown],
         outputs=[status_output, summary_output, topics_output, actions_output, decisions_output]
     ).then(
         fn=refresh_history,  # Refresh history after processing
@@ -873,6 +893,40 @@ with gr.Blocks(title="Meeting Transcript Chatbot") as demo:
     clear_chat_btn.click(
         fn=clear_chat,
         outputs=[chatbot_display]
+    )
+    
+    # Quick question handlers
+    def send_quick_question(question):
+        return question
+    
+    quick_q1.click(
+        fn=lambda: "Liệt kê tất cả action items và người phụ trách",
+        outputs=[chat_input]
+    )
+    
+    quick_q2.click(
+        fn=lambda: "Ai tham gia meeting? Liệt kê tên và vai trò",
+        outputs=[chat_input]
+    )
+    
+    quick_q3.click(
+        fn=lambda: "Tìm từ 'budget' trong transcript",
+        outputs=[chat_input]
+    )
+    
+    quick_q4.click(
+        fn=lambda: "Những quyết định quan trọng nào được đưa ra?",
+        outputs=[chat_input]
+    )
+    
+    quick_q5.click(
+        fn=lambda: "Tóm tắt tất cả action items theo người phụ trách",
+        outputs=[chat_input]
+    )
+    
+    quick_q6.click(
+        fn=lambda: "Chủ đề chính của cuộc họp là gì?",
+        outputs=[chat_input]
     )
     
     export_txt_btn.click(

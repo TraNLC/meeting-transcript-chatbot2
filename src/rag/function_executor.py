@@ -2,7 +2,14 @@
 
 import json
 import re
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Literal
+
+try:
+    from .translator import ContentTranslator
+    TRANSLATION_AVAILABLE = True
+except ImportError:
+    TRANSLATION_AVAILABLE = False
+    print("Warning: Translation module not available. Install 'deep-translator' for full translation support.")
 
 
 class FunctionExecutor:
@@ -11,19 +18,114 @@ class FunctionExecutor:
     Sprint 2: Implements function calling for meeting transcript analysis.
     """
     
-    def __init__(self, transcript: str):
+    def __init__(
+        self, 
+        transcript: str, 
+        output_language: str = "vi",
+        enable_translation: bool = True
+    ):
         """Initialize function executor.
         
         Args:
             transcript: Meeting transcript text
+            output_language: Output language code (vi, en, ja, ko, zh-CN, es, fr, de, etc.)
+            enable_translation: Enable full content translation (requires deep-translator)
         """
         self.transcript = transcript
+        self.output_language = output_language
+        self.enable_translation = enable_translation and TRANSLATION_AVAILABLE
+        
+        # Initialize translator if enabled
+        if self.enable_translation:
+            try:
+                self.translator = ContentTranslator(output_language)
+            except Exception as e:
+                print(f"Translation initialization failed: {e}")
+                self.enable_translation = False
+                self.translator = None
+        else:
+            self.translator = None
         self.function_map = {
             "extract_action_items": self.extract_action_items,
             "get_meeting_participants": self.get_meeting_participants,
             "search_transcript": self.search_transcript,
             "extract_decisions": self.extract_decisions
         }
+        
+        # Translation dictionaries
+        self.translations = {
+            "vi": {
+                "participants": "participants",
+                "name": "name",
+                "role": "role",
+                "contribution": "contribution",
+                "spoke_times": "Phát biểu {count} lần",
+                "attended_meeting": "Tham dự cuộc họp",
+                "action_items": "action_items",
+                "task": "task",
+                "assignee": "assignee",
+                "deadline": "deadline",
+                "priority": "priority",
+                "not_specified": "Chưa xác định",
+                "not_assigned": "Chưa phân công",
+                "medium": "trung bình",
+                "high": "cao",
+                "low": "thấp",
+                "decisions": "decisions",
+                "decision": "decision",
+                "context": "context",
+                "impact": "impact",
+                "mentioned_in_discussion": "Được đề cập trong cuộc thảo luận",
+                "to_be_determined": "Cần xác định",
+                "keyword": "keyword",
+                "total_matches": "total_matches",
+                "results": "results",
+                "line_number": "line_number",
+                "matched_line": "matched_line",
+                "participant": "Người tham gia"
+            },
+            "en": {
+                "participants": "participants",
+                "name": "name",
+                "role": "role",
+                "contribution": "contribution",
+                "spoke_times": "Spoke {count} times",
+                "attended_meeting": "Attended meeting",
+                "action_items": "action_items",
+                "task": "task",
+                "assignee": "assignee",
+                "deadline": "deadline",
+                "priority": "priority",
+                "not_specified": "Not specified",
+                "not_assigned": "Not assigned",
+                "medium": "medium",
+                "high": "high",
+                "low": "low",
+                "decisions": "decisions",
+                "decision": "decision",
+                "context": "context",
+                "impact": "impact",
+                "mentioned_in_discussion": "Mentioned in meeting discussion",
+                "to_be_determined": "To be determined",
+                "keyword": "keyword",
+                "total_matches": "total_matches",
+                "results": "results",
+                "line_number": "line_number",
+                "matched_line": "matched_line",
+                "participant": "Participant"
+            }
+        }
+    
+    def _translate(self, key: str) -> str:
+        """Get translated text for a key.
+        
+        Args:
+            key: Translation key
+            
+        Returns:
+            Translated text
+        """
+        return self.translations[self.output_language].get(key, key)
     
     def execute(self, function_name: str, arguments: Dict[str, Any]) -> str:
         """Execute a function by name.
@@ -44,7 +146,35 @@ class FunctionExecutor:
         func = self.function_map[function_name]
         result = func(**arguments)
         
+        # Apply translation if enabled
+        if self.enable_translation and self.translator:
+            result = self._translate_result(result, function_name)
+        
         return json.dumps(result, ensure_ascii=False, indent=2)
+    
+    def _translate_result(self, result: Dict[str, Any], function_name: str) -> Dict[str, Any]:
+        """Translate result based on function type.
+        
+        Args:
+            result: Function result
+            function_name: Name of the function
+            
+        Returns:
+            Translated result
+        """
+        # Map function names to result types
+        type_map = {
+            "get_meeting_participants": "participants",
+            "extract_action_items": "action_items",
+            "extract_decisions": "decisions",
+            "search_transcript": "search"
+        }
+        
+        result_type = type_map.get(function_name)
+        if result_type:
+            return self.translator.translate_result(result, result_type)
+        
+        return result
     
     def extract_action_items(self, assignee: Optional[str] = None) -> Dict[str, List[Dict]]:
         """Extract action items from transcript.
@@ -56,28 +186,33 @@ class FunctionExecutor:
             Dict with action_items list
         """
         action_items = []
+        seen_tasks = set()  # To avoid duplicates
         
-        # Enhanced patterns for action items
+        # Get list of known participants first
+        participants_result = self.get_meeting_participants()
+        known_names = {p['name'] for p in participants_result['participants']}
+        
+        # Enhanced patterns for action items - only match known participant names
         patterns = [
             # English patterns
-            r"([A-Z][a-z]+)\s+(?:will|needs to|should|must|has to)\s+(.+?)(?:\.|by|before|$)",
-            r"([A-Z][a-z]+)\s+(?:is responsible for|is assigned to|will handle)\s+(.+?)(?:\.|$)",
-            r"Action item:\s*([A-Z][a-z]+)\s*[-:]\s*(.+?)(?:\.|$)",
-            r"TODO:\s*([A-Z][a-z]+)\s*[-:]\s*(.+?)(?:\.|$)",
+            r"\b(" + "|".join(re.escape(name) for name in known_names) + r")\s+(?:will|needs to|should|must|has to)\s+(.+?)(?:\.|by|before|$)",
+            r"\b(" + "|".join(re.escape(name) for name in known_names) + r")\s+(?:is responsible for|is assigned to|will handle)\s+(.+?)(?:\.|$)",
             
-            # Vietnamese patterns
-            r"([A-Z][a-z]+)\s+(?:sẽ|cần|phải|được giao)\s+(.+?)(?:\.|vào|trước|$)",
-            r"Nhiệm vụ:\s*([A-Z][a-z]+)\s*[-:]\s*(.+?)(?:\.|$)",
+            # Vietnamese patterns - match known names
+            r"\b(" + "|".join(re.escape(name) for name in known_names) + r")\s+(?:sẽ|cần|phải|được giao)\s+(.+?)(?:\.|vào|trước|$)",
         ]
         
         for pattern in patterns:
+            if not known_names:  # Skip if no names found
+                continue
+                
             matches = re.finditer(pattern, self.transcript, re.IGNORECASE | re.MULTILINE)
             for match in matches:
                 person = match.group(1).strip()
                 task = match.group(2).strip()
                 
-                # Skip if person is a common word
-                if person.lower() in ['the', 'this', 'that', 'team', 'we', 'they']:
+                # Skip very short tasks
+                if len(task) < 5:
                     continue
                 
                 # Filter by assignee if specified
@@ -87,10 +222,8 @@ class FunctionExecutor:
                 # Extract deadline if present
                 deadline = "Not specified"
                 deadline_patterns = [
-                    r"by\s+(\w+\s+\d+|\w+day)",
-                    r"before\s+(\w+\s+\d+)",
-                    r"vào\s+(\w+\s+\d+|\w+)",
-                    r"trước\s+(\w+\s+\d+)",
+                    r"(?:by|before)\s+(\w+\s+\d+(?:/\d+)?|\w+day)",
+                    r"(?:vào|trước)\s+(\w+\s+\w+\s+(?:này|sau|tới)|ngày\s+\d+/\d+|\d+/\d+)",
                 ]
                 
                 for dl_pattern in deadline_patterns:
@@ -99,45 +232,58 @@ class FunctionExecutor:
                         deadline = dl_match.group(1)
                         break
                 
-                action_items.append({
-                    "task": task,
-                    "assignee": person,
-                    "deadline": deadline,
-                    "priority": "medium"
-                })
+                # Create unique key to avoid duplicates
+                task_key = f"{person}:{task[:50]}"
+                if task_key not in seen_tasks:
+                    seen_tasks.add(task_key)
+                    action_items.append({
+                        "task": task,
+                        "assignee": person,
+                        "deadline": deadline,
+                        "priority": "medium"
+                    })
         
-        # Look for "Action Items" section
-        action_section_match = re.search(
-            r"(?:Action Items?|Nhiệm vụ|TODO):\s*\n((?:[-*•]\s*.+\n?)+)",
-            self.transcript,
-            re.IGNORECASE | re.MULTILINE
-        )
+        # Look for summary section with action items (more reliable)
+        summary_patterns = [
+            r"[-•]\s*(" + "|".join(re.escape(name) for name in known_names) + r")\s+(?:sẽ|cần|phải)\s+(.+?)(?:\n|$)",
+            r"[-•]\s*(" + "|".join(re.escape(name) for name in known_names) + r")\s+(?:will|needs to|should)\s+(.+?)(?:\n|$)",
+        ]
         
-        if action_section_match:
-            section_text = action_section_match.group(1)
-            # Parse bullet points
-            bullet_items = re.findall(r"[-*•]\s*(.+)", section_text)
-            
-            for item in bullet_items:
-                # Try to extract person from item
-                person_match = re.match(r"([A-Z][a-z]+)\s*[-:]\s*(.+)", item)
-                if person_match:
-                    person = person_match.group(1)
-                    task = person_match.group(2)
-                else:
-                    person = "Not assigned"
-                    task = item
+        for pattern in summary_patterns:
+            if not known_names:
+                continue
+                
+            matches = re.finditer(pattern, self.transcript, re.IGNORECASE | re.MULTILINE)
+            for match in matches:
+                person = match.group(1).strip()
+                task = match.group(2).strip()
                 
                 # Filter by assignee if specified
                 if assignee and person.lower() != assignee.lower():
                     continue
                 
-                action_items.append({
-                    "task": task.strip(),
-                    "assignee": person,
-                    "deadline": "Not specified",
-                    "priority": "medium"
-                })
+                # Extract deadline
+                deadline = "Not specified"
+                deadline_patterns = [
+                    r"(?:trước|vào)\s+(thứ\s+\w+|ngày\s+\d+/\d+|\d+/\d+)",
+                    r"(?:by|before)\s+(\w+\s+\d+|\w+day)",
+                ]
+                
+                for dl_pattern in deadline_patterns:
+                    dl_match = re.search(dl_pattern, task, re.IGNORECASE)
+                    if dl_match:
+                        deadline = dl_match.group(1)
+                        break
+                
+                task_key = f"{person}:{task[:50]}"
+                if task_key not in seen_tasks:
+                    seen_tasks.add(task_key)
+                    action_items.append({
+                        "task": task.strip(),
+                        "assignee": person,
+                        "deadline": deadline,
+                        "priority": "medium"
+                    })
         
         return {"action_items": action_items}
     
@@ -148,10 +294,9 @@ class FunctionExecutor:
             Dict with participants list
         """
         participants = []
-        names_found = set()
+        participant_info = {}  # name -> role mapping
         
-        # STEP 1: Try to find "Attendees:" line (most reliable)
-        # Pattern: "Attendees: Alice, Bob, Charlie, Diana"
+        # STEP 1: Try to find "Attendees:" line with roles in parentheses
         attendees_match = re.search(
             r'(?:Attendees|Participants|Present|Members|Người tham gia|Thành viên):\s*([^\n]+)',
             self.transcript,
@@ -162,24 +307,38 @@ class FunctionExecutor:
             # Found attendees line - parse it
             names_text = attendees_match.group(1).strip()
             
-            # Split by comma, "and", "và"
+            # Split by comma, "and"
             name_parts = re.split(r',|\sand\s|\svà\s', names_text)
             
-            for name in name_parts:
-                name = name.strip()
-                # Remove anything in parentheses: "Alice (Manager)" -> "Alice"
-                name = re.sub(r'\([^)]*\)', '', name).strip()
-                # Only keep if it's a valid name (not empty, not too short)
-                if name and len(name) >= 2 and not name.isdigit():
-                    names_found.add(name)
+            for part in name_parts:
+                part = part.strip()
+                
+                # Try to extract name and role from parentheses
+                role_match = re.match(r'([^(]+)\s*\(([^)]+)\)', part)
+                if role_match:
+                    name = role_match.group(1).strip()
+                    role = role_match.group(2).strip()
+                    participant_info[name] = role
+                else:
+                    # No role in parentheses, just name
+                    name = part.strip()
+                    if name and len(name) >= 2 and not name.isdigit():
+                        participant_info[name] = "Participant"
             
             # Build result from attendees line
-            for name in sorted(names_found):
+            for name, role in sorted(participant_info.items()):
                 spoke_count = len(re.findall(r'^' + re.escape(name) + r':', self.transcript, re.MULTILINE))
+                
+                # Use simple format, will be translated later if needed
+                if spoke_count > 0:
+                    contribution = f"Spoke {spoke_count} times"
+                else:
+                    contribution = "Attended meeting"
+                
                 participants.append({
                     "name": name,
-                    "role": "Participant",
-                    "contribution": f"Spoke {spoke_count} times" if spoke_count > 0 else "Attended meeting"
+                    "role": role,
+                    "contribution": contribution
                 })
             
             return {"participants": participants}
@@ -194,27 +353,32 @@ class FunctionExecutor:
             'attendees', 'participants', 'present', 'members',
             'summary', 'conclusion', 'next', 'follow', 'meeting',
             'discussion', 'item', 'items', 'task', 'tasks', 'todo',
-            'blocker', 'blockers', 'issue', 'issues'
+            'blocker', 'blockers', 'issue', 'issues', 'ngày', 'thời'
         }
         
+        names_found = set()
         lines = self.transcript.split('\n')
         for line in lines:
             line = line.strip()
-            # Match "Name: something"
-            match = re.match(r'^([A-Z][a-z]+):\s', line)
+            # Match "Name: something" - support Vietnamese names with multiple capital letters
+            # Must be 2+ letters, start with capital letter, followed by lowercase
+            match = re.match(r'^([A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ][a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]{1,}(?:\s+[A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ][a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]+)?):\s', line)
             if match:
-                name = match.group(1)
-                # Check if it's not in blacklist
-                if name.lower() not in blacklist:
+                name = match.group(1).strip()
+                # Additional validation: name should be 2-30 chars and not contain numbers
+                if (len(name) >= 2 and len(name) <= 30 and 
+                    not any(char.isdigit() for char in name) and
+                    name.lower() not in blacklist):
                     names_found.add(name)
         
         # Build result
         for name in sorted(names_found):
             spoke_count = len(re.findall(r'^' + re.escape(name) + r':', self.transcript, re.MULTILINE))
+            contribution = f"Spoke {spoke_count} times"
             participants.append({
                 "name": name,
                 "role": "Participant",
-                "contribution": f"Spoke {spoke_count} times"
+                "contribution": contribution
             })
         
         return {"participants": participants}
@@ -286,44 +450,3 @@ class FunctionExecutor:
             List of function names
         """
         return list(self.function_map.keys())
-
-
-# Example usage
-if __name__ == "__main__":
-    sample_transcript = """
-    Meeting Notes - Nov 22, 2025
-    
-    Alice: We need to finalize the design by Friday.
-    Bob: I will review the code before the deadline.
-    Charlie: The team decided to use React for the new project.
-    
-    Action items:
-    - Alice will complete the mockups
-    - Bob needs to fix the critical bug
-    - Charlie should prepare the demo
-    
-    Decisions:
-    - Agreed to postpone the release to next week
-    - Decided to hire two more developers
-    """
-    
-    executor = FunctionExecutor(sample_transcript)
-    
-    print("=== Available Functions ===")
-    print(executor.get_available_functions())
-    
-    print("\n=== Extract Action Items ===")
-    result = executor.execute("extract_action_items", {})
-    print(result)
-    
-    print("\n=== Get Participants ===")
-    result = executor.execute("get_meeting_participants", {})
-    print(result)
-    
-    print("\n=== Search 'design' ===")
-    result = executor.execute("search_transcript", {"keyword": "design"})
-    print(result)
-    
-    print("\n=== Extract Decisions ===")
-    result = executor.execute("extract_decisions", {})
-    print(result)
