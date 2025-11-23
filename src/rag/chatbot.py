@@ -79,10 +79,14 @@ class Chatbot:
         
         answer = self.llm_manager.generate(prompt, system_message)
 
-        # Add to conversation history
+        # Add to conversation history in correct format for Gradio/LLM
         self.conversation_history.append({
-            "question": question,
-            "answer": answer
+            "role": "user",
+            "content": question
+        })
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": answer
         })
 
         return {
@@ -90,7 +94,7 @@ class Chatbot:
             "source": "Toàn bộ transcript" if self.language == "vi" else "Full transcript"
         }
 
-    def extract_action_items(self) -> List[Dict]:
+    def extract_action_items_initially(self) -> List[Dict]:
         """
         Trích xuất action items từ transcript.
 
