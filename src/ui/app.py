@@ -146,7 +146,7 @@ def process_transcript(uploaded_file):
         # Extract key information
         with st.spinner("🔎 Đang trích xuất thông tin quan trọng..."):
             st.session_state.topics = st.session_state.chatbot.extract_topics()
-            st.session_state.action_items = st.session_state.chatbot.extract_action_items()
+            st.session_state.action_items = st.session_state.chatbot.extract_action_items_initially()
             st.session_state.decisions = st.session_state.chatbot.extract_decisions()
 
         st.session_state.transcript_loaded = True

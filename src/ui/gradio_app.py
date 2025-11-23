@@ -81,7 +81,7 @@ def process_file(file):
         # Extract information
         topics = chatbot.extract_topics()
         # Use only once, then cache for later use
-        action_items = chatbot.extract_action_items()
+        action_items = chatbot.extract_action_items_initially()
         # After this, always use last_actions for action items
         decisions = chatbot.extract_decisions()
         # After this, always use last_decisions for decisions ("Quyết định Quan trọng")
@@ -378,110 +378,139 @@ def chat_with_ai(message, history):
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": "⚠️ Vui lòng upload và xử lý transcript trước khi chat!"})
         return history
-    
+
     try:
+        import json
         from src.llm.prompts import FunctionCallingSchemas
-        # Use last_actions for action items
-        
-        # Detect if user wants specific function
-        message_lower = message.lower()
-        
-        # Simple rule-based function calling (Sprint 2 demo)
-        # In production, use LLM to decide which function to call
-        
+        # Prepare function schemas for prompt
+        function_schemas = [
+            {
+                "name": "extract_action_items",
+                "description": "Extract action items (tasks) from the meeting transcript. Optionally filter by assignee.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "assignee": {"type": "string", "description": "Name of the assignee to filter tasks (optional)"}
+                    },
+                    "required": []
+                }
+            },
+            {
+                "name": "get_meeting_participants",
+                "description": "Get the list of meeting participants and their roles.",
+                "parameters": {"type": "object", "properties": {}, "required": []}
+            },
+            {
+                "name": "search_transcript",
+                "description": "Search for a keyword in the transcript and return context.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "keyword": {"type": "string", "description": "Keyword to search for"},
+                        "context_lines": {"type": "integer", "description": "Number of context lines to return", "default": 2}
+                    },
+                    "required": ["keyword"]
+                }
+            },
+            {
+                "name": "extract_decisions",
+                "description": "Extract important decisions from the meeting transcript.",
+                "parameters": {"type": "object", "properties": {}, "required": []}
+            }
+        ]
+
+        # Compose prompt for LLM
+        prompt = (
+            "You are an AI assistant for meeting analysis. "
+            "Here are the available functions you can call (in JSON schema):\n"
+            f"{json.dumps(function_schemas, ensure_ascii=False, indent=2)}\n"
+            "Given the user message below, decide which function to call and provide the function name and arguments as JSON. "
+            "If no function is needed, reply with 'general_qa'.\n"
+            f"User message: {message}"
+        )
+
+        # Use LLM to decide function call (simulate with chatbot.ask_question for now)
+        # In production, use OpenAI function calling or similar API
+        result = chatbot.ask_question(prompt)
+        # Expecting result to be a dict: {"function": ..., "arguments": {...}} or "general_qa"
+        try:
+            parsed = result.get("function_call") if isinstance(result, dict) else None
+            if not parsed:
+                # Try to parse from answer
+                parsed = json.loads(result["answer"]) if "answer" in result else json.loads(result)
+        except Exception:
+            parsed = None
+
         response = ""
         function_called = None
-        
-        if any(keyword in message_lower for keyword in ["task", "action", "nhiệm vụ", "việc"]):
-            # Use cached action items (last_actions)
-            import re
-            global last_actions
-            name_match = re.search(r'\b([A-Z][a-z]+)\b', message)
-            assignee = name_match.group(1) if name_match else None
-            if assignee:
-                items = [item for item in last_actions if item.get("assignee", "").lower() == assignee.lower()]
-            else:
-                items = last_actions
-            if items:
-                response = f"🔍 Tìm thấy {len(items)} action items:\n\n"
-                for i, item in enumerate(items, 1):
-                    response += f"{i}. **{item['task']}**\n"
-                    response += f"   👤 {item['assignee']} | 📅 {item['deadline']}\n\n"
-            else:
-                response = "Không tìm thấy action items phù hợp."
-        
-        elif any(keyword in message_lower for keyword in ["tìm", "search", "keyword"]):
-            # Search transcript
-            import re
-            # Extract keyword from quotes or after "tìm"
-            keyword_match = re.search(r'["\']([^"\']+)["\']|tìm\s+(\w+)|search\s+(\w+)', message_lower)
-            keyword = None
-            if keyword_match:
-                keyword = keyword_match.group(1) or keyword_match.group(2) or keyword_match.group(3)
-            
-            if keyword:
-                result = executor.execute("search_transcript", {"keyword": keyword, "context_lines": 2})
-                function_called = "search_transcript"
-                
-                import json
+
+        if parsed and isinstance(parsed, dict) and "function" in parsed:
+            function_name = parsed["function"]
+            args = parsed.get("arguments", {})
+            function_called = function_name
+
+            # All function calls go through executor, which returns cached results for extract_action_items and extract_decisions
+            if function_name in ["extract_action_items", "extract_decisions", "search_transcript", "get_meeting_participants"]:
+                # executor must be available in this scope
+                global executor
+                result = executor.execute(function_name, args)
                 data = json.loads(result)
-                total = data.get("total_matches", 0)
-                results = data.get("results", [])
-                
-                if total > 0:
-                    response = f"🔍 Tìm thấy '{keyword}' {total} lần:\n\n"
-                    for i, match in enumerate(results[:3], 1):  # Show first 3
-                        response += f"**{i}. Dòng {match['line_number']}:**\n"
-                        response += f"```\n{match['context']}\n```\n\n"
-                    
-                    if total > 3:
-                        response += f"_... và {total - 3} kết quả khác_"
+                if function_name == "extract_action_items":
+                    items = data.get("action_items", [])
+                    if items:
+                        response = f"🔍 Tìm thấy {len(items)} action items:\n\n"
+                        for i, item in enumerate(items, 1):
+                            response += f"{i}. **{item['task']}**\n"
+                            response += f"   👤 {item['assignee']} | 📅 {item['deadline']}\n\n"
+                    else:
+                        response = "Không tìm thấy action items phù hợp."
+                elif function_name == "extract_decisions":
+                    decisions = data.get("decisions", [])
+                    if decisions:
+                        response = f"📋 Tìm thấy {len(decisions)} quyết định:\n\n"
+                        for i, d in enumerate(decisions, 1):
+                            response += f"{i}. **{d['decision']}**\n"
+                            response += f"   📝 {d['context']}\n\n"
+                    else:
+                        response = "Không tìm thấy quyết định rõ ràng."
+                elif function_name == "search_transcript":
+                    keyword = args.get("keyword")
+                    total = data.get("total_matches", 0)
+                    results = data.get("results", [])
+                    if total > 0:
+                        response = f"🔍 Tìm thấy '{keyword}' {total} lần:\n\n"
+                        for i, match in enumerate(results[:3], 1):
+                            response += f"**{i}. Dòng {match['line_number']}:**\n"
+                            response += f"```\n{match['context']}\n```\n\n"
+                        if total > 3:
+                            response += f"_... và {total - 3} kết quả khác_"
+                    else:
+                        response = f"Không tìm thấy '{keyword}' trong transcript."
+                elif function_name == "get_meeting_participants":
+                    participants = data.get("participants", [])
+                    if participants:
+                        response = f"👥 Có {len(participants)} người tham gia:\n\n"
+                        for i, p in enumerate(participants, 1):
+                            response += f"{i}. **{p['name']}** - {p['role']}\n"
+                    else:
+                        response = "Không xác định được người tham gia."
                 else:
-                    response = f"Không tìm thấy '{keyword}' trong transcript."
+                    response = "Xin lỗi, tôi không hiểu yêu cầu."
             else:
-                response = "Vui lòng cung cấp từ khóa cần tìm. Ví dụ: 'Tìm \"budget\"'"
-        
-        elif any(keyword in message_lower for keyword in ["người", "participant", "tham gia", "ai"]):
-            # Get participants
-            result = executor.execute("get_meeting_participants", {})
-            function_called = "get_meeting_participants"
-            
-            import json
-            data = json.loads(result)
-            participants = data.get("participants", [])
-            
-            if participants:
-                response = f"👥 Có {len(participants)} người tham gia:\n\n"
-                for i, p in enumerate(participants, 1):
-                    response += f"{i}. **{p['name']}** - {p['role']}\n"
-            else:
-                response = "Không xác định được người tham gia."
-        
-        elif any(keyword in message_lower for keyword in ["quyết định", "decision", "kết luận"]):
-            # Use cached decisions (last_decisions) from "Quyết định Quan trọng"
-            global last_decisions
-            decisions = last_decisions
-            if decisions:
-                response = f"📋 Tìm thấy {len(decisions)} quyết định:\n\n"
-                for i, d in enumerate(decisions, 1):
-                    response += f"{i}. **{d['decision']}**\n"
-                    response += f"   📝 {d['context']}\n\n"
-            else:
-                response = "Không tìm thấy quyết định rõ ràng."
-        
+                response = "Xin lỗi, tôi không hiểu yêu cầu."
         else:
-            # General Q&A using chatbot
+            # General Q&A fallback
             result = chatbot.ask_question(message)
             response = result.get("answer", "Xin lỗi, tôi không hiểu câu hỏi.")
             function_called = "general_qa"
-        
+
         # Add function call info
         if function_called and function_called != "general_qa":
             response = f"🔧 _Function called: `{function_called}`_\n\n{response}"
-        
+
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": response})
-        
+
     except Exception as e:
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": f"❌ Lỗi: {str(e)}"})

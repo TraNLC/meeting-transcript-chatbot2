@@ -94,7 +94,7 @@ class Chatbot:
             "source": "Toàn bộ transcript" if self.language == "vi" else "Full transcript"
         }
 
-    def extract_action_items(self) -> List[Dict]:
+    def extract_action_items_initially(self) -> List[Dict]:
         """
         Trích xuất action items từ transcript.
 
