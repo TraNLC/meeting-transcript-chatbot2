@@ -1,0 +1,14 @@
+[ ] Hoàn thành báo cáo Q4
+- Người làm: Nguyễn Văn A
+- Deadline: 30/11/2025
+- Ưu tiên: Cao
+
+[ ] Review code module authentication
+- Người làm: Trần Văn B
+- Deadline: 25/11/2025
+- Ưu tiên: Cao
+
+[ ] Chuẩn bị slide cho meeting tuần sau
+- Người làm: Lê Thị C
+- Deadline: 28/11/2025
+- Ưu tiên: Trung bình

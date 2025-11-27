@@ -1,0 +1,82 @@
+{
+  "id": "20251127_200823_sample_meeting",
+  "timestamp": "2025-11-27T20:08:23.068465",
+  "original_file": "C:\\Users\\Admin\\AppData\\Local\\Temp\\gradio\\79485c5c0cce4ba9f3ea07e5c88cf55ec73fd959b25b3598b3295db560f8f331\\sample_meeting.txt",
+  "summary": "TÓM TẮT:\n\nCuộc họp dự án website thương mại điện tử đã đánh giá tiến độ hiện tại và lên kế hoạch cho sprint tiếp theo. Các quyết định quan trọng bao gồm thay đổi màu chủ đạo của website sang xanh lá cây, với Mai sẽ cập nhật thiết kế trước thứ Tư. Về phát triển, Tuấn cam kết hoàn thành xác thực backend cuối tuần này và tích hợp cổng thanh toán trước ngày 22/11, dù gặp khó khăn về tài liệu. Kế hoạch marketing đã được duyệt, nhưng ngân sách influencer marketing bị cắt giảm từ 50 triệu xuống 35 triệu, yêu cầu Linh đàm phán lại. Cuối cùng, dự án sẽ soft launch vào ngày 1/12 cho người dùng beta và official launch vào ngày 8/12.",
+  "topics": [
+    {
+      "topic": "Cập nhật và điều chỉnh thiết kế UI",
+      "description": "Thảo luận về tiến độ hoàn thành thiết kế UI cho các trang chính và quyết định thay đổi màu chủ đạo của website từ xanh dương sang xanh lá để phù hợp với thương hiệu và tạo sự khác biệt."
+    },
+    {
+      "topic": "Tiến độ phát triển và xử lý vấn đề kỹ thuật",
+      "description": "Cập nhật tiến độ phát triển backend (API, authentication/authorization) và frontend. Thảo luận về vấn đề gặp phải khi tích hợp cổng thanh toán do tài liệu không rõ ràng và đưa ra thời hạn hoàn thành."
+    },
+    {
+      "topic": "Kế hoạch và ngân sách Marketing",
+      "description": "Trình bày kế hoạch content cho 3 tháng đầu và việc liên hệ với influencers. Thảo luận và điều chỉnh ngân sách cho chiến dịch influencer marketing từ 50 triệu xuống 35 triệu."
+    },
+    {
+      "topic": "Xác định thời gian ra mắt sản phẩm",
+      "description": "Bàn bạc về ngày ra mắt dự kiến và quyết định chốt lịch soft launch vào ngày 1/12 cho nhóm beta users và official launch vào ngày 8/12, có tính đến thời gian buffer cho testing."
+    }
+  ],
+  "action_items": [
+    {
+      "task": "Cập nhật design với màu xanh lá và gửi lại cho team",
+      "assignee": "Mai",
+      "deadline": "trước thứ Tư"
+    },
+    {
+      "task": "Hoàn thành authentication",
+      "assignee": "Tuấn",
+      "deadline": "cuối tuần này"
+    },
+    {
+      "task": "Hoàn thành payment integration",
+      "assignee": "Tuấn",
+      "deadline": "trước ngày 22/11"
+    },
+    {
+      "task": "Implement frontend",
+      "assignee": "Tuấn",
+      "deadline": "Sau khi có design mới"
+    },
+    {
+      "task": "Negotiate lại budget marketing xuống 35 triệu với influencers",
+      "assignee": "Linh",
+      "deadline": "Chưa xác định"
+    },
+    {
+      "task": "Chuẩn bị 2 campaigns riêng cho soft launch và official launch",
+      "assignee": "Linh",
+      "deadline": "Chưa xác định"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Thay đổi màu chủ đạo của thiết kế UI từ xanh dương sang xanh lá.",
+      "context": "Mai đề xuất thay đổi để phù hợp hơn với thương hiệu. Cả team (Tuấn và Linh) đều đồng ý vì màu xanh lá trông fresh hơn, phù hợp với concept eco-friendly và tạo sự khác biệt. Mai sẽ cập nhật design và gửi lại team trước thứ Tư tuần này."
+    },
+    {
+      "decision": "Tuấn phải hoàn thành việc tích hợp cổng thanh toán (payment integration) trước ngày 22/11.",
+      "context": "Tuấn gặp vấn đề với tài liệu (documentation) của nhà cung cấp cổng thanh toán không rõ ràng và cần thêm thời gian để nghiên cứu và kiểm thử."
+    },
+    {
+      "decision": "Thiết lập thứ tự ưu tiên công việc cho Tuấn trong tuần này là: 1) Hoàn thành authentication, 2) Hoàn thành payment integration, 3) Thực hiện frontend sau khi có thiết kế mới.",
+      "context": "Tuấn đang làm authentication, gặp vấn đề với payment integration, và frontend đang chờ thiết kế cuối cùng từ Mai."
+    },
+    {
+      "decision": "Quyết định ngân sách marketing cho 3 tháng đầu là 35 triệu.",
+      "context": "Ngân sách đề xuất ban đầu của Linh là 50 triệu, nhưng Hiếu cho rằng quá cao và yêu cầu giảm xuống 35 triệu. Linh sẽ thử thương lượng lại với influencers hoặc giảm số lượng influencers từ 5 xuống 3 người."
+    },
+    {
+      "decision": "Thực hiện soft launch dự án vào ngày 1/12 cho một nhóm người dùng beta và official launch vào ngày 8/12.",
+      "context": "Ban đầu dự kiến target launch vào 1/12, nhưng Tuấn đề xuất cần thêm 1 tuần đệm (buffer) cho việc kiểm thử. Cả team đều đồng ý với kế hoạch này."
+    }
+  ],
+  "metadata": {
+    "language": "vi",
+    "meeting_type": "meeting"
+  }
+}

@@ -4,7 +4,7 @@ An intelligent meeting analysis system using **Google Gemini AI** to generate su
 
 > 📚 **Course Project**: This project is developed through 5 sprints following the AI Application Engineer Learning Path.
 
-**Current Status**: Sprint 1 (Nov 10-14) 🔄 60% Complete
+**Current Status**: Sprint 3 Complete (Nov 29) ✅ Recording + ChromaDB + Modern UI
 
 **Quick Links:**
 - 📊 [**Dashboard**](dashboard.html) - Live progress tracking (Open in browser) ⭐
@@ -32,18 +32,62 @@ An intelligent meeting analysis system using **Google Gemini AI** to generate su
 
 ## ✨ Features
 
-- 📝 **Automatic Summarization**: Generate concise summaries in Vietnamese
-- ✅ **Action Items Extraction**: Find all tasks, assignees, and deadlines
+### Sprint 3 Complete Features ✅ NEW!
+
+#### 🎙️ Audio Recording & Transcription
+- **Browser Recording**: Record directly with microphone
+- **Auto-Transcribe**: OpenAI Whisper (Local, 50+ languages)
+- **Recording History**: Manage and playback recordings
+- **Multi-language**: Vietnamese, English, Japanese, Korean, Chinese
+
+#### 🔍 Semantic Search (ChromaDB)
+- **AI Search**: Search by meaning, not just keywords
+- **Smart Filters**: By meeting type, language, date
+- **Find Similar**: Discover related meetings
+- **Analytics**: Database statistics and insights
+
+#### ✅ Checklist Management
+- **Task Tracking**: Create and manage action items
+- **Assignees & Deadlines**: Track who does what and when
+- **Priority Levels**: High, Medium, Low
+- **Import from Analysis**: Auto-create tasks from meetings
+
+#### 📊 Modern 7-Tab Interface
+- **Tab 1**: 🎙️ Ghi Âm (Recording)
+- **Tab 2**: 📤 Upload & Phân Tích (Upload & Analysis)
+- **Tab 3**: 💬 Chat với AI (Chat with AI)
+- **Tab 4**: 📊 Lịch Sử Phân Tích (Analysis History)
+- **Tab 5**: 🎙️ Lịch Sử Ghi Âm (Recording History)
+- **Tab 6**: 🔍 Tìm Kiếm & Xuất (Search & Export)
+- **Tab 7**: ✅ Checklist
+
+#### 📤 Export & Integration
+- **Export Formats**: TXT, DOCX (Word)
+- **Professional Layout**: Headers, bullets, formatting
+- **Save to History**: Auto-save analysis results
+- **Vector Storage**: ChromaDB for semantic search
+
+### Sprint 2 Features ✅
+- 📝 **Automatic Summarization**: Generate concise summaries
+- ✅ **Action Items Extraction**: Find tasks, assignees, and deadlines
 - 🎯 **Decision Detection**: Identify important decisions
 - 📌 **Topic Recognition**: Extract main topics discussed
-- 💾 **Export Results**: Save analysis to TXT or DOCX files
+- 🌍 **Multi-language Support**: 20+ languages
+- 🎭 **Meeting Types**: Meetings, workshops, brainstorming
 
-## 🛠️ Technology
+
+
+## 🛠️ Technology Stack
 
 - **Python 3.11+**
-- **Google Gemini 2.5 Flash**: Free AI model
-- **Gradio**: User interface
-- **python-docx**: Word file processing
+- **AI Models**: 
+  - Google Gemini 2.5 Flash (Analysis)
+  - OpenAI Whisper (Transcription, Local)
+  - sentence-transformers (Embeddings)
+- **Vector Database**: ChromaDB
+- **UI Framework**: Gradio 4.x
+- **Audio Processing**: ffmpeg
+- **Document**: python-docx
 
 ---
 
@@ -95,13 +139,38 @@ MAX_TOKENS=4000
 OUTPUT_LANGUAGE=vi
 ```
 
-### 3. Run Application
+### 3. Install ffmpeg (Required for Recording)
 
+**Windows:**
 ```bash
-python src/ui/gradio_app.py
+# Using Chocolatey
+choco install ffmpeg
+
+# Or download from: https://ffmpeg.org/download.html
+# Extract to C:\ffmpeg and add to PATH
 ```
 
-Browser will automatically open at: **http://localhost:7861**
+**Mac:**
+```bash
+brew install ffmpeg
+```
+
+**Linux:**
+```bash
+sudo apt install ffmpeg
+```
+
+### 4. Run Application
+
+```bash
+# Modern 7-tab interface (Recommended)
+python src/ui/app_v2.py
+
+# Or original interface
+python src/ui/gradio_app_final.py
+```
+
+Browser will automatically open at: **http://localhost:7779**
 
 ### 4. Usage
 

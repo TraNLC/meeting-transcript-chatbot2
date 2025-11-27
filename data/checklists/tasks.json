@@ -1,0 +1,101 @@
+[
+  {
+    "id": "T001",
+    "description": "Hoàn thành báo cáo Q4",
+    "assignee": "Nguyễn Văn A",
+    "deadline": "30/11/2025",
+    "priority": "medium",
+    "status": "completed",
+    "source": "analysis",
+    "created_at": "2025-11-27T23:37:21.144960",
+    "completed_at": "2025-11-28T00:04:57.400310"
+  },
+  {
+    "id": "T002",
+    "description": "Review code module authentication",
+    "assignee": "Trần Văn B",
+    "deadline": "25/11/2025",
+    "priority": "medium",
+    "status": "pending",
+    "source": "analysis",
+    "created_at": "2025-11-27T23:37:21.145457",
+    "completed_at": null
+  },
+  {
+    "id": "T003",
+    "description": "Chuẩn bị slide cho meeting tuần sau",
+    "assignee": "Lê Thị C",
+    "deadline": "28/11/2025",
+    "priority": "medium",
+    "status": "pending",
+    "source": "analysis",
+    "created_at": "2025-11-27T23:37:21.145457",
+    "completed_at": null
+  },
+  {
+    "id": "T004",
+    "description": "Hoàn thành báo cáo Q4",
+    "assignee": "Nguyễn Văn A",
+    "deadline": "30/11/2025",
+    "priority": "medium",
+    "status": "pending",
+    "source": "analysis",
+    "created_at": "2025-11-28T00:15:17.329872",
+    "completed_at": null
+  },
+  {
+    "id": "T005",
+    "description": "Review code module authentication",
+    "assignee": "Trần Văn B",
+    "deadline": "25/11/2025",
+    "priority": "medium",
+    "status": "pending",
+    "source": "analysis",
+    "created_at": "2025-11-28T00:15:17.330368",
+    "completed_at": null
+  },
+  {
+    "id": "T006",
+    "description": "Chuẩn bị slide cho meeting tuần sau",
+    "assignee": "Lê Thị C",
+    "deadline": "28/11/2025",
+    "priority": "medium",
+    "status": "pending",
+    "source": "analysis",
+    "created_at": "2025-11-28T00:15:17.330864",
+    "completed_at": null
+  },
+  {
+    "id": "T007",
+    "description": "Hoàn thành báo cáo Q4",
+    "assignee": "Nguyễn Văn A",
+    "deadline": "30/11/2025",
+    "priority": "medium",
+    "status": "pending",
+    "source": "analysis",
+    "created_at": "2025-11-28T00:15:40.319627",
+    "completed_at": null
+  },
+  {
+    "id": "T008",
+    "description": "Review code module authentication",
+    "assignee": "Trần Văn B",
+    "deadline": "25/11/2025",
+    "priority": "medium",
+    "status": "pending",
+    "source": "analysis",
+    "created_at": "2025-11-28T00:15:40.320620",
+    "completed_at": null
+  },
+  {
+    "id": "T009",
+    "description": "Chuẩn bị slide cho meeting tuần sau",
+    "assignee": "Lê Thị C",
+    "deadline": "28/11/2025",
+    "priority": "medium",
+    "status": "pending",
+    "source": "analysis",
+    "created_at": "2025-11-28T00:15:40.321115",
+    "completed_at": null
+  }
+]

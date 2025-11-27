@@ -1,0 +1,23 @@
+Team Meeting - November 27, 2025
+
+Attendees: John Smith, Mary Johnson, Peter Chen
+
+Agenda:
+1. Project status update
+2. Budget review
+3. Next sprint planning
+
+Discussion:
+John presented the Q4 progress report. The team has completed 85% of planned features. Mary raised concerns about the budget overrun in the marketing department. We discussed potential cost-cutting measures.
+
+Action Items:
+- John: Finalize the deployment plan by Friday
+- Mary: Review and optimize marketing spend
+- Peter: Prepare technical documentation
+
+Decisions:
+- Approved additional budget of $50,000 for Q1
+- Decided to hire two new developers
+- Next meeting scheduled for December 5th
+
+Meeting concluded at 3:30 PM.

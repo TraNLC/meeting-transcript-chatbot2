@@ -1,0 +1,26 @@
+{
+  "recordings": [
+    {
+      "id": "20251127_023126",
+      "filename": "20251127_023126.wav",
+      "filepath": "data\\recordings\\20251127_023126.wav",
+      "timestamp": "2025-11-27T02:31:26.422285",
+      "duration": null,
+      "title": "Ghi âm 27/11/2025 02:31",
+      "notes": "Language: vi",
+      "processed": false,
+      "transcript_id": null
+    },
+    {
+      "id": "20251127_023208",
+      "filename": "20251127_023208.wav",
+      "filepath": "data\\recordings\\20251127_023208.wav",
+      "timestamp": "2025-11-27T02:32:08.857649",
+      "duration": null,
+      "title": "Ghi âm 27/11/2025 02:32",
+      "notes": "Language: vi",
+      "processed": false,
+      "transcript_id": null
+    }
+  ]
+}

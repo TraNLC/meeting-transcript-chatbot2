@@ -13,6 +13,12 @@ from src.data import TranscriptLoader, TranscriptPreprocessor
 from src.data.history_manager import HistoryManager
 from src.llm import LLMManager
 from src.rag import Chatbot
+from src.audio.audio_manager import AudioManager
+from src.audio.stt_processor import STTProcessor
+from src.audio.realtime_stt import SimpleRealtimeSTT
+from src.audio.streaming_recorder import SimpleStreamingTranscriber
+from src.audio.vosk_realtime import VoskRealtimeSTT
+from src.vectorstore.chroma_manager import ChromaManager
 
 # Global variables
 chatbot = None
@@ -24,6 +30,12 @@ last_decisions = []
 current_language = "vi"
 current_filename = ""
 history_manager = HistoryManager()
+audio_manager = AudioManager()
+chroma_manager = ChromaManager()
+stt_processor = None  # Lazy init (requires API key)
+realtime_stt = SimpleRealtimeSTT()
+streaming_transcriber = SimpleStreamingTranscriber(chunk_interval=10)  # Update every 10s
+vosk_stt = VoskRealtimeSTT()  # Free, offline, realtime
 
 
 def process_file(file, meeting_type, output_language):
@@ -428,6 +440,333 @@ def load_history(history_id):
     return status, last_summary, topics_text, actions_text, decisions_text
 
 
+def toggle_recording_modal():
+    """Toggle recording modal visibility."""
+    return gr.Group(visible=True)
+
+
+def cancel_recording():
+    """Cancel recording and hide modal."""
+    return gr.Group(visible=False), "_Đã hủy_", gr.Audio(visible=False)
+
+
+def start_recording_session(title, language, auto_translate, translate_to):
+    """Start recording session."""
+    status = f"""
+### 🎙️ Đang ghi âm...
+
+**Tiêu đề:** {title or f"Ghi âm {datetime.now().strftime('%d/%m/%Y')}"}  
+**Ngôn ngữ:** {language}  
+**Tự động dịch:** {'Có' if auto_translate else 'Không'}  
+{f"**Dịch sang:** {translate_to}" if auto_translate else ""}
+
+⏺️ Đang ghi... Nhấn Stop khi hoàn thành.
+    """
+    return status, gr.Audio(visible=True)
+
+
+def save_recording_and_transcribe(audio_file, title, language, transcript_text):
+    """Save recorded audio and transcript from main recording tab."""
+    if audio_file is None:
+        return "⚠️ Chưa có audio để lưu", ""
+    
+    try:
+        # Save recording
+        recording_id = audio_manager.save_recording(
+            audio_file=audio_file,
+            title=title or f"Ghi âm {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            notes=f"Language: {language}"
+        )
+        
+        # Save transcript if available
+        if transcript_text and transcript_text.strip():
+            transcript_file = Path(f"data/transcripts/{recording_id}.txt")
+            transcript_file.parent.mkdir(parents=True, exist_ok=True)
+            transcript_file.write_text(transcript_text, encoding='utf-8')
+        
+        status = f"""✅ Đã lưu ghi âm và transcript!
+
+**ID:** {recording_id}  
+**Audio:** data/recordings/{recording_id}.wav
+**Transcript:** data/transcripts/{recording_id}.txt
+
+💡 Xem trong tab "Thư Viện Lưu Trữ > Lịch Sử Ghi Âm"
+        """
+        
+        return status, recording_id
+        
+    except Exception as e:
+        return f"❌ Lỗi: {str(e)}", ""
+
+
+def transcribe_audio_whisper(audio_file, audio_language):
+    """Transcribe audio using Whisper (local offline model).
+    
+    This is a generator function that yields progressive updates.
+    """
+    if audio_file is None or audio_file == "":
+        yield "🎙️ Sẵn sàng ghi âm. Nhấn microphone icon để bắt đầu..."
+        return
+    
+    try:
+        import whisper
+        import torch
+        
+        yield "🔄 Đang khởi tạo Whisper (Local Offline)..."
+        
+        # Check if CUDA is available
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        yield f"⚙️  Sử dụng: {device.upper()}"
+        
+        # Load model (base model - good balance between speed and accuracy)
+        yield "📥 Đang tải Whisper model (base)..."
+        model = whisper.load_model("base", device=device)
+        
+        yield f"🎤 Đang transcribe audio (ngôn ngữ: {audio_language})..."
+        
+        # Transcribe
+        result = model.transcribe(
+            audio_file,
+            language=audio_language,
+            fp16=(device == "cuda")  # Use FP16 only on GPU
+        )
+        
+        final_transcript = result["text"].strip()
+        
+        # Get current date time
+        from datetime import datetime
+        now = datetime.now().strftime("%d/%m/%Y %H:%M")
+        
+        yield f"""📝 **Transcript ({audio_language}):** {now}
+
+{final_transcript}
+        """
+            
+    except ImportError:
+        yield """❌ Lỗi: Chưa cài đặt Whisper
+
+💡 **Cài đặt Whisper (Local Offline):**
+
+```bash
+pip install openai-whisper
+```
+
+**Hoặc với GPU support:**
+```bash
+pip install openai-whisper torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+**Ưu điểm:**
+- ✅ Miễn phí, không cần API key
+- ✅ Hoạt động offline
+- ✅ Hỗ trợ 50+ ngôn ngữ
+- ✅ Chính xác cao
+
+**Sau khi cài, khởi động lại ứng dụng.**
+        """
+    except Exception as e:
+        error_msg = str(e)
+        yield f"""❌ Lỗi: {error_msg}
+
+💡 **Hướng dẫn khắc phục:**
+
+1. Cài đặt Whisper: `pip install openai-whisper`
+2. Cài đặt ffmpeg (nếu chưa có):
+   - Windows: `choco install ffmpeg`
+   - Hoặc download: https://ffmpeg.org/download.html
+3. Đảm bảo file audio hợp lệ (WAV, MP3)
+4. Khởi động lại ứng dụng
+
+**Chi tiết lỗi:** {type(e).__name__}
+        """
+
+
+def search_recordings_ui(query):
+    """Search recordings by title or notes."""
+    if not query or query.strip() == "":
+        return "_Nhập từ khóa để tìm kiếm_"
+    
+    try:
+        recordings = audio_manager.get_recordings()
+        query_lower = query.lower()
+        
+        # Filter recordings
+        matches = [
+            r for r in recordings
+            if query_lower in r.get('title', '').lower() or
+               query_lower in r.get('notes', '').lower()
+        ]
+        
+        if not matches:
+            return f"❌ Không tìm thấy ghi âm nào với từ khóa '{query}'"
+        
+        # Format results
+        output = [f"# 🔍 Tìm thấy {len(matches)} ghi âm\n"]
+        
+        for i, rec in enumerate(matches, 1):
+            output.append(f"## {i}. {rec['title']}")
+            output.append(f"**ID:** {rec['id']}")
+            output.append(f"**Ngày:** {rec['timestamp'][:19]}")
+            output.append(f"**Thời lượng:** {audio_manager.format_duration(rec.get('duration'))}")
+            output.append(f"**Trạng thái:** {'✅ Đã xử lý' if rec.get('processed') else '⏳ Chưa xử lý'}")
+            if rec.get('notes'):
+                output.append(f"**Ghi chú:** {rec['notes']}")
+            output.append("\n---\n")
+        
+        return "\n".join(output)
+        
+    except Exception as e:
+        return f"❌ Lỗi: {str(e)}"
+
+
+# Semantic Search Functions
+def search_meetings_ui(query, meeting_type_filter, language_filter, n_results):
+    """Search meetings using semantic search."""
+    if not query or query.strip() == "":
+        return "⚠️ Vui lòng nhập từ khóa tìm kiếm", ""
+    
+    try:
+        # Apply filters
+        mt_filter = meeting_type_filter if meeting_type_filter != "Tất cả" else None
+        lang_filter = language_filter if language_filter != "Tất cả" else None
+        
+        results = chroma_manager.semantic_search(
+            query=query,
+            n_results=n_results,
+            meeting_type=mt_filter,
+            language=lang_filter
+        )
+        
+        if not results:
+            return "❌ Không tìm thấy kết quả phù hợp", ""
+        
+        # Format results
+        markdown_output = []
+        markdown_output.append(f"# 🔍 Tìm thấy {len(results)} kết quả\n")
+        
+        for i, result in enumerate(results, 1):
+            metadata = result['metadata']
+            analysis = result.get('analysis', {})
+            
+            markdown_output.append(f"## {i}. Meeting ID: {result['meeting_id']}")
+            markdown_output.append(f"**Loại:** {metadata.get('meeting_type', 'N/A')} | "
+                                  f"**Ngôn ngữ:** {metadata.get('language', 'N/A')} | "
+                                  f"**Ngày:** {metadata.get('timestamp', 'N/A')[:10]}")
+            
+            # Show similarity score
+            if result.get('distance') is not None:
+                similarity = max(0, 100 - result['distance'] * 100)
+                markdown_output.append(f"**Độ tương đồng:** {similarity:.1f}%")
+            
+            # Show transcript preview
+            transcript_preview = result['transcript'][:300] + "..."
+            markdown_output.append(f"\n**Nội dung:**\n> {transcript_preview}\n")
+            
+            markdown_output.append("---\n")
+        
+        status = f"✅ Tìm thấy {len(results)} meetings phù hợp với '{query}'"
+        return status, "\n".join(markdown_output)
+        
+    except Exception as e:
+        return f"❌ Lỗi: {str(e)}", ""
+
+
+def get_vectordb_stats_ui():
+    """Get ChromaDB statistics."""
+    try:
+        stats = chroma_manager.get_statistics()
+        
+        output = []
+        output.append("# 📊 Thống Kê ChromaDB\n")
+        output.append(f"**Tổng số meetings:** {stats['total_meetings']}\n")
+        
+        if stats['by_type']:
+            output.append("**Theo loại:**")
+            for mtype, count in stats['by_type'].items():
+                output.append(f"- {mtype}: {count}")
+            output.append("")
+        
+        if stats['by_language']:
+            output.append("**Theo ngôn ngữ:**")
+            for lang, count in stats['by_language'].items():
+                output.append(f"- {lang}: {count}")
+        
+        return "\n".join(output)
+        
+    except Exception as e:
+        return f"❌ Lỗi: {str(e)}"
+
+
+def get_recordings_list_ui():
+    """Get list of recordings."""
+    try:
+        recordings = audio_manager.get_recordings()
+        
+        stats = audio_manager.get_statistics()
+        stats_text = f"""
+📊 **Thống Kê Ghi Âm**
+- Tổng số: {stats['total_recordings']}
+- Đã xử lý: {stats['processed']}
+- Chưa xử lý: {stats['unprocessed']}
+- Tổng thời lượng: {stats['total_duration_minutes']:.1f} phút
+        """
+        
+        if not recordings:
+            return gr.Dropdown(choices=[], value=None), stats_text
+        
+        choices = [f"{r['id']} - {r['title']}" for r in recordings]
+        
+        return gr.Dropdown(choices=choices, value=None), stats_text
+    except Exception as e:
+        print(f"Error in get_recordings_list_ui: {e}")
+        return gr.Dropdown(choices=[], value=None), f"❌ Lỗi: {str(e)}"
+
+
+def load_recording_info_ui(selected):
+    """Load recording information."""
+    if not selected:
+        return "", "", None
+    
+    try:
+        recording_id = selected.split(" - ")[0]
+        recording = audio_manager.get_recording(recording_id)
+        
+        if not recording:
+            return "❌ Không tìm thấy ghi âm", "", None
+        
+        info = f"""
+### 📁 {recording['title']}
+
+**ID:** {recording['id']}  
+**Ngày:** {recording['timestamp'][:19]}  
+**Thời lượng:** {audio_manager.format_duration(recording.get('duration'))}  
+**Trạng thái:** {'✅ Đã xử lý' if recording.get('processed') else '⏳ Chưa xử lý'}  
+**Ghi chú:** {recording.get('notes', 'Không có ghi chú')}
+        """
+        
+        return info, recording.get('notes', ''), recording['filepath']
+    except Exception as e:
+        return f"❌ Lỗi: {str(e)}", "", None
+
+
+def delete_recording_ui(selected):
+    """Delete selected recording."""
+    if not selected:
+        return "⚠️ Chưa chọn ghi âm", gr.Dropdown(choices=[], value=None), ""
+    
+    try:
+        recording_id = selected.split(" - ")[0]
+        success = audio_manager.delete_recording(recording_id)
+        
+        if success:
+            dropdown, stats = get_recordings_list_ui()
+            return f"✅ Đã xóa {recording_id}", dropdown, stats
+        else:
+            return f"❌ Không thể xóa {recording_id}", gr.Dropdown(choices=[], value=None), ""
+    except Exception as e:
+        return f"❌ Lỗi: {str(e)}", gr.Dropdown(choices=[], value=None), ""
+
+
 def export_to_docx():
     """Export analysis results to DOCX file."""
     global last_summary, last_topics, last_actions, last_decisions, current_language, current_filename
@@ -531,25 +870,94 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
         <p>Phân tích cuộc họp thông minh với AI - Hỗ trợ đa ngôn ngữ</p>
     </div>
     """)
-    
-    # History section
-    with gr.Accordion("📚 Lịch sử phân tích", open=False):
-        with gr.Row():
-            history_dropdown = gr.Dropdown(
-                label="Chọn phân tích đã lưu",
-                choices=[],
-                interactive=True,
-                scale=3
-            )
-            refresh_history_btn = gr.Button("🔄 Làm mới", scale=1)
-            load_history_btn = gr.Button("📂 Tải lại", variant="primary", scale=1)
-        
-        history_info = gr.Markdown("_Chưa có lịch sử_")
+
     
     # Main content in tabs
     with gr.Tabs() as tabs:
         
-        # Tab 1: Upload & Analyze
+        # Tab 1: Recording
+        with gr.Tab("🎙️ Ghi Âm"):
+            with gr.Row():
+                with gr.Column(scale=3):
+                    with gr.Row():
+                        recording_title_input = gr.Textbox(
+                            label="Tiêu đề",
+                            placeholder=f"Ghi âm {datetime.now().strftime('%d/%m/%Y')}",
+                            scale=2
+                        )
+                        recording_lang_input = gr.Dropdown(
+                            label="Ngôn ngữ",
+                            choices=[("Tiếng Việt", "vi"), ("English", "en"), ("日本語", "ja"), ("한국어", "ko"), ("中文", "zh")],
+                            value="vi",
+                            scale=1
+                        )
+                    
+                    audio_recorder_main = gr.Audio(
+                        sources=["microphone"],
+                        type="filepath",
+                        label="🎙️ Ghi âm",
+                        waveform_options={"show_recording_waveform": True}
+                    )
+                    
+                    transcript_display = gr.Textbox(
+                        label="📝 Transcript",
+                        interactive=False,
+                        lines=12,
+                        placeholder="Nhấn Stop để tự động transcribe bằng OpenAI Whisper..."
+                    )
+                    
+                    with gr.Row():
+                        save_recording_btn = gr.Button("💾 Lưu Audio & Transcript", variant="primary", scale=2)
+                        clear_recording_btn = gr.Button("🗑️ Hủy", variant="secondary", scale=1)
+                    
+                    save_status = gr.Textbox(label="Trạng thái", interactive=False, lines=3, show_label=False)
+                    recording_id_hidden = gr.Textbox(visible=False)
+                
+                with gr.Column(scale=1):
+                    gr.Markdown("""
+                    ### 📝 Cách dùng
+                    
+                    1. **Chọn ngôn ngữ** ghi âm
+                    2. **Click microphone** → Bắt đầu ghi
+                    3. **Nhấn Stop** → Tự động:
+                       - Lưu file audio
+                       - Transcribe bằng Whisper
+                    4. **Nhấn Lưu** để lưu vào thư viện
+                    5. **Nhấn Hủy** để xóa và ghi lại
+                    
+                    ---
+                    
+                    ### ⚙️ Công nghệ
+                    
+                    - **STT:** OpenAI Whisper
+                    - **Định dạng:** WAV
+                    - **Hỗ trợ:** 50+ ngôn ngữ
+                    
+                    ---
+                    
+                    ### 💡 Lưu ý
+                    
+                    - Dùng Whisper Local (Offline)
+                    - Miễn phí, không cần API key
+                    - Cần cài ffmpeg (xem hướng dẫn bên dưới)
+                    
+                    ---
+                    
+                    ### 🔧 Cài đặt ffmpeg
+                    
+                    **Windows:**
+                    1. Download: [ffmpeg.org](https://ffmpeg.org/download.html)
+                    2. Extract vào `C:\\ffmpeg`
+                    3. Thêm `C:\\ffmpeg\\bin` vào PATH
+                    4. Khởi động lại terminal
+                    
+                    **Hoặc dùng Chocolatey:**
+                    ```
+                    choco install ffmpeg
+                    ```
+                    """)
+        
+        # Tab 2: Upload & Analyze
         with gr.Tab("📤 Upload & Phân Tích"):
             with gr.Row():
                 with gr.Column(scale=2):
@@ -647,39 +1055,6 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
                     gr.Markdown("### 🎯 Quyết Định Quan Trọng")
                     decisions_output = gr.Markdown("_Chưa có dữ liệu_")
         
-        # Tab 2: Export Results
-        with gr.Tab("💾 Xuất Kết Quả"):
-            gr.Markdown("### 📥 Tải xuống kết quả phân tích")
-            
-            with gr.Row():
-                with gr.Column():
-                    gr.Markdown("""
-                    #### 📄 Xuất file TXT
-                    - Format đơn giản, dễ đọc
-                    - Phù hợp để chia sẻ qua email
-                    - Mở được trên mọi thiết bị
-                    """)
-                    export_txt_btn = gr.Button("📄 Xuất TXT", size="lg", variant="primary")
-                
-                with gr.Column():
-                    gr.Markdown("""
-                    #### 📝 Xuất file DOCX
-                    - Format chuyên nghiệp
-                    - Có thể chỉnh sửa trong Word
-                    - Phù hợp cho báo cáo
-                    """)
-                    export_docx_btn = gr.Button("📝 Xuất DOCX", size="lg", variant="primary")
-            
-            export_file = gr.File(label="File đã xuất")
-            
-            gr.Markdown("""
-            ---
-            **💡 Lưu ý:**
-            - Cần xử lý transcript trước khi xuất
-            - File sẽ được lưu với timestamp
-            - Hỗ trợ đa ngôn ngữ
-            """)
-        
         # Tab 3: Chat with AI
         with gr.Tab("💬 Chat với AI"):
             gr.Markdown("### 🤖 Hỏi đáp thông minh về cuộc họp")
@@ -688,7 +1063,8 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
                 with gr.Column(scale=3):
                     chatbot_display = gr.Chatbot(
                         height=500,
-                        label="Cuộc trò chuyện"
+                        label="Cuộc trò chuyện",
+                        type="tuples"
                     )
                     
                     with gr.Row():
@@ -719,34 +1095,231 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
                     - Quyết định nào được đưa ra?
                     - Chủ đề chính là gì?
                     """)
+        
+        # Tab 4: Library
+        with gr.Tab("📚 Thư Viện Lưu Trữ"):
+            with gr.Tabs():
+                # Sub-tab: Analysis History
+                with gr.Tab("📊 Lịch Sử Phân Tích"):
+                    gr.Markdown("### 📋 Quản lý lịch sử phân tích")
+                    
+                    with gr.Row():
+                        history_dropdown_lib = gr.Dropdown(
+                            label="Chọn phân tích",
+                            choices=[],
+                            interactive=True,
+                            scale=3
+                        )
+                        refresh_history_lib_btn = gr.Button("🔄 Làm mới", scale=1)
+                    
+                    history_info_lib = gr.Markdown("_Chưa có lịch sử_")
+                    
+                    with gr.Row():
+                        with gr.Column():
+                            gr.Markdown("#### 📝 Tóm tắt")
+                            summary_lib = gr.Textbox(lines=5, interactive=False)
+                        
+                        with gr.Column():
+                            gr.Markdown("#### 🎯 Chủ đề")
+                            topics_lib = gr.Markdown()
+                    
+                    with gr.Row():
+                        load_analysis_btn = gr.Button("📂 Tải vào workspace", variant="primary")
+                        delete_analysis_btn = gr.Button("🗑️ Xóa", variant="stop")
+                
+                # Sub-tab: Recording History
+                with gr.Tab("🎙️ Lịch Sử Ghi Âm"):
+                    gr.Markdown("### 🎤 Quản lý ghi âm")
+                    
+                    with gr.Row():
+                        recordings_dropdown = gr.Dropdown(
+                            label="Chọn ghi âm",
+                            choices=[],
+                            interactive=True,
+                            scale=3
+                        )
+                        refresh_recordings_btn = gr.Button("🔄 Làm mới", scale=1)
+                    
+                    recordings_stats = gr.Markdown("📊 Chưa có ghi âm nào")
+                    
+                    with gr.Row():
+                        with gr.Column(scale=2):
+                            recording_info_display = gr.Markdown("_Chọn ghi âm để xem chi tiết_")
+                            recording_notes_display = gr.Textbox(label="Ghi chú", interactive=False, lines=3)
+                        
+                        with gr.Column(scale=1):
+                            audio_player = gr.Audio(
+                                label="Phát lại",
+                                interactive=False
+                            )
+                            
+                            with gr.Row():
+                                process_recording_btn = gr.Button("🔄 Xử lý", variant="primary")
+                                delete_recording_btn = gr.Button("🗑️ Xóa", variant="stop")
+                            
+                            delete_status = gr.Textbox(label="Trạng thái", interactive=False)
+        
+        # Tab 5: Semantic Search
+        with gr.Tab("🔍 Tìm Kiếm Thông Minh"):
+            with gr.Tabs():
+                # Sub-tab: Search Analysis
+                with gr.Tab("📊 Tìm Phân Tích"):
+                    gr.Markdown("### 🔍 Tìm kiếm lịch sử phân tích")
+                    
+                    # Statistics
+                    with gr.Accordion("📊 Thống Kê Database", open=False):
+                        stats_display = gr.Markdown()
+                        refresh_stats_btn = gr.Button("🔄 Làm mới thống kê")
+                    
+                    # Search interface
+                    with gr.Row():
+                        with gr.Column(scale=3):
+                            search_query = gr.Textbox(
+                                label="Tìm kiếm",
+                                placeholder="VD: React Hooks training, budget planning, team meeting...",
+                                lines=2
+                            )
+                        with gr.Column(scale=1):
+                            meeting_type_filter = gr.Dropdown(
+                                label="Loại Meeting",
+                                choices=["Tất cả", "meeting", "workshop", "brainstorming"],
+                                value="Tất cả"
+                            )
+                            language_filter = gr.Dropdown(
+                                label="Ngôn ngữ",
+                                choices=["Tất cả", "en", "vi", "ja", "ko", "zh-CN"],
+                                value="Tất cả"
+                            )
+                            n_results = gr.Slider(
+                                label="Số kết quả",
+                                minimum=1,
+                                maximum=10,
+                                value=5,
+                                step=1
+                            )
+                    
+                    search_btn = gr.Button("🔍 Tìm kiếm", variant="primary", size="lg")
+                    search_status = gr.Textbox(label="Trạng thái", interactive=False)
+                    search_results = gr.Markdown()
+                    
+                    # Examples
+                    gr.Examples(
+                        examples=[
+                            ["React Hooks training", "workshop", "en", 3],
+                            ["budget planning meeting", "meeting", "Tất cả", 5],
+                            ["brainstorming new features", "brainstorming", "Tất cả", 3],
+                        ],
+                        inputs=[search_query, meeting_type_filter, language_filter, n_results]
+                    )
+                
+                # Sub-tab: Search Recordings
+                with gr.Tab("🎙️ Tìm Ghi Âm"):
+                    gr.Markdown("### 🔍 Tìm kiếm ghi âm cuộc gọi")
+                    
+                    with gr.Row():
+                        search_recording_query = gr.Textbox(
+                            label="Tìm kiếm theo tiêu đề hoặc ghi chú",
+                            placeholder="VD: Team meeting, Sprint planning...",
+                            scale=3
+                        )
+                        search_recording_btn = gr.Button("🔍 Tìm", variant="primary", scale=1)
+                    
+                    search_recording_results = gr.Markdown("_Nhập từ khóa để tìm kiếm_")
+                    
+                    gr.Markdown("""
+                    ---
+                    **💡 Mẹo tìm kiếm:**
+                    - Tìm theo tiêu đề: "Team meeting"
+                    - Tìm theo ngày: "25/11/2024"
+                    - Tìm theo ghi chú: "Sprint planning"
+                    """)
+        
+        # Tab 6: Export Results
+        with gr.Tab("📄 Xuất Kết Quả"):
+            gr.Markdown("### 📥 Tải xuống kết quả phân tích")
+            
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("""
+                    #### 📄 Xuất file TXT
+                    - Format đơn giản, dễ đọc
+                    - Phù hợp để chia sẻ qua email
+                    - Mở được trên mọi thiết bị
+                    """)
+                    export_txt_btn = gr.Button("📄 Xuất TXT", size="lg", variant="primary")
+                
+                with gr.Column():
+                    gr.Markdown("""
+                    #### 📝 Xuất file DOCX
+                    - Format chuyên nghiệp
+                    - Có thể chỉnh sửa trong Word
+                    - Phù hợp cho báo cáo
+                    """)
+                    export_docx_btn = gr.Button("📝 Xuất DOCX", size="lg", variant="primary")
+            
+            export_file = gr.File(label="File đã xuất")
+            
+            gr.Markdown("""
+            ---
+            **💡 Lưu ý:**
+            - Cần xử lý transcript trước khi xuất
+            - File sẽ được lưu với timestamp
+            - Hỗ trợ đa ngôn ngữ
+            """)
     
     # Footer
     gr.Markdown("""
     ---
     <div style="text-align: center; color: #666; padding: 1rem;">
-        <p>🚀 Powered by Gemini AI | 🌍 Multi-language Support | 🎯 Smart Analysis</p>
-        <p style="font-size: 0.9em;">Version 3.0 - Final Edition</p>
+        <p>🚀 Powered by Gemini AI | �️ Audio aRecording | 🔍 Semantic Search | 🌍 Multi-language</p>
+        <p style="font-size: 0.9em;">Version 3.1 - Sprint 3 Complete Edition</p>
     </div>
     """)
     
     # Event handlers
     
-    # History handlers
-    refresh_history_btn.click(
-        fn=refresh_history,
-        outputs=[history_dropdown, history_info]
+    # Recording Tab handlers
+    
+    # Auto-transcribe when recording stops (audio changes)
+    audio_recorder_main.stop_recording(
+        fn=transcribe_audio_whisper,
+        inputs=[audio_recorder_main, recording_lang_input],
+        outputs=[transcript_display]
     )
     
-    load_history_btn.click(
+    save_recording_btn.click(
+        fn=save_recording_and_transcribe,
+        inputs=[audio_recorder_main, recording_title_input, recording_lang_input, transcript_display],
+        outputs=[save_status, recording_id_hidden]
+    )
+    
+    clear_recording_btn.click(
+        fn=lambda: (None, "", "", ""),
+        outputs=[audio_recorder_main, transcript_display, save_status, recording_id_hidden]
+    )
+    
+    # Library - Analysis History handlers
+    refresh_history_lib_btn.click(
+        fn=refresh_history,
+        outputs=[history_dropdown_lib, history_info_lib]
+    )
+    
+    load_analysis_btn.click(
         fn=load_history,
-        inputs=[history_dropdown],
+        inputs=[history_dropdown_lib],
         outputs=[status_box, summary_output, topics_output, actions_output, decisions_output]
     )
     
-    # Auto-refresh history on page load
+    # Auto-refresh on page load
     demo.load(
+        fn=get_vectordb_stats_ui,
+        outputs=[stats_display]
+    ).then(
+        fn=get_recordings_list_ui,
+        outputs=[recordings_dropdown, recordings_stats]
+    ).then(
         fn=refresh_history,
-        outputs=[history_dropdown, history_info]
+        outputs=[history_dropdown_lib, history_info_lib]
     )
     
     # Process handler
@@ -756,7 +1329,7 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
         outputs=[status_box, summary_output, topics_output, actions_output, decisions_output]
     ).then(
         fn=refresh_history,  # Refresh history after processing
-        outputs=[history_dropdown, history_info]
+        outputs=[history_dropdown_lib, history_info_lib]
     )
     
     # Export handlers
@@ -768,6 +1341,42 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
     export_docx_btn.click(
         fn=export_to_docx,
         outputs=[export_file]
+    )
+    
+    # Recording Library handlers
+    refresh_recordings_btn.click(
+        fn=get_recordings_list_ui,
+        outputs=[recordings_dropdown, recordings_stats]
+    )
+    
+    recordings_dropdown.change(
+        fn=load_recording_info_ui,
+        inputs=[recordings_dropdown],
+        outputs=[recording_info_display, recording_notes_display, audio_player]
+    )
+    
+    delete_recording_btn.click(
+        fn=delete_recording_ui,
+        inputs=[recordings_dropdown],
+        outputs=[delete_status, recordings_dropdown, recordings_stats]
+    )
+    
+    # Semantic Search handlers
+    refresh_stats_btn.click(
+        fn=get_vectordb_stats_ui,
+        outputs=[stats_display]
+    )
+    
+    search_btn.click(
+        fn=search_meetings_ui,
+        inputs=[search_query, meeting_type_filter, language_filter, n_results],
+        outputs=[search_status, search_results]
+    )
+    
+    search_recording_btn.click(
+        fn=search_recordings_ui,
+        inputs=[search_recording_query],
+        outputs=[search_recording_results]
     )
     
     # Chat handlers
@@ -809,7 +1418,7 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
 
 if __name__ == "__main__":
     demo.launch(
-        server_name="0.0.0.0",
-        server_port=7864,
+        server_name="localhost",
+        server_port=7777,
         share=False
     )

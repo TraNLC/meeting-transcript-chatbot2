@@ -3,12 +3,25 @@ python-dotenv>=1.0.0
 
 # LLM SDK
 google-generativeai>=0.3.0
+openai>=1.0.0
 
 # Document Processing
 python-docx>=1.1.0
 
 # UI
 gradio>=4.0.0
+
+# Vector Database
+chromadb>=0.4.22
+sentence-transformers>=2.2.2
+
+# Text-to-Speech
+gTTS>=2.5.0
+pydub>=0.25.1
+
+# Vosk (Offline STT - Free & Lightweight)
+vosk>=0.3.45
+soundfile>=0.12.1
 
 # Testing
 pytest>=7.4.0

@@ -1,6 +1,8 @@
 """Universal executor supporting multiple meeting types."""
 
 import json
+import os
+from datetime import datetime
 from typing import Dict, List, Any, Optional
 from .chunked_executor import ChunkedFunctionExecutor
 from .meeting_types import (
@@ -159,8 +161,11 @@ class UniversalMeetingExecutor:
         # TODO: Add translation support for specialized functions
         return json.dumps(result, ensure_ascii=False, indent=2)
     
-    def execute_all(self) -> Dict[str, Any]:
+    def execute_all(self, store_in_vectordb: bool = True) -> Dict[str, Any]:
         """Execute all available functions for this meeting type.
+        
+        Args:
+            store_in_vectordb: Whether to store results in ChromaDB
         
         Returns:
             Dict with all results
@@ -181,7 +186,57 @@ class UniversalMeetingExecutor:
             except Exception as e:
                 results["functions"][function_name] = {"error": str(e)}
         
+        # Store in ChromaDB if enabled
+        if store_in_vectordb:
+            try:
+                self._store_in_vectordb(results)
+            except Exception as e:
+                print(f"Warning: Failed to store in ChromaDB: {e}")
+        
         return results
+    
+    def _store_in_vectordb(self, analysis: Dict[str, Any]):
+        """Store analysis results in ChromaDB.
+        
+        Args:
+            analysis: Analysis results from execute_all
+        """
+        try:
+            from ..vectorstore.chroma_manager import ChromaManager
+            
+            # Initialize ChromaDB
+            chroma = ChromaManager()
+            
+            # Generate meeting ID
+            meeting_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Prepare analysis data
+            analysis_data = {}
+            for func_name, func_result in analysis["functions"].items():
+                # Extract actual data from function results
+                if isinstance(func_result, dict) and "result" in func_result:
+                    analysis_data[func_name] = func_result["result"]
+                else:
+                    analysis_data[func_name] = func_result
+            
+            # Store in ChromaDB
+            success = chroma.store_meeting(
+                meeting_id=meeting_id,
+                transcript=self.transcript,
+                analysis=analysis_data,
+                meeting_type=self.meeting_type.value,
+                language=self.output_language
+            )
+            
+            if success:
+                print(f"  ✓ Stored in ChromaDB with ID: {meeting_id}")
+            else:
+                print(f"  ✗ Failed to store in ChromaDB")
+                
+        except ImportError:
+            print("  ChromaDB not available - install with: pip install chromadb sentence-transformers")
+        except Exception as e:
+            print(f"  Error storing in ChromaDB: {e}")
     
     def get_info(self) -> Dict[str, Any]:
         """Get information about the executor.
