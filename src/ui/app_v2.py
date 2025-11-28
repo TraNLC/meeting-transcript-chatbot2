@@ -17,9 +17,11 @@ try:
 except Exception as e:
     print(f"WARNING: Could not setup ffmpeg: {e}")
 
+# Import HuggingFace STT
+from src.audio.huggingface_stt import transcribe_audio_huggingface
+
 # Import all handler functions from gradio_app_final
 from src.ui.gradio_app_final import (
-    transcribe_audio_whisper,
     save_recording_and_transcribe,
     process_file,
     chat_with_ai,
@@ -146,8 +148,8 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
     # Fixed Header
     gr.HTML("""
     <div class="main-header">
-        <h1>🎯 Meeting Analyzer Pro</h1>
-        <p>Phân Tích Cuộc Họp với AI</p>
+        <h1 style="font-size: 2rem; color: white; margin: 0;">🎯 Meeting Analyzer Pro</h1>
+        <p style="color: white; opacity: 0.95; margin: 0.3rem 0 0 0;">Phân Tích Cuộc Họp với AI - 6 Tabs | Made By Team 3</p>
     </div>
     """)
     
@@ -159,7 +161,7 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
         tab4 = create_analysis_history_tab()
         tab5 = create_recording_history_tab()
         tab6 = create_search_export_tab()
-        tab7 = create_checklist_tab()
+        # tab7 = create_checklist_tab()  # Temporarily hidden - focus on core tabs first
     
     # Footer removed for compact layout
     
@@ -218,7 +220,7 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
     )
     
     handlers = {
-        'transcribe': transcribe_audio_whisper,
+        'transcribe': transcribe_audio_huggingface,  # Use HuggingFace STT
         'save_recording': save_recording_and_transcribe,
         'process_file': process_file,
         'chat': chat_with_ai,
@@ -241,29 +243,29 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
     connect_recording_history_events(tab5, handlers)
     connect_search_export_events(tab6, handlers)
     
-    # Connect checklist events - simplified
-    tab7['refresh_btn'].click(
-        fn=refresh_checklist,
-        inputs=[tab7['filter']],
-        outputs=[tab7['checklist'], tab7['stats']]
-    )
-    
-    tab7['filter'].change(
-        fn=refresh_checklist,
-        inputs=[tab7['filter']],
-        outputs=[tab7['checklist'], tab7['stats']]
-    )
-    
-    tab7['add_btn'].click(
-        fn=add_new_task,
-        inputs=[tab7['new_task'], tab7['new_assignee'], tab7['new_deadline'], tab7['new_priority']],
-        outputs=[tab7['checklist'], tab7['stats']]
-    )
-    
-    tab7['import_btn'].click(
-        fn=import_from_analysis,
-        outputs=[tab7['import_status']]
-    )
+    # Checklist events - temporarily disabled
+    # tab7['refresh_btn'].click(
+    #     fn=refresh_checklist,
+    #     inputs=[tab7['filter']],
+    #     outputs=[tab7['checklist'], tab7['stats']]
+    # )
+    # 
+    # tab7['filter'].change(
+    #     fn=refresh_checklist,
+    #     inputs=[tab7['filter']],
+    #     outputs=[tab7['checklist'], tab7['stats']]
+    # )
+    # 
+    # tab7['add_btn'].click(
+    #     fn=add_new_task,
+    #     inputs=[tab7['new_task'], tab7['new_assignee'], tab7['new_deadline'], tab7['new_priority']],
+    #     outputs=[tab7['checklist'], tab7['stats']]
+    # )
+    # 
+    # tab7['import_btn'].click(
+    #     fn=import_from_analysis,
+    #     outputs=[tab7['import_status']]
+    # )
     
     # Auto-load on startup
     demo.load(
@@ -275,10 +277,12 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
     ).then(
         fn=refresh_history,
         outputs=[tab4['dropdown'], tab4['info']]
-    ).then(
-        fn=lambda: refresh_checklist("all"),
-        outputs=[tab7['checklist'], tab7['stats']]
     )
+    # Checklist auto-load temporarily disabled
+    # .then(
+    #     fn=lambda: refresh_checklist("all"),
+    #     outputs=[tab7['checklist'], tab7['stats']]
+    # )
 
 
 if __name__ == "__main__":

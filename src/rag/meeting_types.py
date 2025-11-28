@@ -235,19 +235,31 @@ class BrainstormingFunctions:
         """
         concerns = []
         
-        # Patterns for concerns
+        # Patterns for concerns - more flexible
         patterns = [
-            r"(?:concern|worry|problem|challenge|issue|risk):\s*(.+?)(?:\.|$)",
-            r"(?:but|however|unfortunately):\s*(.+?)(?:\.|$)",
-            r"(?:lo ngại|vấn đề|thách thức|rủi ro):\s*(.+?)(?:\.|$)",
+            r"(?:Concern|concern|Worry|worry|Problem|problem|Challenge|challenge|Issue|issue|Risk|risk):\s*(.+?)(?:\n|$)",
+            r"(?:Raised by|raised by):\s*.+?\n",  # Skip "Raised by" lines
+            r"(?:Lo ngại|lo ngại|Vấn đề|vấn đề|Thách thức|thách thức|Rủi ro|rủi ro):\s*(.+?)(?:\n|$)",
         ]
         
-        for pattern in patterns:
-            matches = re.finditer(pattern, transcript, re.IGNORECASE)
-            for match in matches:
-                concern = match.group(1).strip()
-                if len(concern) > 10:
-                    concerns.append(concern)
+        # Split by lines and look for concern markers
+        lines = transcript.split('\n')
+        for i, line in enumerate(lines):
+            line = line.strip()
+            
+            # Check if line starts with concern keywords
+            concern_keywords = [
+                'Concern:', 'concern:', 'Challenge:', 'challenge:', 
+                'Problem:', 'problem:', 'Risk:', 'risk:',
+                'Lo ngại:', 'Vấn đề:', 'Thách thức:', 'Rủi ro:'
+            ]
+            
+            for keyword in concern_keywords:
+                if line.startswith(keyword):
+                    concern_text = line.replace(keyword, '').strip()
+                    if len(concern_text) > 10 and 'Raised by' not in concern_text:
+                        concerns.append(concern_text)
+                    break
         
         return {"concerns": concerns}
     

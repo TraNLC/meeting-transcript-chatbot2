@@ -74,10 +74,10 @@ try:
             log_test("TC_01.2", "Language support", "FAIL", f"Only {len(lang_choices)} languages")
         
         # TC_01.3: Check audio component
-        if tab['audio'].sources == ["microphone"]:
-            log_test("TC_01.3", "Microphone recording", "PASS", "Audio source configured correctly")
+        if "microphone" in tab['audio'].sources:
+            log_test("TC_01.3", "Microphone recording", "PASS", f"Audio sources: {tab['audio'].sources}")
         else:
-            log_test("TC_01.3", "Microphone recording", "FAIL", "Audio source not configured")
+            log_test("TC_01.3", "Microphone recording", "FAIL", f"Audio sources: {tab['audio'].sources}")
         
         # TC_01.4: Check buttons
         if tab['save_btn'] and tab['clear_btn']:

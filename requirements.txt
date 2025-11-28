@@ -19,7 +19,13 @@ sentence-transformers>=2.2.2
 gTTS>=2.5.0
 pydub>=0.25.1
 
-# Vosk (Offline STT - Free & Lightweight)
+# HuggingFace Transformers (STT with Whisper)
+transformers>=4.35.0
+torch>=2.0.0
+torchaudio>=2.0.0
+accelerate>=0.24.0
+
+# Vosk (Offline STT - Free & Lightweight - Backup option)
 vosk>=0.3.45
 soundfile>=0.12.1
 

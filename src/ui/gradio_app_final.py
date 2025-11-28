@@ -42,6 +42,9 @@ def process_file(file, meeting_type, output_language):
     """Process uploaded transcript file - Using working logic from gradio_app.py."""
     global chatbot, transcript_text, last_summary, last_topics, last_actions, last_decisions, current_language, current_filename
     
+    # Import meeting type functions
+    from src.rag.meeting_types import WorkshopFunctions, BrainstormingFunctions
+    
     provider = "gemini"
     model = "gemini-2.5-flash"
     language = output_language
@@ -87,10 +90,24 @@ def process_file(file, meeting_type, output_language):
         # Generate summary
         summary = chatbot.generate_summary()
         
-        # Extract information
+        # Extract information based on meeting type
         topics = chatbot.extract_topics()
         action_items = chatbot.extract_action_items_initially()
         decisions = chatbot.extract_decisions()
+        
+        # Extract specialized information based on meeting type
+        specialized_data = {}
+        if meeting_type == "workshop":
+            # Workshop-specific extractions
+            specialized_data['key_learnings'] = WorkshopFunctions.extract_key_learnings(transcript)
+            specialized_data['exercises'] = WorkshopFunctions.extract_exercises(transcript)
+            specialized_data['qa_pairs'] = WorkshopFunctions.extract_qa_pairs(transcript)
+        elif meeting_type == "brainstorming":
+            # Brainstorming-specific extractions
+            ideas_result = BrainstormingFunctions.extract_ideas(transcript)
+            specialized_data['ideas'] = ideas_result
+            specialized_data['categorized_ideas'] = BrainstormingFunctions.categorize_ideas(ideas_result)
+            specialized_data['concerns'] = BrainstormingFunctions.extract_concerns(transcript)
         
         # Save results globally
         last_summary = summary
@@ -107,15 +124,19 @@ def process_file(file, meeting_type, output_language):
                 topics=topics,
                 action_items=action_items,
                 decisions=decisions,
-                metadata={"language": language, "meeting_type": meeting_type}
+                metadata={
+                    "language": language, 
+                    "meeting_type": meeting_type,
+                    "specialized_data": specialized_data
+                }
             )
         except Exception as e:
             print(f"Failed to save history: {e}")
         
-        # Format outputs
-        topics_text = format_topics(topics, language)
+        # Format outputs based on meeting type
+        topics_text = format_topics_by_type(topics, meeting_type, specialized_data, language)
         actions_text = format_actions(action_items, language)
-        decisions_text = format_decisions(decisions, language)
+        decisions_text = format_decisions_by_type(decisions, meeting_type, specialized_data, language)
         
         success_msgs = {
             "vi": f"✅ Đã xử lý: {current_filename} | Loại: {meeting_type} | Ngôn ngữ: {language}",
@@ -171,6 +192,58 @@ def format_topics(topics, language="vi"):
     for i, topic in enumerate(topics, 1):
         result.append(f"### {i}. {topic.get('topic', 'N/A')}")
         result.append(f"{topic.get('description', '')}\n")
+    
+    return "\n".join(result)
+
+
+def format_topics_by_type(topics, meeting_type, specialized_data, language="vi"):
+    """Format topics based on meeting type with specialized data."""
+    result = []
+    
+    # Standard topics
+    result.append(format_topics(topics, language))
+    
+    # Add specialized sections based on meeting type
+    if meeting_type == "workshop":
+        # Add key learnings
+        learnings = specialized_data.get('key_learnings', {}).get('key_learnings', [])
+        if learnings:
+            result.append("\n\n---\n## 📚 Key Learnings\n")
+            for i, learning in enumerate(learnings, 1):
+                result.append(f"{i}. {learning}")
+        
+        # Add exercises
+        exercises = specialized_data.get('exercises', {}).get('exercises', [])
+        if exercises:
+            result.append("\n\n---\n## 🎯 Exercises & Activities\n")
+            for i, ex in enumerate(exercises, 1):
+                result.append(f"{i}. {ex.get('title', 'N/A')}")
+        
+        # Add Q&A
+        qa_pairs = specialized_data.get('qa_pairs', {}).get('qa_pairs', [])
+        if qa_pairs:
+            result.append("\n\n---\n## ❓ Q&A Session\n")
+            for i, qa in enumerate(qa_pairs, 1):
+                result.append(f"**Q{i}:** {qa.get('question', 'N/A')}")
+                result.append(f"**A{i}:** {qa.get('answer', 'N/A')}\n")
+    
+    elif meeting_type == "brainstorming":
+        # Add ideas by category
+        categorized = specialized_data.get('categorized_ideas', {}).get('categorized_ideas', {})
+        if categorized:
+            result.append("\n\n---\n## 💡 Ideas by Category\n")
+            for category, ideas in categorized.items():
+                if ideas:
+                    result.append(f"\n### {category}")
+                    for idea in ideas:
+                        result.append(f"- {idea.get('idea', 'N/A')}")
+        
+        # Add concerns
+        concerns = specialized_data.get('concerns', {}).get('concerns', [])
+        if concerns:
+            result.append("\n\n---\n## ⚠️ Concerns & Challenges\n")
+            for i, concern in enumerate(concerns, 1):
+                result.append(f"{i}. {concern}")
     
     return "\n".join(result)
 
@@ -309,6 +382,24 @@ def format_decisions(decisions, language="vi"):
         
         result.append(f"### {i}. {decision_text}")
         result.append(f"- {lang['context']}: {context}\n")
+    
+    return "\n".join(result)
+
+
+def format_decisions_by_type(decisions, meeting_type, specialized_data, language="vi"):
+    """Format decisions based on meeting type."""
+    result = []
+    
+    # Standard decisions
+    result.append(format_decisions(decisions, language))
+    
+    # For brainstorming, decisions might be about selected ideas
+    if meeting_type == "brainstorming":
+        ideas = specialized_data.get('ideas', {}).get('ideas', [])
+        if ideas:
+            result.append("\n\n---\n## 💡 All Ideas Generated\n")
+            for i, idea in enumerate(ideas, 1):
+                result.append(f"{i}. {idea.get('idea', 'N/A')}")
     
     return "\n".join(result)
 

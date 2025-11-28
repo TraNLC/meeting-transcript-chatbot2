@@ -5,11 +5,11 @@ from datetime import datetime
 
 
 def create_recording_tab():
-    """Create Recording tab - Simple & Clean Layout."""
+    """Create Recording tab - Clean Layout 1:2."""
     
     with gr.Tab("🎙️ Ghi Âm"):
         with gr.Row():
-            # Left: Recording
+            # Left: Controls (1)
             with gr.Column(scale=1):
                 gr.Markdown("### 🎤 Ghi Âm")
                 
@@ -31,7 +31,7 @@ def create_recording_tab():
                 )
                 
                 audio_recorder_main = gr.Audio(
-                    sources=["microphone"],
+                    sources=["microphone", "upload"],  # Cho phép ghi âm HOẶC upload
                     type="filepath",
                     label="",
                     waveform_options={"show_recording_waveform": True},
@@ -39,37 +39,38 @@ def create_recording_tab():
                 )
                 
                 with gr.Row():
-                    save_recording_btn = gr.Button("💾 Lưu", variant="primary", scale=2)
+                    transcribe_btn = gr.Button("🎤 Transcribe", variant="secondary", scale=1)
+                    save_recording_btn = gr.Button("💾 Lưu", variant="primary", scale=1)
                     clear_recording_btn = gr.Button("🗑️ Hủy", variant="secondary", scale=1)
                 
                 save_status = gr.Textbox(
-                    label="Trạng thái",
+                    label="",
                     interactive=False,
-                    lines=2,
-                    show_label=False
+                    lines=1,
+                    show_label=False,
+                    visible=False  # Ẩn khi chưa có status
                 )
                 
                 recording_id_hidden = gr.Textbox(visible=False)
             
-            # Right: Transcript
-            with gr.Column(scale=1):
+            # Right: Transcript (2)
+            with gr.Column(scale=2):
                 gr.Markdown("### 📝 Transcript")
                 
                 transcript_display = gr.Textbox(
                     label="",
                     interactive=False,
-                    lines=20,
+                    lines=25,
                     show_label=False,
                     placeholder="Nhấn Stop để tự động transcribe..."
                 )
-                
-
     
     return {
         'lang': recording_lang_input,
         'audio': audio_recorder_main,
         'transcript': transcript_display,
         'title': recording_title_input,
+        'transcribe_btn': transcribe_btn,
         'save_btn': save_recording_btn,
         'clear_btn': clear_recording_btn,
         'save_status': save_status,

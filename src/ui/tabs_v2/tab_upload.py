@@ -4,11 +4,11 @@ import gradio as gr
 
 
 def create_upload_tab():
-    """Create Upload & Analysis tab - Simple & Clean Layout."""
+    """Create Upload & Analysis tab - Clean Layout 1:2."""
     
     with gr.Tab("📤 Upload & Phân Tích"):
         with gr.Row():
-            # Left: Upload & Controls
+            # Left: Upload & Controls (1)
             with gr.Column(scale=1):
                 gr.Markdown("### 📁 Upload File")
                 
@@ -21,11 +21,12 @@ def create_upload_tab():
                 meeting_type = gr.Dropdown(
                     label="Loại cuộc họp",
                     choices=[
-                        ("Meeting", "meeting"),
-                        ("Workshop", "workshop"),
-                        ("Brainstorming", "brainstorming")
+                        ("📋 Meeting - Cuộc họp thường", "meeting"),
+                        ("🎓 Workshop - Đào tạo/Hội thảo", "workshop"),
+                        ("💡 Brainstorming - Động não", "brainstorming")
                     ],
-                    value="meeting"
+                    value="meeting",
+                    info="Output sẽ khác nhau tùy loại cuộc họp"
                 )
                 
                 output_lang = gr.Dropdown(
@@ -43,22 +44,21 @@ def create_upload_tab():
                 process_btn = gr.Button("🚀 Phân Tích", variant="primary", size="lg")
                 
                 status_box = gr.Textbox(
-                    label="Trạng thái",
+                    label="",
                     interactive=False,
-                    lines=2,
-                    show_label=False
+                    lines=1,
+                    show_label=False,
+                    visible=False  # Ẩn khi chưa có status
                 )
-                
-
             
-            # Right: Results
+            # Right: Results (2)
             with gr.Column(scale=2):
-                gr.Markdown("### � Kếmt Quả")
+                gr.Markdown("### 📊 Kết Quả Phân Tích")
                 
                 with gr.Tabs():
                     with gr.Tab("📝 Tóm tắt"):
                         summary_output = gr.Textbox(
-                            lines=12,
+                            lines=15,
                             interactive=False,
                             show_label=False,
                             placeholder="Tóm tắt sẽ hiển thị ở đây..."

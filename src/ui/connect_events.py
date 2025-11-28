@@ -7,7 +7,16 @@ def connect_recording_events(tab, handlers):
     tab['audio'].stop_recording(
         fn=handlers['transcribe'],
         inputs=[tab['audio'], tab['lang']],
-        outputs=[tab['transcript']]
+        outputs=[tab['transcript']],
+        show_progress="full"
+    )
+    
+    # Manual transcribe button (for uploaded files)
+    tab['transcribe_btn'].click(
+        fn=handlers['transcribe'],
+        inputs=[tab['audio'], tab['lang']],
+        outputs=[tab['transcript']],
+        show_progress="full"
     )
     
     tab['save_btn'].click(
