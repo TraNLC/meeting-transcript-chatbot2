@@ -24,10 +24,14 @@ transformers>=4.35.0
 torch>=2.0.0
 torchaudio>=2.0.0
 accelerate>=0.24.0
+librosa>=0.10.0
 
 # Vosk (Offline STT - Free & Lightweight - Backup option)
 vosk>=0.3.45
 soundfile>=0.12.1
+
+# Data Processing
+pandas>=2.0.0
 
 # Testing
 pytest>=7.4.0
