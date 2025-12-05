@@ -1,0 +1,10 @@
+{
+  "summary": "Workshop Docker/K8s, hands-on với containers và orchestration.",
+  "topics": [
+    "Docker",
+    "Kubernetes",
+    "Containers",
+    "Deployment"
+  ],
+  "action_items": []
+}

@@ -1,0 +1,11 @@
+{
+  "summary": "Họp performance, implement caching và CDN để tăng tốc.",
+  "topics": [
+    "Performance",
+    "Caching",
+    "Redis",
+    "CDN",
+    "Database"
+  ],
+  "action_items": []
+}

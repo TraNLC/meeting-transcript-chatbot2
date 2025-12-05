@@ -7,6 +7,7 @@ from .tab_analysis_history import create_analysis_history_tab
 from .tab_recording_history import create_recording_history_tab
 from .tab_search_export import create_search_export_tab
 from .tab_checklist import create_checklist_tab
+from .tab_settings import create_settings_tab
 
 __all__ = [
     'create_recording_tab',
@@ -16,4 +17,5 @@ __all__ = [
     'create_recording_history_tab',
     'create_search_export_tab',
     'create_checklist_tab',
+    'create_settings_tab',
 ]

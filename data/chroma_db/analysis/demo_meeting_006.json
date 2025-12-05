@@ -1,0 +1,10 @@
+{
+  "summary": "Daily standup, có 2 blockers cần resolve.",
+  "topics": [
+    "Standup",
+    "Bug fixes",
+    "Payment",
+    "Dashboard"
+  ],
+  "action_items": []
+}

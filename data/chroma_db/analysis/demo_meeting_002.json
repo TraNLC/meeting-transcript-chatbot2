@@ -1,0 +1,21 @@
+{
+  "summary": "Sprint planning cho Sprint 15, focus vào payment integration và user profile.",
+  "topics": [
+    "Payment integration",
+    "User profile",
+    "Bug fixes",
+    "Testing"
+  ],
+  "action_items": [
+    {
+      "task": "Setup VNPay sandbox",
+      "assignee": "Dev team",
+      "deadline": "02/12/2025"
+    },
+    {
+      "task": "Create Cloudinary account",
+      "assignee": "DevOps",
+      "deadline": "01/12/2025"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "summary": "Workshop Python cơ bản, cover syntax, data types, control flow và functions.",
+  "topics": [
+    "Python basics",
+    "Data types",
+    "Control flow",
+    "Functions"
+  ],
+  "action_items": [
+    {
+      "task": "Hoàn thành bài tập về functions",
+      "assignee": "All students",
+      "deadline": "05/12/2025"
+    }
+  ]
+}

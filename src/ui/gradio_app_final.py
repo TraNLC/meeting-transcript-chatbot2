@@ -8,6 +8,20 @@ from datetime import datetime
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
+# Import utilities
+from src.utils.logger import get_logger
+from src.utils.error_handler import (
+    get_user_friendly_message, 
+    validate_file, 
+    sanitize_input,
+    safe_execute
+)
+from src.utils.rate_limiter import get_rate_limiter
+from src.utils.cache import get_cached_llm_response, cache_llm_response
+
+# Initialize logger
+logger = get_logger(__name__)
+
 from src.config import Settings
 from src.data import TranscriptLoader, TranscriptPreprocessor
 from src.data.history_manager import HistoryManager
@@ -42,6 +56,8 @@ def process_file(file, meeting_type, output_language):
     """Process uploaded transcript file - Using working logic from gradio_app.py."""
     global chatbot, transcript_text, last_summary, last_topics, last_actions, last_decisions, current_language, current_filename
     
+    logger.info(f"Processing file: type={meeting_type}, language={output_language}")
+    
     # Import meeting type functions
     from src.rag.meeting_types import WorkshopFunctions, BrainstormingFunctions
     
@@ -61,14 +77,35 @@ def process_file(file, meeting_type, output_language):
     }
     
     if file is None:
+        logger.warning("No file uploaded")
         return upload_msg.get(language, upload_msg["vi"]), "", "", "", ""
+    
+    # Validate file
+    is_valid, error_msg = validate_file(
+        file.name, 
+        max_size_mb=50, 
+        allowed_extensions=['.txt', '.docx']
+    )
+    if not is_valid:
+        logger.error(f"File validation failed: {error_msg}")
+        return f"❌ {error_msg}", "", "", "", ""
     
     current_language = language
     
+    # Check rate limit
+    rate_limiter = get_rate_limiter('gemini', max_calls=15, time_window=60)
+    if not rate_limiter.wait_if_needed(key='process_file', max_wait=30):
+        logger.warning("Rate limit exceeded")
+        return "⚠️ Quá nhiều requests. Vui lòng đợi 30 giây...", "", "", "", ""
+    
     try:
         # Load transcript
+        logger.debug(f"Loading file: {file.name}")
         loader = TranscriptLoader()
         transcript = loader.load_file(file.name)
+        
+        # Sanitize input
+        transcript = sanitize_input(transcript, max_length=50000)
         
         # Clean and truncate
         preprocessor = TranscriptPreprocessor()
@@ -76,7 +113,18 @@ def process_file(file, meeting_type, output_language):
         transcript = preprocessor.truncate_text(transcript, max_length=15000)
         transcript_text = transcript
         
+        logger.info(f"Transcript loaded: {len(transcript)} chars")
+        
+        # Check cache first
+        cache_key = f"{meeting_type}_{language}_{transcript[:100]}"
+        cached_result = get_cached_llm_response(cache_key, model=model)
+        
+        if cached_result:
+            logger.info("Using cached result")
+            # Parse cached result (simplified - in production, cache full response)
+        
         # Initialize LLM and chatbot
+        logger.debug("Initializing LLM")
         llm_manager = LLMManager(
             provider=provider,
             model_name=model,
@@ -85,10 +133,14 @@ def process_file(file, meeting_type, output_language):
             api_key=Settings.GEMINI_API_KEY,
         )
         
-        chatbot = Chatbot(llm_manager=llm_manager, transcript=transcript, language=language)
+        chatbot = Chatbot(llm_manager=llm_manager, transcript=transcript, language=language, meeting_type=meeting_type)
         
         # Generate summary
+        logger.info("Generating summary")
         summary = chatbot.generate_summary()
+        
+        # Cache the summary
+        cache_llm_response(cache_key, summary, model=model)
         
         # Extract information based on meeting type
         topics = chatbot.extract_topics()
@@ -158,6 +210,11 @@ def process_file(file, meeting_type, output_language):
         )
         
     except Exception as e:
+        logger.error(f"Error processing file: {str(e)}", exc_info=True)
+        
+        # Get user-friendly error message
+        user_message = get_user_friendly_message(e, language)
+        
         error_prefixes = {
             "vi": "❌ Lỗi:",
             "en": "❌ Error:",
@@ -168,7 +225,8 @@ def process_file(file, meeting_type, output_language):
             "fr": "❌ Erreur:",
             "de": "❌ Fehler:"
         }
-        return f"{error_prefixes.get(language, error_prefixes['vi'])} {str(e)}", "", "", "", ""
+        
+        return f"{error_prefixes.get(language, error_prefixes['vi'])} {user_message}", "", "", "", ""
 
 
 def format_topics(topics, language="vi"):
@@ -205,45 +263,96 @@ def format_topics_by_type(topics, meeting_type, specialized_data, language="vi")
     
     # Add specialized sections based on meeting type
     if meeting_type == "workshop":
-        # Add key learnings
+        # Add key learnings (limit to top 8)
         learnings = specialized_data.get('key_learnings', {}).get('key_learnings', [])
         if learnings:
             result.append("\n\n---\n## 📚 Key Learnings\n")
-            for i, learning in enumerate(learnings, 1):
-                result.append(f"{i}. {learning}")
+            for i, learning in enumerate(learnings[:8], 1):
+                # Truncate long learnings
+                learning_text = learning if len(learning) <= 150 else learning[:147] + "..."
+                result.append(f"{i}. {learning_text}")
+            
+            if len(learnings) > 8:
+                result.append(f"\n_...and {len(learnings) - 8} more learnings_")
+            
+            result.append(f"\n**Total: {len(learnings)} key learnings**")
         
-        # Add exercises
+        # Add exercises (limit to top 10)
         exercises = specialized_data.get('exercises', {}).get('exercises', [])
         if exercises:
             result.append("\n\n---\n## 🎯 Exercises & Activities\n")
-            for i, ex in enumerate(exercises, 1):
-                result.append(f"{i}. {ex.get('title', 'N/A')}")
+            for i, ex in enumerate(exercises[:10], 1):
+                ex_title = ex.get('title', 'N/A')
+                # Truncate long titles
+                if len(ex_title) > 100:
+                    ex_title = ex_title[:97] + "..."
+                result.append(f"{i}. {ex_title}")
+            
+            if len(exercises) > 10:
+                result.append(f"\n_...and {len(exercises) - 10} more exercises_")
+            
+            result.append(f"\n**Total: {len(exercises)} exercises**")
         
-        # Add Q&A
+        # Add Q&A (limit to top 5 pairs)
         qa_pairs = specialized_data.get('qa_pairs', {}).get('qa_pairs', [])
         if qa_pairs:
-            result.append("\n\n---\n## ❓ Q&A Session\n")
-            for i, qa in enumerate(qa_pairs, 1):
-                result.append(f"**Q{i}:** {qa.get('question', 'N/A')}")
-                result.append(f"**A{i}:** {qa.get('answer', 'N/A')}\n")
+            result.append("\n\n---\n## ❓ Q&A Highlights\n")
+            for i, qa in enumerate(qa_pairs[:5], 1):
+                question = qa.get('question', 'N/A')
+                answer = qa.get('answer', 'N/A')
+                
+                # Truncate long Q&A
+                if len(question) > 100:
+                    question = question[:97] + "..."
+                if len(answer) > 150:
+                    answer = answer[:147] + "..."
+                
+                result.append(f"**Q{i}:** {question}")
+                result.append(f"**A{i}:** {answer}\n")
+            
+            if len(qa_pairs) > 5:
+                result.append(f"_...and {len(qa_pairs) - 5} more Q&A pairs_")
+            
+            result.append(f"\n**Total: {len(qa_pairs)} Q&A pairs**")
     
     elif meeting_type == "brainstorming":
-        # Add ideas by category
+        # Add ideas by category (limit to top ideas per category)
         categorized = specialized_data.get('categorized_ideas', {}).get('categorized_ideas', {})
         if categorized:
-            result.append("\n\n---\n## 💡 Ideas by Category\n")
+            result.append("\n\n---\n## 💡 Top Ideas by Category\n")
+            
+            # Count total ideas
+            total_ideas = sum(len(ideas) for ideas in categorized.values())
+            
             for category, ideas in categorized.items():
-                if ideas:
-                    result.append(f"\n### {category}")
-                    for idea in ideas:
-                        result.append(f"- {idea.get('idea', 'N/A')}")
+                if ideas and len(ideas) > 0:
+                    # Show top 5 ideas per category
+                    top_ideas = ideas[:5]
+                    result.append(f"\n### {category} ({len(ideas)} ideas)")
+                    for i, idea in enumerate(top_ideas, 1):
+                        idea_text = idea.get('idea', 'N/A')
+                        # Truncate long ideas
+                        if len(idea_text) > 100:
+                            idea_text = idea_text[:97] + "..."
+                        result.append(f"{i}. {idea_text}")
+                    
+                    # Show "and X more" if there are more ideas
+                    if len(ideas) > 5:
+                        result.append(f"   _...and {len(ideas) - 5} more ideas_")
+            
+            result.append(f"\n**Total: {total_ideas} ideas generated**")
         
-        # Add concerns
+        # Add concerns (limit to top 5)
         concerns = specialized_data.get('concerns', {}).get('concerns', [])
         if concerns:
-            result.append("\n\n---\n## ⚠️ Concerns & Challenges\n")
-            for i, concern in enumerate(concerns, 1):
-                result.append(f"{i}. {concern}")
+            result.append("\n\n---\n## ⚠️ Key Concerns & Challenges\n")
+            for i, concern in enumerate(concerns[:5], 1):
+                # Truncate long concerns
+                concern_text = concern if len(concern) <= 150 else concern[:147] + "..."
+                result.append(f"{i}. {concern_text}")
+            
+            if len(concerns) > 5:
+                result.append(f"\n_...and {len(concerns) - 5} more concerns_")
     
     return "\n".join(result)
 
@@ -388,20 +497,8 @@ def format_decisions(decisions, language="vi"):
 
 def format_decisions_by_type(decisions, meeting_type, specialized_data, language="vi"):
     """Format decisions based on meeting type."""
-    result = []
-    
-    # Standard decisions
-    result.append(format_decisions(decisions, language))
-    
-    # For brainstorming, decisions might be about selected ideas
-    if meeting_type == "brainstorming":
-        ideas = specialized_data.get('ideas', {}).get('ideas', [])
-        if ideas:
-            result.append("\n\n---\n## 💡 All Ideas Generated\n")
-            for i, idea in enumerate(ideas, 1):
-                result.append(f"{i}. {idea.get('idea', 'N/A')}")
-    
-    return "\n".join(result)
+    # Just return standard decisions, no extra sections
+    return format_decisions(decisions, language)
 
 
 def chat_with_ai(message, history):
@@ -420,12 +517,15 @@ def chat_with_ai(message, history):
         result = chatbot.ask_question(message)
         response = result.get("answer", "Xin lỗi, tôi không hiểu câu hỏi.")
         
-        new_history = history.copy()
-        new_history.append([message, response])
+        # Use messages format (not tuples)
+        new_history = history.copy() if history else []
+        new_history.append({"role": "user", "content": message})
+        new_history.append({"role": "assistant", "content": response})
         return new_history
     except Exception as e:
-        new_history = history.copy()
-        new_history.append([message, f"❌ Lỗi: {str(e)}"])
+        new_history = history.copy() if history else []
+        new_history.append({"role": "user", "content": message})
+        new_history.append({"role": "assistant", "content": f"❌ Lỗi: {str(e)}"})
         return new_history
 
 

@@ -1,0 +1,21 @@
+{
+  "summary": "Brainstorming tính năng mobile app, chọn dark mode và offline mode làm priority.",
+  "topics": [
+    "Dark mode",
+    "Offline mode",
+    "Chatbot",
+    "Voice search"
+  ],
+  "action_items": [
+    {
+      "task": "Design dark mode mockups",
+      "assignee": "Design team",
+      "deadline": "20/12/2025"
+    },
+    {
+      "task": "Research offline solutions",
+      "assignee": "Engineering",
+      "deadline": "15/12/2025"
+    }
+  ]
+}

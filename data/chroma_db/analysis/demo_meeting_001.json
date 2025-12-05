@@ -1,0 +1,20 @@
+{
+  "summary": "Cuộc họp xem xét ngân sách Q4, quyết định tăng budget marketing và cắt giảm chi phí vận hành.",
+  "topics": [
+    "Ngân sách marketing",
+    "Chi phí vận hành",
+    "Dự báo doanh thu"
+  ],
+  "action_items": [
+    {
+      "task": "Chuẩn bị báo cáo chi tiết",
+      "assignee": "Trần Thị B",
+      "deadline": "10/12/2025"
+    },
+    {
+      "task": "Liên hệ agency marketing",
+      "assignee": "Lê Văn C",
+      "deadline": "12/12/2025"
+    }
+  ]
+}

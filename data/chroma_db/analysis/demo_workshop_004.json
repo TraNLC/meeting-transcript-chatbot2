@@ -1,0 +1,11 @@
+{
+  "summary": "Workshop API design, cover REST principles và best practices.",
+  "topics": [
+    "API Design",
+    "REST",
+    "JWT",
+    "Swagger",
+    "GraphQL"
+  ],
+  "action_items": []
+}

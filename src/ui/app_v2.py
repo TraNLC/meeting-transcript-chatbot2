@@ -45,11 +45,27 @@ from tabs_v2 import (
     create_analysis_history_tab,
     create_recording_history_tab,
     create_search_export_tab,
-    create_checklist_tab
+    create_checklist_tab,
+    create_settings_tab
 )
 
 # Import checklist manager
 from src.data.checklist_manager import get_checklist_manager
+
+# Import settings handlers
+from src.ui.settings_handlers import (
+    create_backup_handler,
+    list_backups_handler,
+    restore_backup_handler,
+    delete_backup_handler,
+    get_storage_stats_handler,
+    cleanup_recordings_handler,
+    cleanup_history_handler,
+    get_cache_stats_handler,
+    clear_llm_cache_handler,
+    clear_all_cache_handler,
+    get_logs_handler
+)
 
 
 # Custom CSS - Navy Blue Theme
@@ -161,7 +177,8 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
         tab4 = create_analysis_history_tab()
         tab5 = create_recording_history_tab()
         tab6 = create_search_export_tab()
-        # tab7 = create_checklist_tab()  # Temporarily hidden - focus on core tabs first
+        tab7 = create_settings_tab()
+        # tab8 = create_checklist_tab()  # Temporarily hidden - focus on core tabs first
     
     # Footer removed for compact layout
     
@@ -243,6 +260,68 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
     connect_recording_history_events(tab5, handlers)
     connect_search_export_events(tab6, handlers)
     
+    # Connect settings events
+    tab7['create_backup_btn'].click(
+        fn=create_backup_handler,
+        inputs=[tab7['backup_name'], tab7['include_recordings']],
+        outputs=[tab7['backup_status']]
+    )
+    
+    tab7['refresh_backup_btn'].click(
+        fn=list_backups_handler,
+        outputs=[tab7['backup_list'], tab7['selected_backup']]
+    )
+    
+    tab7['restore_btn'].click(
+        fn=restore_backup_handler,
+        inputs=[tab7['selected_backup']],
+        outputs=[tab7['backup_status']]
+    )
+    
+    tab7['delete_backup_btn'].click(
+        fn=delete_backup_handler,
+        inputs=[tab7['selected_backup']],
+        outputs=[tab7['backup_status'], tab7['backup_list'], tab7['selected_backup']]
+    )
+    
+    tab7['refresh_stats_btn'].click(
+        fn=get_storage_stats_handler,
+        outputs=[tab7['storage_stats']]
+    )
+    
+    tab7['cleanup_recordings_btn'].click(
+        fn=cleanup_recordings_handler,
+        inputs=[tab7['recordings_days']],
+        outputs=[tab7['cleanup_status']]
+    )
+    
+    tab7['cleanup_history_btn'].click(
+        fn=cleanup_history_handler,
+        inputs=[tab7['history_days']],
+        outputs=[tab7['cleanup_status']]
+    )
+    
+    tab7['refresh_cache_btn'].click(
+        fn=get_cache_stats_handler,
+        outputs=[tab7['cache_stats']]
+    )
+    
+    tab7['clear_llm_cache_btn'].click(
+        fn=clear_llm_cache_handler,
+        outputs=[tab7['cache_status']]
+    )
+    
+    tab7['clear_all_cache_btn'].click(
+        fn=clear_all_cache_handler,
+        outputs=[tab7['cache_status']]
+    )
+    
+    tab7['refresh_logs_btn'].click(
+        fn=get_logs_handler,
+        inputs=[tab7['log_lines']],
+        outputs=[tab7['logs_display']]
+    )
+    
     # Checklist events - temporarily disabled
     # tab7['refresh_btn'].click(
     #     fn=refresh_checklist,
@@ -277,6 +356,12 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
     ).then(
         fn=refresh_history,
         outputs=[tab4['dropdown'], tab4['info']]
+    ).then(
+        fn=get_storage_stats_handler,
+        outputs=[tab7['storage_stats']]
+    ).then(
+        fn=get_cache_stats_handler,
+        outputs=[tab7['cache_stats']]
     )
     # Checklist auto-load temporarily disabled
     # .then(

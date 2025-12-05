@@ -1,12 +1,23 @@
 {
   "recordings": [
     {
-      "id": "20251127_023126",
-      "filename": "20251127_023126.wav",
-      "filepath": "data\\recordings\\20251127_023126.wav",
-      "timestamp": "2025-11-27T02:31:26.422285",
+      "id": "20251129_023618",
+      "filename": "20251129_023618.wav",
+      "filepath": "data\\recordings\\20251129_023618.wav",
+      "timestamp": "2025-11-29T02:36:18.230921",
       "duration": null,
-      "title": "Ghi âm 27/11/2025 02:31",
+      "title": "Ghi âm 29/11/2025 02:36",
+      "notes": "Language: vi",
+      "processed": false,
+      "transcript_id": null
+    },
+    {
+      "id": "20251129_023604",
+      "filename": "20251129_023604.wav",
+      "filepath": "data\\recordings\\20251129_023604.wav",
+      "timestamp": "2025-11-29T02:36:04.960950",
+      "duration": null,
+      "title": "Ghi âm 29/11/2025 02:36",
       "notes": "Language: vi",
       "processed": false,
       "transcript_id": null
@@ -18,6 +29,28 @@
       "timestamp": "2025-11-27T02:32:08.857649",
       "duration": null,
       "title": "Ghi âm 27/11/2025 02:32",
+      "notes": "Language: vi",
+      "processed": false,
+      "transcript_id": null
+    },
+    {
+      "id": "20251127_023126",
+      "filename": "20251127_023126.wav",
+      "filepath": "data\\recordings\\20251127_023126.wav",
+      "timestamp": "2025-11-27T02:31:26.422285",
+      "duration": null,
+      "title": "Ghi âm 27/11/2025 02:31",
+      "notes": "Language: vi",
+      "processed": false,
+      "transcript_id": null
+    },
+    {
+      "id": "20251129_103907",
+      "filename": "20251129_103907.wav",
+      "filepath": "data\\recordings\\20251129_103907.wav",
+      "timestamp": "2025-11-29T10:39:07.584476",
+      "duration": null,
+      "title": "Ghi âm 29/11/2025 10:39",
       "notes": "Language: vi",
       "processed": false,
       "transcript_id": null

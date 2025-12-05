@@ -1,0 +1,70 @@
+{
+  "id": "20251129_030215_meeting_regular",
+  "timestamp": "2025-11-29T03:02:15.986427",
+  "original_file": "data\\transcripts\\meeting_regular.txt",
+  "summary": "TÓM TẮT:\n\nCuộc họp đồng bộ hàng tuần của nhóm Phát triển Sản phẩm đã cập nhật tiến độ các module chính và thảo luận về các vấn đề quan trọng. Nhóm đã hoàn thành tích hợp OAuth (nhưng phát hiện lỗi bảo mật), thiết kế dashboard mới đã sẵn sàng, và 3 lỗi nghiêm trọng được tìm thấy trong tích hợp cổng thanh toán cần được ưu tiên khắc phục ngay. Để đảm bảo chất lượng, nhóm đã quyết định dời ngày phát hành Q4 sang 15/12 và phê duyệt ngân sách cho nguồn lực QA bổ sung. Các hành động chính bao gồm sửa lỗi thanh toán, tối ưu hóa hiệu suất dashboard, và hoãn hệ thống giới thiệu đến Q1 2026 để tập trung vào các tính năng cốt lõi.",
+  "topics": [
+    {
+      "topic": "Kế hoạch Phát hành Q4 và Nguồn lực QA",
+      "description": "Thảo luận về tiến độ phát hành Q4, nhu cầu đẩy nhanh thử nghiệm, và quyết định dời ngày phát hành sang 15/12 để có thêm thời gian kiểm tra, đồng thời phê duyệt ngân sách cho nguồn lực QA bổ sung."
+    },
+    {
+      "topic": "Cập nhật các Tính năng và Lỗi Quan trọng",
+      "description": "Bao gồm cập nhật về tích hợp module xác thực (OAuth) và vấn đề bảo mật token refresh, cũng như việc phát hiện 3 lỗi nghiêm trọng trong tích hợp cổng thanh toán cần được ưu tiên khắc phục."
+    },
+    {
+      "topic": "Thiết kế và Hiệu suất Bảng điều khiển",
+      "description": "Mike đã hoàn thành thiết kế bảng điều khiển mới sẵn sàng để xem xét, và có thảo luận về vấn đề hiệu suất khi thời gian tải bảng điều khiển quá chậm (5 giây), cần được tối ưu hóa."
+    },
+    {
+      "topic": "Yêu cầu Tính năng Mới và Ưu tiên",
+      "description": "Thảo luận về yêu cầu từ phòng Marketing về hệ thống giới thiệu (referral system) và quyết định hoãn lại tính năng này đến Q1 2026 để tập trung vào các tính năng cốt lõi trước."
+    }
+  ],
+  "action_items": [
+    {
+      "task": "Fix 3 critical payment bugs",
+      "assignee": "Sarah",
+      "deadline": "01/12/2025"
+    },
+    {
+      "task": "Review dashboard designs and provide feedback",
+      "assignee": "John",
+      "deadline": "30/11/2025"
+    },
+    {
+      "task": "Hire 2 additional QA engineers",
+      "assignee": "Lisa",
+      "deadline": "15/12/2025"
+    },
+    {
+      "task": "Optimize dashboard loading time to under 2 seconds",
+      "assignee": "Mike",
+      "deadline": "05/12/2025"
+    },
+    {
+      "task": "Prepare Q4 release notes and documentation",
+      "assignee": "John",
+      "deadline": "10/12/2025"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Dời ngày phát hành Q4 sang ngày 15 tháng 12 thay vì ngày 10 tháng 12",
+      "context": "Cần thêm thời gian để kiểm tra kỹ lưỡng và sửa lỗi"
+    },
+    {
+      "decision": "Phê duyệt ngân sách cho các tài nguyên QA bổ sung",
+      "context": "Nhóm hiện tại đang quá tải với khối lượng công việc kiểm thử"
+    },
+    {
+      "decision": "Hoãn hệ thống giới thiệu đến Q1 2026",
+      "context": "Tập trung vào các tính năng cốt lõi trước, hệ thống giới thiệu là tính năng không quá cấp thiết"
+    }
+  ],
+  "metadata": {
+    "language": "vi",
+    "meeting_type": "meeting",
+    "specialized_data": {}
+  }
+}

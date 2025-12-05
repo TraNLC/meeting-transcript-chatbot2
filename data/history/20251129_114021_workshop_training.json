@@ -1,0 +1,106 @@
+{
+  "id": "20251129_114021_workshop_training",
+  "timestamp": "2025-11-29T11:40:21.171408",
+  "original_file": "C:\\Users\\Admin\\AppData\\Local\\Temp\\gradio\\565b6f17a0dda58df70b847b7b0daf16c0de952b78bef13d45ecbaa2e9d5a316\\workshop_training.txt",
+  "summary": "TÓM TẮT:\nBuổi workshop \"Advanced React Hooks\" đã cung cấp kiến thức chuyên sâu về việc sử dụng các React Hooks cơ bản và nâng cao trong các functional component. Các chủ đề chính được thảo luận bao gồm useState để quản lý trạng thái, useEffect cho các tác dụng phụ và vòng đời, useContext để truyền dữ liệu toàn cục, cùng với việc tạo Custom Hooks để tái sử dụng logic. Người tham gia đã thực hành qua nhiều bài tập, học cách xử lý cập nhật trạng thái bất đồng bộ, quản lý hiệu ứng với mảng phụ thuộc và dọn dẹp. Buổi học cũng nhấn mạnh các quy tắc của Hooks, tối ưu hiệu suất và tầm quan trọng của việc thực hành để làm chủ React Hooks.",
+  "topics": [
+    {
+      "topic": "useState Hook",
+      "description": "Thảo luận về useState, hook cơ bản để quản lý state trong functional components. Nội dung bao gồm cách sử dụng cơ bản, cập nhật state dựa trên state trước đó (functional form), và lưu ý về việc state updates là bất đồng bộ."
+    },
+    {
+      "topic": "useEffect Hook",
+      "description": "Trình bày về useEffect để xử lý các side effect như gọi API, đăng ký/hủy đăng ký, và thao tác DOM. Tập trung vào cách kiểm soát thời điểm chạy bằng dependency array, cách thực hiện cleanup function và các lỗi thường gặp."
+    },
+    {
+      "topic": "useContext Hook",
+      "description": "Giải thích useContext như một giải pháp để truyền dữ liệu qua cây component mà không cần prop drilling, thích hợp cho global state như theme hoặc xác thực người dùng. Cũng đề cập đến các trường hợp không nên sử dụng Context."
+    },
+    {
+      "topic": "Custom Hooks",
+      "description": "Giới thiệu về custom hooks để trích xuất logic component thành các hàm tái sử dụng. Nội dung bao gồm quy tắc đặt tên (phải bắt đầu bằng 'use'), khả năng gọi các hooks khác bên trong, và các ví dụ thực tế như useLocalStorage và useFetch."
+    }
+  ],
+  "action_items": [
+    {
+      "task": "Complete all 6 exercises and submit on GitHub",
+      "assignee": "All participants",
+      "deadline": "05/12/2025"
+    },
+    {
+      "task": "Read React Hooks documentation",
+      "assignee": "All participants",
+      "deadline": "02/12/2025"
+    },
+    {
+      "task": "Build a mini project using custom hooks",
+      "assignee": "All participants",
+      "deadline": "10/12/2025"
+    },
+    {
+      "task": "Review useReducer and useMemo for next session",
+      "assignee": "All participants",
+      "deadline": "08/12/2025"
+    },
+    {
+      "task": "Share your custom hooks in team Slack channel",
+      "assignee": "All participants",
+      "deadline": "07/12/2025"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Tất cả người tham gia phải hoàn thành 6 bài tập và nộp trên GitHub.",
+      "context": "Đây là một trong các mục hành động sau buổi hội thảo để củng cố kiến thức thực hành. Hạn chót là ngày 05/12/2025."
+    },
+    {
+      "decision": "Tất cả người tham gia phải đọc tài liệu React Hooks.",
+      "context": "Đây là một trong các mục hành động sau buổi hội thảo để củng cố kiến thức lý thuyết. Hạn chót là ngày 02/12/2025."
+    },
+    {
+      "decision": "Tất cả người tham gia phải xây dựng một dự án nhỏ sử dụng custom hooks.",
+      "context": "Đây là một trong các mục hành động sau buổi hội thảo để khuyến khích áp dụng thực tế. Hạn chót là ngày 10/12/2025."
+    },
+    {
+      "decision": "Tất cả người tham gia phải xem lại useReducer và useMemo để chuẩn bị cho buổi tiếp theo.",
+      "context": "Đây là một trong các mục hành động để chuẩn bị cho buổi hội thảo tiếp theo về quản lý trạng thái nâng cao. Hạn chót là ngày 08/12/2025."
+    },
+    {
+      "decision": "Tất cả người tham gia phải chia sẻ custom hooks của mình trong kênh Slack của nhóm.",
+      "context": "Đây là một trong các mục hành động để khuyến khích chia sẻ và hợp tác. Hạn chót là ngày 07/12/2025."
+    },
+    {
+      "decision": "Buổi hội thảo tiếp theo về 'Quản lý trạng thái nâng cao với useReducer' sẽ diễn ra vào ngày 13 tháng 12 năm 2025.",
+      "context": "Thông báo về kế hoạch đào tạo tiếp theo đã được chốt."
+    }
+  ],
+  "metadata": {
+    "language": "vi",
+    "meeting_type": "workshop",
+    "specialized_data": {
+      "key_learnings": {
+        "key_learnings": [
+          "React Hooks allow you to use state and lifecycle features in functional components without writing classes",
+          "useState returns an array with current state and updater function",
+          "State updates are asynchronous",
+          "Empty dependency array [] means effect runs only once on mount",
+          "Context is great for global state like theme, user auth, or language preferences",
+          "Custom hooks must start with \"use\" prefix and can call other hooks",
+          "Context is not a replacement for state management libraries like Redux",
+          "Practice is key"
+        ]
+      },
+      "exercises": {
+        "exercises": [
+          {
+            "title": "Create a counter component using useState Task: Build a counter that increments and decrements Time: 15 minutes Student Question: Can we use multiple useState in one component? Answer: Yes! You can use as many useState hooks as needed. Each manages independent state. Student Question: What happens if we update state based on previous state? Answer: Always use the functional form: setState(prev => prev + 1) to avoid stale state issues. Key Learning: useState returns an array with current state and updater function. Use array destructuring to access them. Important Point: State updates are asynchronous. Don't rely on immediate state changes. === SECTION 2: useEffect Hook === David: useEffect handles side effects like data fetching, subscriptions, and DOM manipulation. Exercise 2: Fetch data from API using useEffect Task: Create a component that fetches user data on mount Time: 20 minutes Student Question: When does useEffect run? Answer: By default, after every render. But you can control it with dependency array. Student Question: How do we clean up side effects? Answer: Return a cleanup function from useEffect. It runs before component unmounts. Key Learning: Empty dependency array [] means effect runs only once on mount. No array means it runs after every render. Common Mistake: Forgetting to add dependencies leads to stale closures and bugs. Exercise 3: Implement a timer with cleanup Task: Create a countdown timer that cleans up on unmount Time: 15 minutes === SECTION 3: useContext Hook === David: useContext provides a way to pass data through component tree without prop drilling. Key Learning: Context is great for global state like theme, user auth, or language preferences. Exercise 4: Build a theme switcher using useContext Task: Implement dark/light mode toggle across multiple components Time: 25 minutes Student Question: Should we use Context for everything? Answer: No! Context causes re-renders of all consumers. Use it for truly global state only. Remember: Context is not a replacement for state management libraries like Redux. === SECTION 4: Custom Hooks === David: Custom hooks let you extract component logic into reusable functions. Key Learning: Custom hooks must start with \"use\" prefix and can call other hooks. Exercise 5: Create a custom useLocalStorage hook Task: Build a hook that syncs state with localStorage Time: 30 minutes Best Practice: Custom hooks should be pure and reusable across different components. Student Question: Can custom hooks have their own state? Answer: Yes! Custom hooks can use useState, useEffect, and any other hooks internally. Exercise 6: Build a custom useFetch hook Task: Create a reusable hook for API calls with loading and error states Time: 30 minutes === Q&A SESSION === Question: What's the difference between useEffect and useLayoutEffect? Answer: useLayoutEffect runs synchronously after DOM mutations but before browser paint. Use it for DOM measurements. Question: How do we optimize performance with hooks? Answer: Use useMemo for expensive calculations and useCallback for function memoization. Question: Can we use hooks in class components? Answer: No, hooks only work in functional components. But you can gradually migrate. Question: What are the rules of hooks? Answer: 1) Only call hooks at top level, 2) Only call hooks from React functions, 3) Custom hooks must start with \"use\" === WRAP UP === Key Takeaways: 1. Hooks make functional components as powerful as class components 2. useState for local state, useEffect for side effects 3. useContext for global state without prop drilling 4. Custom hooks for reusable logic 5. Always follow the rules of hooks Remember: Practice is key. Build real projects to master hooks. Action Items: - Complete all 6 exercises and submit on GitHub (All participants, 05/12/2025) - Read React Hooks documentation (All participants, 02/12/2025) - Build a mini project using custom hooks (All participants, 10/12/2025) - Review useReducer and useMemo for next session (All participants, 08/12/2025) - Share your custom hooks in team Slack channel (All participants, 07/12/2025) Next Workshop: Advanced State Management with useReducer - December 13, 2025 Resources: - React Hooks Documentation: https://react.dev/reference/react - Exercise Solutions: GitHub repo link - Recommended Reading: \"Learning React Hooks\" by O'Reilly",
+            "type": "exercise"
+          }
+        ]
+      },
+      "qa_pairs": {
+        "qa_pairs": []
+      }
+    }
+  }
+}

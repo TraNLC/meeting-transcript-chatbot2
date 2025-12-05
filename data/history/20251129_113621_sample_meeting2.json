@@ -1,0 +1,100 @@
+{
+  "id": "20251129_113621_sample_meeting2",
+  "timestamp": "2025-11-29T11:36:21.558673",
+  "original_file": "C:\\Users\\Admin\\AppData\\Local\\Temp\\gradio\\29a0211c8dfc17375b19993a8ffe162241718e6b2d684183a0bf6385d0a3549b\\sample_meeting2.txt",
+  "summary": "TÓM TẮT:\n\nCuộc họp tập trung thảo luận chiến lược Q4 và lộ trình sản phẩm, với mục tiêu đẩy nhanh tiến độ và chuẩn bị cho việc ra mắt. Về sản phẩm, ứng dụng di động đang được hoàn thiện (Android cần 2 tuần, kiểm tra bảo mật đến 30/11) và sẽ tích hợp hệ thống đề xuất AI; công ty cũng sẽ tuyển thêm 3 lập trình viên cho đội Trung Quốc. Kế hoạch marketing bao gồm chiến dịch tại 5 thị trường với tổng ngân sách 200.000 USD, trong đó ngân sách cho Việt Nam được điều chỉnh tăng lên 40.000 USD. Các bên đã thống nhất lịch trình ra mắt sản phẩm vào ngày 1/12 (beta), 8/12 (soft launch) và 15/12 (official launch), đồng thời quyết định chấp nhận đề nghị đầu tư 500.000 USD cho 10% cổ phần từ TechCorp.",
+  "topics": [
+    {
+      "topic": "Phát triển Sản phẩm & Lộ trình",
+      "description": "Thảo luận về tiến độ phát triển ứng dụng di động (iOS, Android), tích hợp API backend, kiểm tra bảo mật hệ thống trước khi ra mắt, và quyết định bổ sung tính năng đề xuất AI để tăng tương tác người dùng."
+    },
+    {
+      "topic": "Chiến lược Marketing & Ngân sách",
+      "description": "Lập kế hoạch chiến dịch marketing cho 5 thị trường chính (USA, Vietnam, China, Spain, Brazil) với tổng ngân sách $200,000, phân bổ và điều chỉnh ngân sách cho từng thị trường, cùng với kế hoạch hợp tác với 10 influencer."
+    },
+    {
+      "topic": "Lịch trình Ra mắt Sản phẩm",
+      "description": "Đề xuất và thống nhất lịch trình ra mắt sản phẩm với các mốc thời gian cụ thể: Beta launch vào 1/12, Soft launch vào 8/12, và Official launch vào 15/12."
+    },
+    {
+      "topic": "Đầu tư Chiến lược & Đối tác",
+      "description": "Đánh giá các cơ hội hợp tác và quyết định chấp nhận đề nghị đầu tư từ TechCorp với số tiền $500,000 đổi lấy 10% cổ phần, dựa trên lợi thế về mạng lưới và khả năng mở rộng thị trường ở châu Á."
+    },
+    {
+      "topic": "Mở rộng Nguồn lực & Tuyển dụng",
+      "description": "Quyết định tuyển dụng thêm 3 lập trình viên cho đội ngũ tại Trung Quốc để đáp ứng khối lượng công việc nặng và tăng tốc độ phát triển tính năng."
+    }
+  ],
+  "action_items": [
+    {
+      "task": "Complete Android app development",
+      "assignee": "Zhang Wei",
+      "deadline": "Chưa xác định"
+    },
+    {
+      "task": "Hire 3 developers for China team",
+      "assignee": "Zhang Wei",
+      "deadline": "December 15th"
+    },
+    {
+      "task": "Hoàn thành security audit",
+      "assignee": "Linh",
+      "deadline": "30/11"
+    },
+    {
+      "task": "Coordinate beta launch",
+      "assignee": "Linh",
+      "deadline": "December 1st"
+    },
+    {
+      "task": "Adjust marketing budget",
+      "assignee": "Maria",
+      "deadline": "Chưa xác định"
+    },
+    {
+      "task": "Prepare 3 launch campaigns",
+      "assignee": "Maria",
+      "deadline": "Chưa xác định"
+    },
+    {
+      "task": "Finalize investment contract with TechCorp",
+      "assignee": "David",
+      "deadline": "November 25th"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Hoàn thành kiểm toán bảo mật (security audit) trước ngày 30/11.",
+      "context": "Để đảm bảo hệ thống an toàn trước khi ra mắt sản phẩm, vì bảo mật là ưu tiên hàng đầu."
+    },
+    {
+      "decision": "Thêm hệ thống đề xuất dựa trên AI (AI-powered recommendation system) vào các tính năng của sản phẩm.",
+      "context": "Hệ thống này dự kiến sẽ tăng mức độ tương tác của người dùng lên 40% theo nghiên cứu."
+    },
+    {
+      "decision": "Phê duyệt tổng ngân sách marketing cho Q4 là $200,000.",
+      "context": "Maria đề xuất ngân sách này và David thấy hợp lý."
+    },
+    {
+      "decision": "Điều chỉnh ngân sách marketing: tăng ngân sách cho thị trường Việt Nam lên $40,000 và giảm ngân sách cho thị trường Mỹ xuống $70,000.",
+      "context": "Linh đề xuất tăng ngân sách cho Việt Nam vì tiềm năng lớn và thị trường đang phát triển nhanh, đặc biệt trong lĩnh vực thanh toán di động."
+    },
+    {
+      "decision": "Thuê thêm 3 nhà phát triển cho đội ngũ Trung Quốc, Zhang Wei sẽ làm việc với HR để hoàn thành việc này trước ngày 15/12.",
+      "context": "Zhang Wei đề xuất do khối lượng công việc nặng và cần đẩy nhanh việc cung cấp các tính năng."
+    },
+    {
+      "decision": "Phê duyệt lịch trình ra mắt sản phẩm: Beta launch vào ngày 1/12, Soft launch vào ngày 8/12, và Official launch vào ngày 15/12.",
+      "context": "Linh đề xuất lịch trình này để có đủ thời gian sửa lỗi và thu thập phản hồi từ người dùng, và tất cả các bên đều đồng ý."
+    },
+    {
+      "decision": "Chấp nhận đề nghị đầu tư của TechCorp trị giá $500,000 đổi lấy 10% cổ phần. David sẽ hoàn tất hợp đồng trước ngày 25/11.",
+      "context": "TechCorp có mạng lưới rộng ở châu Á và sự hiện diện mạnh mẽ ở Trung Quốc và Đông Nam Á, điều này có thể giúp công ty mở rộng nhanh hơn tại các thị trường châu Á."
+    }
+  ],
+  "metadata": {
+    "language": "vi",
+    "meeting_type": "meeting",
+    "specialized_data": {}
+  }
+}

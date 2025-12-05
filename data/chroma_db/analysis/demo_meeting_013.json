@@ -1,0 +1,10 @@
+{
+  "summary": "Plan migrate lên AWS, 2 tháng, dùng blue-green deployment.",
+  "topics": [
+    "AWS",
+    "Migration",
+    "Infrastructure",
+    "DevOps"
+  ],
+  "action_items": []
+}

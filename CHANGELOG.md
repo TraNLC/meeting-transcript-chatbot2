@@ -44,15 +44,6 @@ All notable changes to Meeting Transcript Analyzer project.
   - Import from analysis results
   - Filter and statistics
 
-- **📊 7-Tab Modern UI (app_v2.py)**
-  - Tab 1: 🎙️ Ghi Âm (Recording)
-  - Tab 2: 📤 Upload & Phân Tích (Upload & Analysis)
-  - Tab 3: 💬 Chat với AI (Chat with AI)
-  - Tab 4: 📊 Lịch Sử Phân Tích (Analysis History)
-  - Tab 5: 🎙️ Lịch Sử Ghi Âm (Recording History)
-  - Tab 6: 🔍 Tìm Kiếm & Xuất (Search & Export)
-  - Tab 7: ✅ Checklist
-
 - **📤 Export Functionality**
   - Export to TXT format
   - Export to DOCX (Word) format

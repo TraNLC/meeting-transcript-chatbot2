@@ -1,0 +1,10 @@
+{
+  "summary": "Họp security, phát hiện 3 vulnerabilities cần fix urgent.",
+  "topics": [
+    "Security",
+    "SQL Injection",
+    "Rate Limiting",
+    "Password Policy"
+  ],
+  "action_items": []
+}

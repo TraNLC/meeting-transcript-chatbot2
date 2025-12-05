@@ -22,10 +22,7 @@ class ChromaManager:
         os.makedirs(persist_directory, exist_ok=True)
         
         # Initialize ChromaDB client with persistence
-        self.client = chromadb.Client(Settings(
-            persist_directory=persist_directory,
-            anonymized_telemetry=False
-        ))
+        self.client = chromadb.PersistentClient(path=persist_directory)
         
         # Get or create collection
         self.collection = self.client.get_or_create_collection(

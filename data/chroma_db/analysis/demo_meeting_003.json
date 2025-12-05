@@ -1,0 +1,21 @@
+{
+  "summary": "Client meeting về dự án redesign website, thống nhất scope, budget và timeline.",
+  "topics": [
+    "Website redesign",
+    "Requirements",
+    "Timeline",
+    "Budget"
+  ],
+  "action_items": [
+    {
+      "task": "Send competitor analysis",
+      "assignee": "Agency",
+      "deadline": "08/12/2025"
+    },
+    {
+      "task": "Prepare wireframes",
+      "assignee": "Designer",
+      "deadline": "15/12/2025"
+    }
+  ]
+}
