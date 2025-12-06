@@ -1,0 +1,136 @@
+<!-- Recording Setup Modal -->
+<div class="modal fade" id="recordingSetupModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-i18n="recording.modal.title">Ghi âm ngay lập tức</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="recordingSetupForm">
+                    <div class="mb-3">
+                        <label class="form-label" data-i18n="recording.modal.titleLabel">Tiêu đề</label>
+                        <input type="text" class="form-control" id="recordingTitle" value="Ghi âm 6/12/2025" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" data-i18n="recording.modal.language">Ngôn ngữ hợp</label>
+                        <select class="form-select" id="recordingLanguage">
+                            <option value="vi">Tiếng Việt</option>
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="zh">中文</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" data-i18n="recording.modal.audioSource">Nguồn âm thanh</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="audioSource" id="sourceMicrophone"
+                                value="microphone" checked>
+                            <label class="form-check-label" for="sourceMicrophone">
+                                <i class="bi bi-mic"></i> <span data-i18n="recording.modal.microphone">Microphone</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="audioSource" id="sourceScreen"
+                                value="screen">
+                            <label class="form-check-label" for="sourceScreen">
+                                <i class="bi bi-display"></i> <span data-i18n="recording.modal.screen">Tab/Màn hình
+                                    (Screen Audio)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="realtimeMode" checked>
+                            <label class="form-check-label" for="realtimeMode"
+                                data-i18n="recording.modal.autoTranslate">
+                                Tự động dịch (Bạn có muốn bản phiên âm được dịch không?)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="translateOptions" style="display: none;">
+                        <label class="form-label" data-i18n="recording.modal.translateTo">Dịch sang</label>
+                        <select class="form-select" id="translateLanguage">
+                            <option value="vi">Tiếng Việt</option>
+                            <option value="en">Tiếng Anh</option>
+                            <option value="ja">Tiếng Nhật</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="common.back">Quay
+                    lại</button>
+                <button type="button" class="btn btn-primary" onclick="startRecording()"
+                    data-i18n="common.continue">Tiếp tục</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Popup -->
+<div id="loadingPopup" class="loading-popup" style="display: none;">
+    <div class="loading-popup-content">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <h5 class="mt-4 mb-2" id="loadingTitle" data-i18n="common.processing">Đang xử lý...</h5>
+        <p class="text-muted" id="loadingMessage" data-i18n="common.pleaseWait">Vui lòng đợi trong giây lát</p>
+        <div class="progress mt-3" style="height: 4px; width: 200px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Screen Share Confirmation Modal -->
+<div class="modal fade" id="screenShareModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-i18n="recording.modal.title">Ghi âm ngay lập tức</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h6 data-i18n="recording.screenShare.why">Tại sao chúng tôi cần bạn chia sẻ màn hình của bạn?</h6>
+                    <p class="mb-0" data-i18n="recording.screenShare.explanation">Nếu bạn chọn không chia sẻ màn hình,
+                        ứng dụng có thể không thu được âm thanh từ
+                        các nguồn bên ngoài như Teams hoặc Google Meet, và do đó có thể không hoạt động như mong đợi
+                    </p>
+                </div>
+
+                <h6 data-i18n="recording.screenShare.howTo">Cách thu âm:</h6>
+                <ol class="small">
+                    <li data-i18n="recording.screenShare.step1">Một cửa sổ bật lên sẽ yêu cầu bạn chọn màn hình chia sẻ
+                    </li>
+                    <li data-i18n="recording.screenShare.step2">Chọn tab "Thẻ trình duyệt Chrome"</li>
+                    <li data-i18n="recording.screenShare.step3">Chọn tab có audio đang phát</li>
+                    <li><strong data-i18n="recording.screenShare.step4">BẬT checkbox "Chia sẻ cả âm thanh trên
+                            thẻ"</strong></li>
+                    <li data-i18n="recording.screenShare.step5">Nhấn "Chia sẻ"</li>
+                </ol>
+
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="allowScreenShare" checked>
+                    <label class="form-check-label" for="allowScreenShare" data-i18n="recording.screenShare.allow">
+                        Cho phép ghi âm màn hình
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="common.back">Quay
+                    lại</button>
+                <button type="button" class="btn btn-dark" onclick="confirmScreenShare()" data-i18n="common.confirm">Xác
+                    nhận</button>
+            </div>
+        </div>
+    </div>
+</div>

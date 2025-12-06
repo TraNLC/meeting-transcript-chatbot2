@@ -1,0 +1,51 @@
+{
+  "id": "20251206_221018_sample",
+  "timestamp": "2025-12-06T22:10:18.542081",
+  "original_file": "E:\\ChatBot\\meeting-transcript-chatbot2\\data\\uploads\\sample.txt",
+  "summary": "TÓM TẮT:\n\nCuộc họp về Project Apollo đã thảo luận về các cập nhật dự án. Về ngân sách, dự án đang dưới mức cho phép 5%, nhưng tiến độ phát triển frontend lại hơi chậm so với kế hoạch. Để khắc phục, tính năng đăng nhập được ưu tiên hoàn thành và nguồn lực sẽ được phân bổ lại để hỗ trợ team frontend. Các hành động tiếp theo bao gồm Người tham gia C hoàn thành tính năng đăng nhập và Người tham gia B điều chỉnh phân bổ nguồn lực.",
+  "topics": [
+    {
+      "topic": "Cập nhật Ngân sách",
+      "description": "Thảo luận về tình hình ngân sách của Project Apollo, với thông báo rằng dự án đang dưới ngân sách 5%."
+    },
+    {
+      "topic": "Tiến độ Dự án",
+      "description": "Đánh giá tiến độ dự án, đặc biệt là việc phát triển frontend đang bị chậm tiến độ so với lịch trình."
+    },
+    {
+      "topic": "Ưu tiên Tính năng",
+      "description": "Quyết định ưu tiên phát triển tính năng đăng nhập (login feature) trong giai đoạn hiện tại."
+    },
+    {
+      "topic": "Phân bổ Nguồn lực",
+      "description": "Thảo luận và đưa ra hành động về việc điều chỉnh phân bổ nguồn lực để hỗ trợ đẩy nhanh tiến độ phát triển frontend."
+    }
+  ],
+  "action_items": [
+    {
+      "task": "finish login feature",
+      "assignee": "Participant C",
+      "deadline": "Chưa xác định"
+    },
+    {
+      "task": "reallocate resources",
+      "assignee": "Participant B",
+      "deadline": "Chưa xác định"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Ưu tiên phát triển tính năng đăng nhập (login feature).",
+      "context": "Phát triển frontend đang bị chậm tiến độ một chút, và nhóm cần bắt kịp tiến độ vào tuần tới."
+    },
+    {
+      "decision": "Điều chỉnh phân bổ nguồn lực để hỗ trợ phát triển frontend.",
+      "context": "Phát triển frontend đang bị chậm tiến độ và tính năng đăng nhập đã được ưu tiên."
+    }
+  ],
+  "metadata": {
+    "language": "vi",
+    "meeting_type": "project",
+    "specialized_data": {}
+  }
+}

@@ -1,0 +1,16 @@
+================================================================================
+                           BÁO CÁO PHÂN TÍCH CUỘC HỌP                           
+================================================================================
+
+File: sample.txt
+Generated: 2025-12-06 22:08:08
+
+
+TÓM TẮT
+--------------------------------------------------------------------------------
+TÓM TẮT:
+
+Cuộc họp về Dự án Apollo đã cập nhật tình hình ngân sách và tiến độ. Ngân sách hiện đang tốt, thấp hơn 5% so với dự kiến. Tuy nhiên, phát triển frontend đang chậm một chút nhưng dự kiến sẽ bắt kịp vào tuần tới. Để giải quyết, nhóm quyết định ưu tiên tính năng đăng nhập, và Participant B sẽ điều chỉnh phân bổ nguồn lực để hỗ trợ phát triển frontend. Các hành động chính bao gồm Participant C hoàn thành tính năng đăng nhập và Participant B tái phân bổ nguồn lực.
+
+
+================================================================================

@@ -1,0 +1,51 @@
+{
+  "id": "20251206_220513_sample",
+  "timestamp": "2025-12-06T22:05:13.061345",
+  "original_file": "E:\\ChatBot\\meeting-transcript-chatbot2\\data\\uploads\\sample.txt",
+  "summary": "TÓM TẮT:\n\nCuộc họp về Dự án Apollo đã diễn ra để cập nhật tình hình và thảo luận các vấn đề phát sinh. Về ngân sách, dự án đang vượt kế hoạch 5%, nhưng tiến độ phát triển frontend đang bị chậm trễ một chút. Để khắc phục, nhóm đã quyết định ưu tiên hoàn thành tính năng đăng nhập và phân bổ lại tài nguyên để hỗ trợ phát triển frontend. Các hành động tiếp theo bao gồm Participant C hoàn thành tính năng đăng nhập và Participant B điều chỉnh phân bổ tài nguyên.",
+  "topics": [
+    {
+      "topic": "Tình hình Ngân sách",
+      "description": "Thảo luận về ngân sách dự án, xác nhận dự án hiện đang sử dụng ít hơn 5% so với ngân sách dự kiến."
+    },
+    {
+      "topic": "Tiến độ Dự án",
+      "description": "Đánh giá tiến độ dự án, ghi nhận rằng phát triển frontend đang bị chậm tiến độ một chút."
+    },
+    {
+      "topic": "Ưu tiên Phát triển",
+      "description": "Xác định và ưu tiên tính năng đăng nhập (login feature) để đẩy nhanh tiến độ phát triển frontend."
+    },
+    {
+      "topic": "Phân bổ Nguồn lực",
+      "description": "Quyết định điều chỉnh phân bổ nguồn lực để hỗ trợ và khắc phục tình trạng chậm trễ trong phát triển frontend."
+    }
+  ],
+  "action_items": [
+    {
+      "task": "finish login feature",
+      "assignee": "Participant C",
+      "deadline": "Chưa xác định"
+    },
+    {
+      "task": "reallocate resources",
+      "assignee": "Participant B",
+      "deadline": "Chưa xác định"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Ưu tiên phát triển tính năng đăng nhập (login feature).",
+      "context": "Dự án đang bị chậm tiến độ một chút ở phần phát triển frontend, cần tập trung vào các tính năng quan trọng để bắt kịp tiến độ."
+    },
+    {
+      "decision": "Điều chỉnh phân bổ nguồn lực để hỗ trợ phát triển frontend.",
+      "context": "Dự án đang bị chậm tiến độ ở phần phát triển frontend và cần sự hỗ trợ về nguồn lực để bắt kịp tiến độ."
+    }
+  ],
+  "metadata": {
+    "language": "vi",
+    "meeting_type": "project",
+    "specialized_data": {}
+  }
+}

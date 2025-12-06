@@ -1,0 +1,9 @@
+[Time: 10:00 AM]
+Participant A: Good morning everyone. Let's start the meeting about Project Apollo.
+Participant B: Hi. I have the updates on the budget. We are currently under budget by 5%.
+Participant A: That's great news. What about the timeline?
+Participant C: We are slightly behind schedule on the frontend development, but we should catch up by next week.
+Participant A: Okay, let's prioritize the login feature.
+Participant B: I will adjust the resource allocation to help with the frontend.
+Participant A: Perfect. So, action items: Participant C to finish login feature, Participant B to reallocate resources.
+[End of Meeting]

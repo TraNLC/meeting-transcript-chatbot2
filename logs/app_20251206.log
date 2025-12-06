@@ -366,3 +366,161 @@
 2025-12-06 11:56:36 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
 2025-12-06 11:56:36 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
 2025-12-06 11:56:36 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 20:39:29 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 20:39:29 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 20:39:29 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 20:50:09 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 20:50:09 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 20:50:09 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 20:52:49 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 20:52:49 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 20:52:49 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 20:54:07 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 20:54:07 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 20:54:07 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 20:55:48 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 20:55:48 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 20:55:48 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 20:56:59 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 20:56:59 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 20:56:59 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 21:11:30 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 21:11:30 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 21:11:30 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 21:13:59 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 21:13:59 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 21:13:59 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 21:18:22 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 21:18:22 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 21:18:22 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 21:18:37 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 21:18:37 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 21:18:37 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 21:24:03 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 21:24:03 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 21:24:03 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 21:24:30 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 21:24:30 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 21:24:30 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 21:24:45 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 21:24:45 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 21:24:45 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:03:38 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:03:38 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:03:38 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:03:41 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:03:41 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:03:41 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:04:06 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:57 | Processing file: type=project, language=vi
+2025-12-06 22:04:06 | INFO     | MeetingAnalyzer.src.utils.rate_limiter | __init__:33 | RateLimiter initialized: 15 calls per 60s
+2025-12-06 22:04:06 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:98 | Loading file: E:\ChatBot\meeting-transcript-chatbot2\data\uploads\sample.txt
+2025-12-06 22:04:06 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:111 | Transcript loaded: 636 chars
+2025-12-06 22:04:06 | INFO     | MeetingAnalyzer.src.utils.cache | __init__:33 | Cache initialized: max_size=50, ttl=3600s
+2025-12-06 22:04:06 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:122 | Initializing LLM
+2025-12-06 22:04:06 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:134 | Generating summary
+2025-12-06 22:04:12 | DEBUG    | MeetingAnalyzer.src.utils.cache | set:105 | Cache set: aadffd4b1dfdd2182c5cf25216001fdf (size: 1/50)
+2025-12-06 22:04:12 | DEBUG    | MeetingAnalyzer.src.utils.cache | cache_llm_response:232 | Cached LLM response for model: gemini-2.5-flash
+2025-12-06 22:04:33 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:195 | Added meeting sample_20251206_220433 to RAG system
+2025-12-06 22:04:49 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:57 | Processing file: type=project, language=vi
+2025-12-06 22:04:49 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:98 | Loading file: E:\ChatBot\meeting-transcript-chatbot2\data\uploads\sample.txt
+2025-12-06 22:04:49 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:111 | Transcript loaded: 636 chars
+2025-12-06 22:04:49 | DEBUG    | MeetingAnalyzer.src.utils.cache | get:80 | Cache hit: aadffd4b1dfdd2182c5cf25216001fdf
+2025-12-06 22:04:49 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:118 | Using cached result
+2025-12-06 22:04:49 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:122 | Initializing LLM
+2025-12-06 22:04:49 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:134 | Generating summary
+2025-12-06 22:04:55 | DEBUG    | MeetingAnalyzer.src.utils.cache | set:105 | Cache set: aadffd4b1dfdd2182c5cf25216001fdf (size: 1/50)
+2025-12-06 22:04:55 | DEBUG    | MeetingAnalyzer.src.utils.cache | cache_llm_response:232 | Cached LLM response for model: gemini-2.5-flash
+2025-12-06 22:05:13 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:195 | Added meeting sample_20251206_220513 to RAG system
+2025-12-06 22:06:18 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:06:18 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:06:18 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:06:18 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:06:18 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:06:18 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:07:11 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:07:11 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:07:11 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:07:11 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:07:11 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:07:11 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:07:31 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:57 | Processing file: type=project, language=vi
+2025-12-06 22:07:31 | INFO     | MeetingAnalyzer.src.utils.rate_limiter | __init__:33 | RateLimiter initialized: 15 calls per 60s
+2025-12-06 22:07:31 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:98 | Loading file: E:\ChatBot\meeting-transcript-chatbot2\data\uploads\sample.txt
+2025-12-06 22:07:31 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:111 | Transcript loaded: 636 chars
+2025-12-06 22:07:31 | INFO     | MeetingAnalyzer.src.utils.cache | __init__:33 | Cache initialized: max_size=50, ttl=3600s
+2025-12-06 22:07:31 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:122 | Initializing LLM
+2025-12-06 22:07:31 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:134 | Generating summary
+2025-12-06 22:07:38 | DEBUG    | MeetingAnalyzer.src.utils.cache | set:105 | Cache set: aadffd4b1dfdd2182c5cf25216001fdf (size: 1/50)
+2025-12-06 22:07:38 | DEBUG    | MeetingAnalyzer.src.utils.cache | cache_llm_response:232 | Cached LLM response for model: gemini-2.5-flash
+2025-12-06 22:07:57 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:195 | Added meeting sample_20251206_220757 to RAG system
+2025-12-06 22:09:01 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:09:01 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:09:01 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:09:03 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:09:03 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:09:03 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:09:38 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:09:38 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:09:38 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:09:51 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:09:51 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:09:51 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:09:53 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:57 | Processing file: type=project, language=vi
+2025-12-06 22:09:53 | INFO     | MeetingAnalyzer.src.utils.rate_limiter | __init__:33 | RateLimiter initialized: 15 calls per 60s
+2025-12-06 22:09:53 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:98 | Loading file: E:\ChatBot\meeting-transcript-chatbot2\data\uploads\sample.txt
+2025-12-06 22:09:53 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:111 | Transcript loaded: 636 chars
+2025-12-06 22:09:53 | INFO     | MeetingAnalyzer.src.utils.cache | __init__:33 | Cache initialized: max_size=50, ttl=3600s
+2025-12-06 22:09:53 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:122 | Initializing LLM
+2025-12-06 22:09:53 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:134 | Generating summary
+2025-12-06 22:10:01 | DEBUG    | MeetingAnalyzer.src.utils.cache | set:105 | Cache set: aadffd4b1dfdd2182c5cf25216001fdf (size: 1/50)
+2025-12-06 22:10:01 | DEBUG    | MeetingAnalyzer.src.utils.cache | cache_llm_response:232 | Cached LLM response for model: gemini-2.5-flash
+2025-12-06 22:10:18 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:197 | Added meeting sample_20251206_221018 to RAG system
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:10:59 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:16:49 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:16:49 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:16:49 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:17:05 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:17:05 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:17:05 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:18:41 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:57 | Processing file: type=project, language=vi
+2025-12-06 22:18:41 | INFO     | MeetingAnalyzer.src.utils.rate_limiter | __init__:33 | RateLimiter initialized: 15 calls per 60s
+2025-12-06 22:18:41 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:98 | Loading file: E:\ChatBot\meeting-transcript-chatbot2\data\uploads\sample.txt
+2025-12-06 22:18:41 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:111 | Transcript loaded: 636 chars
+2025-12-06 22:18:41 | INFO     | MeetingAnalyzer.src.utils.cache | __init__:33 | Cache initialized: max_size=50, ttl=3600s
+2025-12-06 22:18:41 | DEBUG    | MeetingAnalyzer.src.handlers.meeting_processing | process_file:122 | Initializing LLM
+2025-12-06 22:18:41 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:134 | Generating summary
+2025-12-06 22:18:48 | DEBUG    | MeetingAnalyzer.src.utils.cache | set:105 | Cache set: aadffd4b1dfdd2182c5cf25216001fdf (size: 1/50)
+2025-12-06 22:18:48 | DEBUG    | MeetingAnalyzer.src.utils.cache | cache_llm_response:232 | Cached LLM response for model: gemini-2.5-flash
+2025-12-06 22:19:06 | INFO     | MeetingAnalyzer.src.handlers.meeting_processing | process_file:197 | Added meeting sample_20251206_221905 to RAG system
+2025-12-06 22:36:48 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:36:48 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:36:48 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 22:37:02 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 22:37:02 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 22:37:02 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 23:25:00 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 23:25:00 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 23:25:00 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 23:25:14 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 23:25:14 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 23:25:14 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 23:39:52 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 23:39:52 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 23:39:52 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 23:40:08 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 23:40:08 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 23:40:08 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 23:46:21 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 23:46:21 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 23:46:21 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================
+2025-12-06 23:46:37 | INFO     | MeetingAnalyzer | __init__:71 | ================================================================================
+2025-12-06 23:46:37 | INFO     | MeetingAnalyzer | __init__:72 | Meeting Analyzer Pro - Logger Initialized
+2025-12-06 23:46:37 | INFO     | MeetingAnalyzer | __init__:73 | ================================================================================

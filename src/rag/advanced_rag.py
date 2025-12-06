@@ -48,7 +48,7 @@ class AdvancedRAG:
                 model_kwargs={'device': 'cpu'},
                 encode_kwargs={'normalize_embeddings': True}
             )
-            print("✅ Embeddings initialized: HuggingFace")
+            print("[OK] Embeddings initialized: HuggingFace")
         except ImportError:
             # Fallback to sentence-transformers directly with wrapper
             from sentence_transformers import SentenceTransformer
@@ -65,7 +65,7 @@ class AdvancedRAG:
                     return self.model.encode([text])[0].tolist()
             
             self.embeddings = SentenceTransformerEmbeddings('all-MiniLM-L6-v2')
-            print("✅ Embeddings initialized: SentenceTransformer (Wrapped)")
+            print("[OK] Embeddings initialized: SentenceTransformer (Wrapped)")
     
     def _init_vector_store(self):
         """Initialize vector store (ChromaDB or PineCone)."""
@@ -87,9 +87,9 @@ class AdvancedRAG:
                 embedding_function=self.embeddings,
                 collection_name="meetings_advanced"
             )
-            print("✅ Vector Store initialized: ChromaDB")
+            print("[OK] Vector Store initialized: ChromaDB")
         except Exception as e:
-            print(f"⚠️  ChromaDB init failed: {e}")
+            print(f"[WARN] ChromaDB init failed: {e}")
             self.vector_store = None
     
     def _init_pinecone(self):
@@ -105,7 +105,7 @@ class AdvancedRAG:
             # index_name = os.getenv("PINECONE_INDEX_NAME", "datacamp-index")
             
             if not api_key:
-                print("⚠️  PINECONE_API_KEY not found, falling back to ChromaDB")
+                print("[WARN] PINECONE_API_KEY not found, falling back to ChromaDB")
                 self._init_chroma()
                 return
             
@@ -126,7 +126,7 @@ class AdvancedRAG:
             #             region="us-east-1"
             #         )
             #     )
-            #     print(f"✅ Index {index_name} created")
+            #     print(f"[OK] Index {index_name} created")
             
             # Initialize vector store
             self.vector_store = PineconeVectorStore(
@@ -134,14 +134,14 @@ class AdvancedRAG:
                 embedding=self.embeddings,
                 pinecone_api_key=api_key
             )
-            print("✅ Vector Store initialized: PineCone")
+            print("[OK] Vector Store initialized: PineCone")
         except ImportError as e:
-            print(f"⚠️  PineCone library not installed: {e}")
+            print(f"[WARN] PineCone library not installed: {e}")
             print("Install with: pip install langchain-pinecone pinecone-client")
             print("Falling back to ChromaDB")
             self._init_chroma()
         except Exception as e:
-            print(f"⚠️  PineCone init failed: {e}, falling back to ChromaDB")
+            print(f"[WARN] PineCone init failed: {e}, falling back to ChromaDB")
             self._init_chroma()
     
     def _init_llm(self):
@@ -160,7 +160,7 @@ class AdvancedRAG:
                     temperature=0.3,
                     max_tokens=4000
                 )
-                print("✅ LLM initialized: Gemini 2.0 Flash")
+                print("[OK] LLM initialized: Gemini 2.0 Flash")
             else:
                 # Fallback to existing LLMManager
                 from src.llm import LLMManager
@@ -172,9 +172,9 @@ class AdvancedRAG:
                     api_key=Settings.GEMINI_API_KEY
                 )
                 self.llm = None
-                print("✅ LLM initialized: LLMManager (fallback)")
+                print("[OK] LLM initialized: LLMManager (fallback)")
         except Exception as e:
-            print(f"⚠️  LLM init failed: {e}")
+            print(f"[WARN] LLM init failed: {e}")
             self.llm = None
     
     def add_meeting(
@@ -197,7 +197,7 @@ class AdvancedRAG:
         print(f"DEBUG: vector_store type = {type(self.vector_store)}")
         
         if self.vector_store is None:
-            print("❌ Vector store not initialized")
+            print("[ERROR] Vector store not initialized")
             return False
         
         try:
@@ -205,7 +205,7 @@ class AdvancedRAG:
             chunks = self._chunk_transcript(transcript)
             
             if not chunks:
-                print("❌ No chunks created from transcript")
+                print("[ERROR] No chunks created from transcript")
                 return False
             
             # Add metadata to each chunk
@@ -227,7 +227,7 @@ class AdvancedRAG:
                     metadatas=metadatas,
                     ids=ids
                 )
-                print(f"✅ Added {len(chunks)} chunks to vector store")
+                print(f"[OK] Added {len(chunks)} chunks to vector store")
             except AttributeError:
                 # Fallback for different vector store APIs
                 from langchain_core.documents import Document
@@ -236,11 +236,11 @@ class AdvancedRAG:
                     for chunk, meta in zip(chunks, metadatas)
                 ]
                 self.vector_store.add_documents(documents, ids=ids)
-                print(f"✅ Added {len(documents)} documents to vector store")
+                print(f"[OK] Added {len(documents)} documents to vector store")
             
             return True
         except Exception as e:
-            print(f"❌ Error adding meeting: {e}")
+            print(f"[ERROR] Error adding meeting: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -290,7 +290,7 @@ class AdvancedRAG:
             List of relevant chunks with metadata
         """
         if not self.vector_store:
-            print("❌ Vector store not initialized")
+            print("[ERROR] Vector store not initialized")
             return []
         
         try:
@@ -298,7 +298,7 @@ class AdvancedRAG:
             try:
                 count = self.vector_store._collection.count()
                 if count == 0:
-                    print("⚠️  No documents in vector store yet")
+                    print("[WARN] No documents in vector store yet")
                     return []
             except:
                 pass
@@ -322,10 +322,10 @@ class AdvancedRAG:
                     "score": getattr(doc, 'score', None)
                 })
             
-            print(f"✅ Found {len(formatted_results)} results")
+            print(f"[OK] Found {len(formatted_results)} results")
             return formatted_results
         except Exception as e:
-            print(f"❌ Search error: {e}")
+            print(f"[ERROR] Search error: {e}")
             import traceback
             traceback.print_exc()
             return []
@@ -428,20 +428,36 @@ Trả lời (bằng tiếng Việt):"""
         """
         try:
             count = 0
+            type_counts = {}
+            language_counts = {}
+            
             if self.vector_store:
                 if self.vector_store_type == "chroma":
                     try:
                         collection = self.vector_store._collection
-                        count = collection.count()
-                    except:
-                        count = 0
+                        # Chroma collection.get() returns raw data
+                        data = collection.get(include=['metadatas'])
+                        count = len(data['ids'])
+                        
+                        # Aggregation
+                        if data['metadatas']:
+                            for meta in data['metadatas']:
+                                m_type = meta.get('meeting_type', 'unknown')
+                                lang = meta.get('language', 'unknown')
+                                type_counts[m_type] = type_counts.get(m_type, 0) + 1
+                                language_counts[lang] = language_counts.get(lang, 0) + 1
+                    except Exception as e:
+                        print(f"Stats error: {e}")
                 else:
-                    # PineCone stats
+                    # PineCone stats (simplified)
                     count = "N/A"
             
             return {
                 "vector_store": self.vector_store_type,
+                "total_meetings": count, # Using total_meetings key to match UI
                 "total_chunks": count,
+                "by_type": type_counts,
+                "by_language": language_counts,
                 "embedding_model": self.embedding_model_name,
                 "llm_provider": self.llm_provider,
                 "status": "active" if self.vector_store is not None else "inactive"

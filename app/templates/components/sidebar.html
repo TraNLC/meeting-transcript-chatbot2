@@ -1,0 +1,44 @@
+<!-- Sidebar Component -->
+<div class="col-md-2 border-end sidebar-compact"
+    style="height: calc(100vh - 70px); overflow-y: auto; background: var(--sidebar-bg);">
+    <div class="p-2">
+        <!-- Category Tabs (Compact) -->
+        <div class="mb-2">
+            <div class="nav flex-column nav-pills">
+                <a href="#" class="nav-link active compact-nav-link" data-category="recording" title="Ghi âm"
+                    onclick="switchTab('recording'); return false;">
+                    <i class="bi bi-mic-fill"></i>
+                    <span class="nav-text" data-i18n="sidebar.recording">Ghi âm</span>
+                </a>
+                <a href="#" class="nav-link compact-nav-link" data-category="upload" title="Tải lên & Chuyển văn bản"
+                    onclick="switchTab('upload'); return false;">
+                    <i class="bi bi-cloud-upload"></i>
+                    <span class="nav-text" data-i18n="sidebar.upload">Tải lên</span>
+                </a>
+                <a href="#" class="nav-link compact-nav-link" data-category="chat" title="Chat AI"
+                    onclick="switchTab('chat'); return false;">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    <span class="nav-text" data-i18n="sidebar.chat">Chat AI</span>
+                </a>
+                <a href="#" class="nav-link compact-nav-link" data-category="history" title="Lịch sử"
+                    onclick="switchTab('history'); return false;">
+                    <i class="bi bi-clock-history"></i>
+                    <span class="nav-text" data-i18n="sidebar.history">Lịch sử</span>
+                </a>
+            </div>
+        </div>
+
+        <hr class="my-2">
+
+        <!-- Recording List (for recording category) -->
+        <div id="recordingList">
+            <!-- Will be populated by JS -->
+            <div class="text-center text-muted py-5">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 small" data-i18n="common.loading">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+</div>

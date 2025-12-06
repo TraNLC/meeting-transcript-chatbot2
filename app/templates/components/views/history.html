@@ -1,0 +1,36 @@
+<!-- History View: Full Page List -->
+<div id="historyView" class="p-4" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">📜 <span data-i18n="history.title">Lịch sử Cuộc họp</span></h5>
+        <button class="btn btn-outline-primary btn-sm" onclick="loadHistoryView()">
+            <i class="bi bi-arrow-clockwise"></i> <span data-i18n="history.refresh">Làm mới</span>
+        </button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="ps-4" data-i18n="history.table.name">Tên cuộc họp</th>
+                            <th scope="col" data-i18n="history.table.date">Ngày tạo</th>
+                            <th scope="col" data-i18n="history.table.duration">Thời lượng</th>
+                            <th scope="col" data-i18n="history.table.status">Trạng thái</th>
+                            <th scope="col" class="text-end pe-4" data-i18n="history.table.actions">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- Populated by JS -->
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <span class="ms-2" data-i18n="common.loading">Đang tải dữ liệu...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,6 +1,0 @@
-# Flask App Requirements
-Flask==3.0.0
-Flask-CORS==4.0.0
-
-# Keep all existing requirements
--r requirements.txt

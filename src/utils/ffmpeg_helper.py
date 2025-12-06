@@ -33,7 +33,7 @@ def setup_ffmpeg_path():
             # Check if ffmpeg already in PATH
             import shutil
             if shutil.which("ffmpeg"):
-                print("✅ ffmpeg found in system PATH")
+                print("[OK] ffmpeg found in system PATH")
                 return True
             continue
         
@@ -44,12 +44,12 @@ def setup_ffmpeg_path():
                 path_str = str(path.absolute())
                 if path_str not in os.environ["PATH"]:
                     os.environ["PATH"] = f"{path_str};{os.environ['PATH']}"
-                    print(f"✅ ffmpeg configured: {path_str}")
+                    print(f"[OK] ffmpeg configured: {path_str}")
                 return True
     
-    print("⚠️  ffmpeg not found - recording features may not work")
-    print("💡 Run: python -m pip install ffmpeg-python")
-    print("   Or download from: https://ffmpeg.org/download.html")
+    print("[WARN] ffmpeg not found - recording features may not work")
+    print("INFO: Run: python -m pip install ffmpeg-python")
+    print("      Or download from: https://ffmpeg.org/download.html")
     return False
 
 
