@@ -26,6 +26,20 @@ torchaudio>=2.0.0
 accelerate>=0.24.0
 librosa>=0.10.0
 
+# Speaker Diarization
+pyannote.audio>=3.1.0
+speechbrain>=0.5.16
+
+# LangChain & Advanced RAG
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-google-genai>=0.0.6
+langchain-pinecone>=0.1.0
+langchain-huggingface>=0.0.1
+langchain-chroma>=0.1.0
+pinecone-client>=3.0.0
+tiktoken>=0.5.0
+
 # Vosk (Offline STT - Free & Lightweight - Backup option)
 vosk>=0.3.45
 soundfile>=0.12.1

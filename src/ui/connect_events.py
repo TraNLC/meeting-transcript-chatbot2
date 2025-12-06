@@ -6,7 +6,7 @@ def connect_recording_events(tab, handlers):
     # Auto-transcribe when recording stops
     tab['audio'].stop_recording(
         fn=handlers['transcribe'],
-        inputs=[tab['audio'], tab['lang']],
+        inputs=[tab['audio'], tab['lang'], tab['realtime']],
         outputs=[tab['transcript']],
         show_progress="full"
     )
@@ -14,7 +14,7 @@ def connect_recording_events(tab, handlers):
     # Manual transcribe button (for uploaded files)
     tab['transcribe_btn'].click(
         fn=handlers['transcribe'],
-        inputs=[tab['audio'], tab['lang']],
+        inputs=[tab['audio'], tab['lang'], tab['realtime']],
         outputs=[tab['transcript']],
         show_progress="full"
     )
@@ -23,20 +23,59 @@ def connect_recording_events(tab, handlers):
         fn=handlers['save_recording'],
         inputs=[tab['audio'], tab['title'], tab['lang'], tab['transcript']],
         outputs=[tab['save_status'], tab['id']]
+    ).then(
+        fn=handlers['refresh_recording_history'],
+        outputs=[tab['recording_list']]
     )
     
     tab['clear_btn'].click(
         fn=lambda: (None, "", "", ""),
         outputs=[tab['audio'], tab['transcript'], tab['save_status'], tab['id']]
     )
+    
+    # History sidebar events
+    tab['refresh_history_btn'].click(
+        fn=handlers['refresh_recording_history'],
+        inputs=[tab['history_filter'], tab['history_search']],
+        outputs=[tab['recording_list']]
+    )
+    
+    tab['history_filter'].change(
+        fn=handlers['refresh_recording_history'],
+        inputs=[tab['history_filter'], tab['history_search']],
+        outputs=[tab['recording_list']]
+    )
+    
+    tab['history_search'].change(
+        fn=handlers['refresh_recording_history'],
+        inputs=[tab['history_filter'], tab['history_search']],
+        outputs=[tab['recording_list']]
+    )
 
 
 def connect_upload_events(tab, handlers):
     """Connect upload tab events."""
     tab['process_btn'].click(
-        fn=handlers['process_file'],
-        inputs=[tab['file'], tab['meeting_type'], tab['output_lang']],
-        outputs=[tab['status'], tab['summary'], tab['topics'], tab['actions'], tab['decisions']]
+        fn=handlers['process_upload'],
+        inputs=[
+            tab['file_type'],
+            tab['audio_file'],
+            tab['text_file'],
+            tab['transcribe_lang'],
+            tab['enable_diarization'],
+            tab['meeting_type'],
+            tab['output_lang']
+        ],
+        outputs=[
+            tab['status'],
+            tab['transcript'],
+            tab['summary'],
+            tab['topics'],
+            tab['actions'],
+            tab['decisions'],
+            tab['participants']
+        ],
+        show_progress="full"
     )
 
 

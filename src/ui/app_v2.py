@@ -20,10 +20,16 @@ except Exception as e:
 # Import HuggingFace STT
 from src.audio.huggingface_stt import transcribe_audio_huggingface
 
+# Wrapper for transcribe with realtime parameter
+def transcribe_with_realtime(audio_file, language="vi", realtime=True):
+    """Wrapper to pass realtime parameter to transcribe function."""
+    return transcribe_audio_huggingface(audio_file, language, realtime)
+
 # Import all handler functions from gradio_app_final
 from src.ui.gradio_app_final import (
     save_recording_and_transcribe,
     process_file,
+    process_upload,
     chat_with_ai,
     export_to_txt,
     export_to_docx,
@@ -236,8 +242,11 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
         connect_search_export_events
     )
     
+    # Import recording history handlers
+    from src.ui.recording_history_handlers import get_recordings_grouped_by_date
+    
     handlers = {
-        'transcribe': transcribe_audio_huggingface,  # Use HuggingFace STT
+        'transcribe': transcribe_with_realtime,  # Use HuggingFace STT with realtime support
         'save_recording': save_recording_and_transcribe,
         'process_file': process_file,
         'chat': chat_with_ai,
@@ -251,6 +260,7 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
         'search_recordings': search_recordings_ui,
         'export_txt': export_to_txt,
         'export_docx': export_to_docx,
+        'refresh_recording_history': get_recordings_grouped_by_date,
     }
     
     connect_recording_events(tab1, handlers)
@@ -362,6 +372,9 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
     ).then(
         fn=get_cache_stats_handler,
         outputs=[tab7['cache_stats']]
+    ).then(
+        fn=lambda: get_recordings_grouped_by_date("Tất cả", ""),
+        outputs=[tab1['recording_list']]
     )
     # Checklist auto-load temporarily disabled
     # .then(

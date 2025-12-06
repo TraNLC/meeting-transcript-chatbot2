@@ -1,59 +1,186 @@
 {
   "recordings": [
     {
-      "id": "20251129_023618",
-      "filename": "20251129_023618.wav",
-      "filepath": "data\\recordings\\20251129_023618.wav",
-      "timestamp": "2025-11-29T02:36:18.230921",
-      "duration": null,
-      "title": "Ghi âm 29/11/2025 02:36",
-      "notes": "Language: vi",
-      "processed": false,
-      "transcript_id": null
+      "id": "rec_001",
+      "title": "Ghi âm 6/12/2025",
+      "timestamp": "2025-12-06T01:39:53.705058",
+      "duration": 150,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_001.wav",
+      "transcript": "Sample transcript 1"
     },
     {
-      "id": "20251129_023604",
-      "filename": "20251129_023604.wav",
-      "filepath": "data\\recordings\\20251129_023604.wav",
-      "timestamp": "2025-11-29T02:36:04.960950",
-      "duration": null,
-      "title": "Ghi âm 29/11/2025 02:36",
-      "notes": "Language: vi",
-      "processed": false,
-      "transcript_id": null
+      "id": "rec_002",
+      "title": "Ghi âm 6/12/2025",
+      "timestamp": "2025-12-05T23:39:53.705058",
+      "duration": 180,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_002.wav",
+      "transcript": "Sample transcript 2"
     },
     {
-      "id": "20251127_023208",
-      "filename": "20251127_023208.wav",
-      "filepath": "data\\recordings\\20251127_023208.wav",
-      "timestamp": "2025-11-27T02:32:08.857649",
-      "duration": null,
-      "title": "Ghi âm 27/11/2025 02:32",
-      "notes": "Language: vi",
-      "processed": false,
-      "transcript_id": null
+      "id": "rec_003",
+      "title": "Ghi âm 5/12/2025",
+      "timestamp": "2025-12-05T01:39:53.705058",
+      "duration": 105,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_003.wav",
+      "transcript": "Sample transcript 3"
     },
     {
-      "id": "20251127_023126",
-      "filename": "20251127_023126.wav",
-      "filepath": "data\\recordings\\20251127_023126.wav",
-      "timestamp": "2025-11-27T02:31:26.422285",
-      "duration": null,
-      "title": "Ghi âm 27/11/2025 02:31",
-      "notes": "Language: vi",
-      "processed": false,
-      "transcript_id": null
+      "id": "rec_004",
+      "title": "Ghi âm 5/12/2025",
+      "timestamp": "2025-12-04T22:39:53.705058",
+      "duration": 195,
+      "language": "en",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_004.wav",
+      "transcript": "Sample transcript 4"
     },
     {
-      "id": "20251129_103907",
-      "filename": "20251129_103907.wav",
-      "filepath": "data\\recordings\\20251129_103907.wav",
-      "timestamp": "2025-11-29T10:39:07.584476",
-      "duration": null,
-      "title": "Ghi âm 29/11/2025 10:39",
-      "notes": "Language: vi",
-      "processed": false,
-      "transcript_id": null
+      "id": "rec_005",
+      "title": "Ghi âm 5/12/2025",
+      "timestamp": "2025-12-04T20:39:53.705058",
+      "duration": 220,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_005.wav",
+      "transcript": "Sample transcript 5"
+    },
+    {
+      "id": "rec_006",
+      "title": "Ghi âm 5/12/2025",
+      "timestamp": "2025-12-04T18:39:53.705058",
+      "duration": 165,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_006.wav",
+      "transcript": "Sample transcript 6"
+    },
+    {
+      "id": "rec_007",
+      "title": "Ghi âm 25/11/2025",
+      "timestamp": "2025-11-11T01:39:53.705058",
+      "duration": 240,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_007.wav",
+      "transcript": "Sample transcript 7"
+    },
+    {
+      "id": "rec_008",
+      "title": "Ghi âm 11/24/2025",
+      "timestamp": "2025-11-10T01:39:53.705058",
+      "duration": 135,
+      "language": "en",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_008.wav",
+      "transcript": "Sample transcript 8"
+    },
+    {
+      "id": "rec_009",
+      "title": "Ghi âm 8/11/2025",
+      "timestamp": "2025-11-04T01:39:53.705058",
+      "duration": 190,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_009.wav",
+      "transcript": "Sample transcript 9"
+    },
+    {
+      "id": "rec_010",
+      "title": "Ghi âm 8/11/2025",
+      "timestamp": "2025-11-03T22:39:53.705058",
+      "duration": 155,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_010.wav",
+      "transcript": "Sample transcript 10"
+    },
+    {
+      "id": "rec_011",
+      "title": "Ghi âm 27/10/2025",
+      "timestamp": "2025-10-27T00:00:00",
+      "duration": 200,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_011.wav",
+      "transcript": "Sample transcript 11"
+    },
+    {
+      "id": "rec_012",
+      "title": "Ghi âm 23/10/2025",
+      "timestamp": "2025-10-23T00:00:00",
+      "duration": 175,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_012.wav",
+      "transcript": "Sample transcript 12"
+    },
+    {
+      "id": "rec_013",
+      "title": "Ghi âm 22/10/2025",
+      "timestamp": "2025-10-22T00:00:00",
+      "duration": 145,
+      "language": "en",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_013.wav",
+      "transcript": "Sample transcript 13"
+    },
+    {
+      "id": "rec_014",
+      "title": "Ghi âm 17/10/2025",
+      "timestamp": "2025-10-17T00:00:00",
+      "duration": 210,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_014.wav",
+      "transcript": "Sample transcript 14"
+    },
+    {
+      "id": "rec_015",
+      "title": "Recording 16/10/2025",
+      "timestamp": "2025-10-16T00:00:00",
+      "duration": 185,
+      "language": "en",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_015.wav",
+      "transcript": "Sample transcript 15"
+    },
+    {
+      "id": "rec_016",
+      "title": "Ghi âm 15/10/2025",
+      "timestamp": "2025-10-15T00:00:00",
+      "duration": 160,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_016.wav",
+      "transcript": "Sample transcript 16"
+    },
+    {
+      "id": "rec_017",
+      "title": "Ghi âm 13/10/2025",
+      "timestamp": "2025-10-13T00:00:00",
+      "duration": 195,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_017.wav",
+      "transcript": "Sample transcript 17"
+    },
+    {
+      "id": "rec_018",
+      "title": "Ghi âm 9/10/2025",
+      "timestamp": "2025-10-09T00:00:00",
+      "duration": 170,
+      "language": "vi",
+      "category": "recording",
+      "audio_file": "data/recordings/rec_018.wav",
+      "transcript": "Sample transcript 18"
     }
-  ]
+  ],
+  "total": 18,
+  "last_updated": "2025-12-06T01:39:53.705555"
 }

@@ -7,15 +7,16 @@ from pathlib import Path
 from datetime import datetime
 
 
-def transcribe_audio_huggingface(audio_file, language="vi"):
+def transcribe_audio_huggingface(audio_file, language="vi", realtime=True):
     """Transcribe audio using HuggingFace Whisper model.
     
     Args:
         audio_file: Path to audio file
         language: Language code (vi, en, ja, ko, zh)
+        realtime: If True, yield progressive updates (chunk by chunk)
         
     Yields:
-        str: Progress messages and final transcript
+        str: Progress messages and progressive/final transcript
     """
     if audio_file is None or audio_file == "":
         yield "🎙️ Sẵn sàng ghi âm. Nhấn microphone icon để bắt đầu..."
@@ -93,23 +94,19 @@ def transcribe_audio_huggingface(audio_file, language="vi"):
         except Exception as e:
             yield f"⚠️  Không đọc được thông tin file: {e}"
         
-        # Load pipeline (force reload to avoid cache)
-        yield "📥 Đang tải Whisper model từ HuggingFace..."
+        # Load Whisper Large-v3 model (96% accuracy - BEST)
+        model_name = "openai/whisper-large-v3"
+        yield f"📥 Đang tải Whisper Large-v3 model (1550M params, ~96% accuracy)..."
         
-        # Use openai/whisper-base model for faster processing
-        # Base model: 74M params - faster and good enough for most cases
-        # For long audio (>30s), we need return_timestamps=True
         import gc
         gc.collect()  # Clear memory before loading
         
-        # Use small model for better accuracy (still fast enough)
-        # base: 74M params, small: 244M params (3x larger, more accurate)
         pipe = pipeline(
             "automatic-speech-recognition",
-            model="openai/whisper-small",  # Better accuracy than base
+            model=model_name,
             device=device,
-            return_timestamps=True,  # Required for long-form audio
-            torch_dtype=torch.float32  # Ensure consistent dtype
+            return_timestamps=True,
+            torch_dtype=torch.float16 if device == 0 else torch.float32
         )
         
         yield f"🎤 Đang transcribe audio (ngôn ngữ: {language})..."
@@ -136,6 +133,7 @@ def transcribe_audio_huggingface(audio_file, language="vi"):
             yield f"⚠️  WARNING: Đây có thể là file mẫu cached: {known_hashes[file_hash]}"
             yield f"⚠️  Hãy thử: 1) Clear browser cache, 2) Refresh page, 3) Record lại"
         
+        # Transcribe with timestamps for realtime display
         result = pipe(
             audio_file,
             generate_kwargs={
@@ -143,29 +141,59 @@ def transcribe_audio_huggingface(audio_file, language="vi"):
                 "task": "transcribe",
                 "temperature": 0.0,  # More deterministic, reduce hallucination
                 "no_repeat_ngram_size": 3  # Prevent repetition
-            }
+            },
+            return_timestamps=True  # Get chunks with timestamps
         )
         
         elapsed_time = time.time() - start_time
         
-        # Extract text from result (handle both formats)
-        if isinstance(result, dict):
-            if "text" in result:
-                transcript = result["text"].strip()
-            elif "chunks" in result:
-                # Combine chunks if timestamps are returned
-                transcript = " ".join([chunk["text"] for chunk in result["chunks"]]).strip()
-            else:
-                transcript = str(result).strip()
+        # Extract chunks and display progressively if realtime mode
+        full_transcript = ""
+        
+        if realtime and isinstance(result, dict) and "chunks" in result:
+            # Realtime mode: yield each chunk progressively
+            yield "🎯 Bắt đầu hiển thị transcript realtime...\n"
+            
+            for i, chunk in enumerate(result["chunks"]):
+                chunk_text = chunk.get("text", "").strip()
+                timestamp = chunk.get("timestamp", (0, 0))
+                
+                if chunk_text:
+                    full_transcript += chunk_text + " "
+                    
+                    # Format timestamp
+                    start_time_sec = timestamp[0] if timestamp[0] is not None else 0
+                    minutes = int(start_time_sec // 60)
+                    seconds = int(start_time_sec % 60)
+                    time_str = f"{minutes:02d}:{seconds:02d}"
+                    
+                    # Yield progressive update
+                    yield f"""📝 **Transcript Realtime** [{time_str}]
+
+{full_transcript.strip()}
+
+⏱️ Đang xử lý... ({i+1}/{len(result["chunks"])} chunks)"""
+                    
+                    # Small delay to simulate realtime (optional)
+                    time.sleep(0.05)
         else:
-            transcript = str(result).strip()
+            # Non-realtime mode or no chunks: extract full text
+            if isinstance(result, dict):
+                if "text" in result:
+                    full_transcript = result["text"].strip()
+                elif "chunks" in result:
+                    full_transcript = " ".join([chunk["text"] for chunk in result["chunks"]]).strip()
+                else:
+                    full_transcript = str(result).strip()
+            else:
+                full_transcript = str(result).strip()
         
         # Detect potential hallucination (very short or repetitive text)
-        if len(transcript) < 10:
-            yield f"⚠️  Warning: Transcript quá ngắn ({len(transcript)} chars). Audio có thể không rõ hoặc quá ngắn."
+        if len(full_transcript) < 10:
+            yield f"⚠️  Warning: Transcript quá ngắn ({len(full_transcript)} chars). Audio có thể không rõ hoặc quá ngắn."
         
         # Check for repetition (hallucination indicator)
-        words = transcript.split()
+        words = full_transcript.split()
         if len(words) > 5:
             unique_words = len(set(words))
             repetition_ratio = unique_words / len(words)
@@ -184,11 +212,13 @@ def transcribe_audio_huggingface(audio_file, language="vi"):
         except:
             pass
         
-        yield f"""📝 **Transcript ({language}):** {now}
+        # Final result
+        yield f"""📝 **Transcript Hoàn Chỉnh** ({language}) - {now}
 
-{transcript}
+{full_transcript.strip()}
 
 ✅ Hoàn thành trong {elapsed_time:.1f}s{speed_info}
+💡 Copy text trên để phân tích hoặc lưu lại
 """
         
         # Cleanup unique temp file

@@ -1,0 +1,45 @@
+{
+  "id": "20251206_100612_test",
+  "timestamp": "2025-12-06T10:06:12.459177",
+  "original_file": "test.txt",
+  "summary": "TÓM TẮT:\n\nCuộc họp diễn ra lúc 9:00 sáng nhằm thảo luận về dự án AI. Các thành viên Nguyễn Văn A và Trần Thị B đã thống nhất quyết định triển khai hệ thống RAG. Các hành động quan trọng được giao bao gồm: Nguyễn Văn A sẽ thiết lập môi trường trước ngày 10/12/2025, và Trần Thị B sẽ nghiên cứu LangChain trước ngày 12/12/2025.",
+  "topics": [
+    {
+      "topic": "Dự án AI",
+      "description": "Cuộc họp tập trung vào việc thảo luận về dự án trí tuệ nhân tạo."
+    },
+    {
+      "topic": "Triển khai hệ thống RAG",
+      "description": "Quyết định quan trọng được đưa ra là sẽ triển khai hệ thống RAG (Retrieval-Augmented Generation) cho dự án."
+    },
+    {
+      "topic": "Phân công nhiệm vụ và thời hạn",
+      "description": "Các nhiệm vụ cụ thể được phân công cho các thành viên, bao gồm thiết lập môi trường (Nguyễn Văn A) và nghiên cứu LangChain (Trần Thị B), kèm theo thời hạn hoàn thành."
+    }
+  ],
+  "action_items": [
+    {
+      "task": "Setup environment",
+      "assignee": "Nguyễn Văn A",
+      "deadline": "10/12/2025"
+    },
+    {
+      "task": "Research LangChain",
+      "assignee": "Trần Thị B",
+      "deadline": "12/12/2025"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Sẽ implement RAG system.",
+      "context": "Cuộc họp thảo luận về dự án AI."
+    }
+  ],
+  "metadata": {
+    "language": "vi",
+    "meeting_type": "meeting",
+    "file_type": "text",
+    "speaker_diarization": false,
+    "specialized_data": {}
+  }
+}

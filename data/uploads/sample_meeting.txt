@@ -1,0 +1,98 @@
+TRANSCRIPT CUỘC HỌP DỰ ÁN WEBSITE THƯƠNG MẠI ĐIỆN TỬ
+Ngày: 15/11/2024
+Thời gian: 9:00 AM - 10:30 AM
+Người tham gia: Hiếu (Project Manager), Mai (Designer), Tuấn (Developer), Linh (Marketing)
+
+---
+
+Hiếu: Chào mọi người! Cảm ơn các bạn đã tham gia cuộc họp hôm nay. Hôm nay chúng ta sẽ thảo luận về tiến độ dự án website thương mại điện tử và lên kế hoạch cho sprint tiếp theo.
+
+Mai: Chào anh Hiếu và mọi người!
+
+Tuấn: Chào cả nhà!
+
+Linh: Chào mọi người ạ!
+
+Hiếu: Được rồi, chúng ta bắt đầu nhé. Đầu tiên, Mai có thể update về phần thiết kế không?
+
+Mai: Dạ được ạ. Em đã hoàn thành thiết kế UI cho trang chủ, trang sản phẩm và trang giỏ hàng. Em đã gửi file Figma cho cả team rồi. Tuy nhiên, em nghĩ chúng ta nên thay đổi màu chủ đạo từ xanh dương sang xanh lá để phù hợp hơn với thương hiệu.
+
+Hiếu: Ý kiến hay đấy Mai. Mọi người nghĩ sao về việc đổi màu?
+
+Tuấn: Em thấy ổn ạ. Xanh lá trông fresh hơn và phù hợp với concept eco-friendly của chúng ta.
+
+Linh: Em đồng ý! Xanh lá sẽ tạo sự khác biệt so với các đối thủ cạnh tranh.
+
+Hiếu: Tốt! Vậy chúng ta quyết định đổi sang màu xanh lá. Mai, em cập nhật lại design với màu mới và gửi lại cho team vào thứ Tư tuần này nhé.
+
+Mai: Dạ em sẽ hoàn thành trước thứ Tư ạ.
+
+Hiếu: Tuyệt! Tiếp theo, Tuấn update về phần development.
+
+Tuấn: Dạ, em đã hoàn thành 80% backend API. Hiện tại em đang làm phần authentication và authorization. Em dự kiến sẽ hoàn thành phần này vào cuối tuần này. Tuy nhiên, em gặp một vấn đề nhỏ với payment gateway integration.
+
+Hiếu: Vấn đề gì vậy Tuấn?
+
+Tuấn: Dạ là documentation của payment provider không rõ ràng lắm. Em cần thêm thời gian để research và test. Em nghĩ cần thêm 3-4 ngày nữa.
+
+Hiếu: Được rồi. Vậy em cố gắng hoàn thành payment integration trước ngày 22/11 nhé. Nếu cần support thì em báo team.
+
+Tuấn: Dạ em cảm ơn anh!
+
+Hiếu: Còn về frontend thì sao Tuấn?
+
+Tuấn: Frontend em mới làm được khoảng 50%. Em đang chờ design final từ Mai để implement. Sau khi có design mới, em sẽ tăng tốc phần này.
+
+Hiếu: OK. Vậy priority của Tuấn tuần này là: 1) Hoàn thành authentication, 2) Payment integration, 3) Frontend implementation sau khi có design mới.
+
+Tuấn: Dạ vâng ạ!
+
+Hiếu: Linh, em update về marketing plan nhé.
+
+Linh: Dạ, em đã chuẩn bị content plan cho 3 tháng đầu. Em đã tạo được 20 bài viết blog và 50 posts cho social media. Em cũng đã liên hệ với 5 influencers để hợp tác launch campaign.
+
+Hiếu: Tốt lắm! Budget cho influencer marketing là bao nhiêu?
+
+Linh: Em estimate khoảng 50 triệu cho 3 tháng đầu ạ.
+
+Hiếu: Hmm, 50 triệu hơi cao. Chúng ta cần giảm xuống còn 35 triệu. Em thử negotiate lại với influencers xem sao nhé.
+
+Linh: Dạ được ạ, em sẽ thử negotiate. Nếu không được thì em sẽ giảm số lượng influencers từ 5 xuống 3 người.
+
+Hiếu: Được! Đó là một giải pháp tốt. Vậy chúng ta quyết định budget marketing là 35 triệu cho 3 tháng đầu.
+
+Linh: Dạ vâng ạ!
+
+Hiếu: Còn về launch date, chúng ta vẫn target ngày 1/12 đúng không?
+
+Mai: Dạ nếu mọi thứ suôn sẻ thì em nghĩ có thể launch được ạ.
+
+Tuấn: Em cũng nghĩ vậy, nhưng cần có thêm 1 tuần buffer cho testing.
+
+Hiếu: Được rồi. Vậy chúng ta sẽ có soft launch vào 1/12 cho một nhóm beta users, và official launch vào 8/12. Mọi người đồng ý chứ?
+
+Mai: Dạ đồng ý ạ!
+
+Tuấn: OK anh!
+
+Linh: Em cũng đồng ý. Vậy em sẽ chuẩn bị 2 campaigns riêng cho soft launch và official launch.
+
+Hiếu: Perfect! Vậy tóm lại:
+- Mai sẽ cập nhật design với màu xanh lá trước thứ Tư
+- Tuấn sẽ hoàn thành authentication cuối tuần này và payment integration trước 22/11
+- Linh sẽ negotiate budget xuống 35 triệu và chuẩn bị 2 launch campaigns
+- Soft launch: 1/12, Official launch: 8/12
+
+Mọi người có câu hỏi gì không?
+
+Mai: Em không có câu hỏi ạ.
+
+Tuấn: Em cũng clear rồi ạ.
+
+Linh: Em OK ạ!
+
+Hiếu: Tuyệt! Vậy chúng ta kết thúc meeting tại đây. Cảm ơn mọi người! Hẹn gặp lại vào meeting tuần sau.
+
+Mọi người: Cảm ơn anh! Bye bye!
+
+--- KẾT THÚC TRANSCRIPT ---

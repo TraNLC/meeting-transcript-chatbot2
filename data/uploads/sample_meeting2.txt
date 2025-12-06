@@ -1,0 +1,85 @@
+TRANSCRIPT CUỘC HỌP ĐA QUỐC GIA - GLOBAL TECH STARTUP
+Date: November 20, 2024
+Time: 2:00 PM - 3:30 PM
+Participants: David (CEO - USA), Linh (CTO - Vietnam), Zhang Wei (Product Manager - China), Maria (Marketing Director - Spain)
+
+---
+
+David: Good afternoon everyone! Thank you for joining this important meeting. Today we'll discuss our Q4 strategy and product roadmap.
+
+Linh: Chào mọi người! Rất vui được tham gia cuộc họp hôm nay.
+
+Zhang Wei: 大家好！Hello everyone!
+
+Maria: ¡Hola! Good afternoon!
+
+David: Great to have the whole team here. Let's start with the product update. Zhang Wei, can you share the progress?
+
+Zhang Wei: Sure, David. We have completed 75% of the mobile app development. The iOS version is ready for beta testing, but Android version needs two more weeks. I will coordinate with the development team to speed up the process.
+
+Linh: Về phần backend, team Việt Nam đã hoàn thành API integration với payment gateway. Tuy nhiên, em cần thêm 1 tuần để test security vulnerabilities. Em sẽ làm việc với security team để đảm bảo hệ thống an toàn trước khi launch.
+
+David: That's good progress, Linh. Security is our top priority. Please make sure all vulnerabilities are addressed before the launch date.
+
+Linh: Dạ, em sẽ hoàn thành security audit trước ngày 30/11 ạ.
+
+Zhang Wei: For the product features, we decided to add AI-powered recommendation system. This will increase user engagement by 40% according to our research.
+
+Maria: That's excellent! From marketing perspective, I have prepared campaigns for 5 different markets. We will launch in USA, Vietnam, China, Spain, and Brazil. The total budget is $200,000 for Q4.
+
+David: $200,000 seems reasonable. Maria, please break down the budget by market.
+
+Maria: Sure. USA will get $80,000, China $50,000, Vietnam $30,000, Spain $25,000, and Brazil $15,000. I will also collaborate with 10 influencers across these markets.
+
+Linh: Em nghĩ chúng ta nên tăng budget cho thị trường Việt Nam lên $40,000 vì potential rất lớn. Vietnam market is growing very fast, especially in mobile payment sector.
+
+David: Good point, Linh. Let's increase Vietnam budget to $40,000 and reduce USA budget to $70,000. We agreed on this adjustment.
+
+Zhang Wei: I also suggest we should hire 3 more developers for the China team. The workload is quite heavy and we need to deliver features faster.
+
+David: Okay, Zhang Wei will work with HR to hire 3 developers for China team by December 15th. What about the timeline?
+
+Linh: Em đề xuất timeline như sau: Beta launch vào 1/12, soft launch vào 8/12, và official launch vào 15/12. Như vậy chúng ta có đủ thời gian để fix bugs và gather user feedback.
+
+David: Perfect timeline! Everyone agrees with this schedule?
+
+Zhang Wei: Yes, I agree. This gives us enough buffer time.
+
+Maria: Me too! I will prepare 3 separate campaigns for beta, soft launch, and official launch.
+
+David: Excellent! Now let's talk about the partnership opportunities. Maria, any updates?
+
+Maria: Yes! I have been negotiating with 2 major partners: TechCorp and InnovateLabs. TechCorp wants to invest $500,000 for 10% equity, while InnovateLabs offers $300,000 for 8% equity.
+
+Linh: Em nghĩ deal với TechCorp tốt hơn vì họ có network rộng ở châu Á. They can help us expand faster in Asian markets.
+
+Zhang Wei: I agree with Linh. TechCorp has strong presence in China and Southeast Asia. We should accept their offer.
+
+David: Great! So we decided to accept TechCorp's investment offer of $500,000 for 10% equity. I will finalize the contract by November 25th.
+
+Maria: Wonderful! This investment will help us scale much faster.
+
+David: Alright, let me summarize our action items:
+- Zhang Wei will complete Android app development and hire 3 developers for China team
+- Linh sẽ hoàn thành security audit trước 30/11 và coordinate beta launch
+- Maria will adjust marketing budget and prepare 3 launch campaigns
+- David will finalize investment contract with TechCorp by November 25th
+
+Timeline:
+- Beta launch: December 1st
+- Soft launch: December 8th  
+- Official launch: December 15th
+
+Any questions or concerns?
+
+Linh: Em không có câu hỏi ạ. Everything is clear!
+
+Zhang Wei: No questions from my side. Let's make it happen!
+
+Maria: All clear! Excited for the launch!
+
+David: Perfect! Thank you everyone for your great work. Let's make Q4 our best quarter ever!
+
+Everyone: Thank you! 谢谢! Cảm ơn! ¡Gracias!
+
+--- END OF TRANSCRIPT ---

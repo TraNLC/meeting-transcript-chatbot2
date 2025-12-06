@@ -1,0 +1,44 @@
+{
+  "id": "20251206_110410_Project_Kickoff_Meeting",
+  "timestamp": "2025-12-06T11:04:10.198360",
+  "original_file": "Project_Kickoff_Meeting.mp3",
+  "summary": "## Tóm tắt cuộc họp\nCuộc họp khởi động dự án phát triển ứng dụng AI. Team đã thống nhất về công nghệ sử dụng (Python, Flask, React) và lộ trình phát triển trong 3 tháng tới.\n\n## Điểm chính\n- Sử dụng mô hình Agile/Scrum\n- Daily meeting vào 9:00 sáng\n- Demo sản phẩm mỗi 2 tuần",
+  "topics": [
+    {
+      "topic": "Tech Stack",
+      "description": "Thống nhất sử dụng Python, Flask cho backend và React cho frontend."
+    },
+    {
+      "topic": "Timeline",
+      "description": "Dự án kéo dài 3 tháng, chia làm 6 sprint."
+    }
+  ],
+  "action_items": [
+    {
+      "task": "Setup Git repository",
+      "assignee": "DevOps Team",
+      "deadline": "Today"
+    },
+    {
+      "task": "Draft database schema",
+      "assignee": "Backend Lead",
+      "deadline": "Tomorrow"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Chọn Pinecone làm Vector DB",
+      "context": "Hiệu năng tốt, dễ scale"
+    },
+    {
+      "decision": "Sử dụng Gemini 1.5 Flash",
+      "context": "Cân bằng giữa tốc độ và chi phí"
+    }
+  ],
+  "metadata": {
+    "language": "vi",
+    "meeting_type": "meeting",
+    "file_type": "audio",
+    "speaker_diarization": true
+  }
+}

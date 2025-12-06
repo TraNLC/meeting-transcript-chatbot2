@@ -32,20 +32,12 @@ from src.audio.stt_processor import STTProcessor
 from src.audio.realtime_stt import SimpleRealtimeSTT
 from src.audio.streaming_recorder import SimpleStreamingTranscriber
 from src.audio.vosk_realtime import VoskRealtimeSTT
-from src.vectorstore.chroma_manager import ChromaManager
+from src.rag.advanced_rag import get_rag_instance
 
-# Global variables
-chatbot = None
-transcript_text = ""
-last_summary = ""
-last_topics = []
-last_actions = []
-last_decisions = []
-current_language = "vi"
-current_filename = ""
-history_manager = HistoryManager()
 audio_manager = AudioManager()
-chroma_manager = ChromaManager()
+history_manager = HistoryManager()
+# Initialize Advanced RAG
+rag_system = get_rag_instance(vector_store="chroma")
 stt_processor = None  # Lazy init (requires API key)
 realtime_stt = SimpleRealtimeSTT()
 streaming_transcriber = SimpleStreamingTranscriber(chunk_interval=10)  # Update every 10s
@@ -184,6 +176,22 @@ def process_file(file, meeting_type, output_language):
             )
         except Exception as e:
             print(f"Failed to save history: {e}")
+        
+        # Add to RAG system
+        if rag_system:
+            try:
+                rag_metadata = {
+                    "meeting_type": meeting_type,
+                    "language": language,
+                    "filename": current_filename,
+                    "timestamp": datetime.now().isoformat()
+                }
+                # Use filename as meeting_id for simplicity, or generate a UUID
+                meeting_id = f"{Path(file.name).stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                rag_system.add_meeting(meeting_id, transcript, rag_metadata)
+                logger.info(f"Added meeting {meeting_id} to RAG system")
+            except Exception as e:
+                logger.error(f"Failed to add to RAG: {e}")
         
         # Format outputs based on meeting type
         topics_text = format_topics_by_type(topics, meeting_type, specialized_data, language)
@@ -510,7 +518,8 @@ def chat_with_ai(message, history):
     
     if not chatbot:
         new_history = history.copy()
-        new_history.append([message, "⚠️ Vui lòng xử lý transcript trước!"])
+        new_history.append({"role": "user", "content": message})
+        new_history.append({"role": "assistant", "content": "⚠️ Vui lòng xử lý transcript trước!"})
         return new_history
     
     try:
@@ -816,16 +825,21 @@ def search_meetings_ui(query, meeting_type_filter, language_filter, n_results):
     if not query or query.strip() == "":
         return "⚠️ Vui lòng nhập từ khóa tìm kiếm", ""
     
+    if not rag_system:
+        return "❌ Hệ thống RAG chưa được khởi tạo", ""
+
     try:
         # Apply filters
-        mt_filter = meeting_type_filter if meeting_type_filter != "Tất cả" else None
-        lang_filter = language_filter if language_filter != "Tất cả" else None
+        filter_metadata = {}
+        if meeting_type_filter and meeting_type_filter != "Tất cả":
+            filter_metadata["meeting_type"] = meeting_type_filter
+        if language_filter and language_filter != "Tất cả":
+            filter_metadata["language"] = language_filter
         
-        results = chroma_manager.semantic_search(
+        results = rag_system.semantic_search(
             query=query,
-            n_results=n_results,
-            meeting_type=mt_filter,
-            language=lang_filter
+            k=n_results,
+            filter_metadata=filter_metadata if filter_metadata else None
         )
         
         if not results:
@@ -836,51 +850,83 @@ def search_meetings_ui(query, meeting_type_filter, language_filter, n_results):
         markdown_output.append(f"# 🔍 Tìm thấy {len(results)} kết quả\n")
         
         for i, result in enumerate(results, 1):
-            metadata = result['metadata']
-            analysis = result.get('analysis', {})
+            metadata = result.get('metadata', {})
+            content = result.get('content', '')
+            score = result.get('score', 0)
             
-            markdown_output.append(f"## {i}. Meeting ID: {result['meeting_id']}")
+            markdown_output.append(f"## {i}. Meeting ID: {metadata.get('meeting_id', 'N/A')}")
             markdown_output.append(f"**Loại:** {metadata.get('meeting_type', 'N/A')} | "
                                   f"**Ngôn ngữ:** {metadata.get('language', 'N/A')} | "
                                   f"**Ngày:** {metadata.get('timestamp', 'N/A')[:10]}")
             
-            # Show similarity score
-            if result.get('distance') is not None:
-                similarity = max(0, 100 - result['distance'] * 100)
-                markdown_output.append(f"**Độ tương đồng:** {similarity:.1f}%")
+            # Show similarity score if available
+            # Note: Score interpretation depends on vector store (distance vs similarity)
+            # markdown_output.append(f"**Score:** {score}")
             
             # Show transcript preview
-            transcript_preview = result['transcript'][:300] + "..."
+            transcript_preview = content[:300] + "..."
             markdown_output.append(f"\n**Nội dung:**\n> {transcript_preview}\n")
             
             markdown_output.append("---\n")
         
-        status = f"✅ Tìm thấy {len(results)} meetings phù hợp với '{query}'"
+        status = f"✅ Tìm thấy {len(results)} chunks phù hợp với '{query}'"
+        
+        # Store results for export
+        global last_search_results
+        last_search_results = results
+        
         return status, "\n".join(markdown_output)
         
     except Exception as e:
         return f"❌ Lỗi: {str(e)}", ""
 
 
-def get_vectordb_stats_ui():
-    """Get ChromaDB statistics."""
+def export_search_results_ui():
+    """Export search results to TXT."""
+    global last_search_results
+    if not last_search_results:
+        return None
+        
     try:
-        stats = chroma_manager.get_statistics()
+        filename = f"search_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        filepath = Path(filename)
+        
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(f"SEARCH RESULTS REPORT\n")
+            f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write("="*50 + "\n\n")
+            
+            for i, result in enumerate(last_search_results, 1):
+                metadata = result.get('metadata', {})
+                content = result.get('content', '')
+                
+                f.write(f"RESULT #{i}\n")
+                f.write(f"Meeting ID: {metadata.get('meeting_id', 'N/A')}\n")
+                f.write(f"Type: {metadata.get('meeting_type', 'N/A')}\n")
+                f.write(f"Date: {metadata.get('timestamp', 'N/A')}\n")
+                f.write("-" * 20 + "\n")
+                f.write(f"{content}\n")
+                f.write("="*50 + "\n\n")
+                
+        return str(filepath)
+    except Exception as e:
+        return None
+
+
+def get_vectordb_stats_ui():
+    """Get Vector DB statistics."""
+    if not rag_system:
+        return "❌ Hệ thống RAG chưa được khởi tạo"
+
+    try:
+        stats = rag_system.get_stats()
         
         output = []
-        output.append("# 📊 Thống Kê ChromaDB\n")
-        output.append(f"**Tổng số meetings:** {stats['total_meetings']}\n")
-        
-        if stats['by_type']:
-            output.append("**Theo loại:**")
-            for mtype, count in stats['by_type'].items():
-                output.append(f"- {mtype}: {count}")
-            output.append("")
-        
-        if stats['by_language']:
-            output.append("**Theo ngôn ngữ:**")
-            for lang, count in stats['by_language'].items():
-                output.append(f"- {lang}: {count}")
+        output.append(f"# 📊 Thống Kê {stats.get('vector_store', 'Vector DB').upper()}\n")
+        output.append(f"**Trạng thái:** {stats.get('status', 'Unknown')}")
+        output.append(f"**Tổng số chunks:** {stats.get('total_chunks', 0)}")
+        output.append(f"**Embedding Model:** {stats.get('embedding_model', 'N/A')}")
+        output.append(f"**LLM Provider:** {stats.get('llm_provider', 'N/A')}")
         
         return "\n".join(output)
         
@@ -1255,7 +1301,7 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
                     chatbot_display = gr.Chatbot(
                         height=500,
                         label="Cuộc trò chuyện",
-                        type="tuples"
+                        type="messages"
                     )
                     
                     with gr.Row():
@@ -1392,6 +1438,10 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
                     search_btn = gr.Button("🔍 Tìm kiếm", variant="primary", size="lg")
                     search_status = gr.Textbox(label="Trạng thái", interactive=False)
                     search_results = gr.Markdown()
+                    
+                    with gr.Row():
+                        export_search_btn = gr.Button("💾 Xuất Kết Quả (TXT)", size="sm")
+                        search_export_file = gr.File(label="File kết quả")
                     
                     # Examples
                     gr.Examples(
@@ -1570,6 +1620,11 @@ with gr.Blocks(css=custom_css, title="Meeting Analyzer Pro", theme=gr.themes.Sof
         outputs=[search_recording_results]
     )
     
+    export_search_btn.click(
+        fn=export_search_results_ui,
+        outputs=[search_export_file]
+    )
+    
     # Chat handlers
     send_btn.click(
         fn=chat_with_ai,
@@ -1613,3 +1668,239 @@ if __name__ == "__main__":
         server_port=7777,
         share=False
     )
+
+
+def process_upload(file_type, audio_file, text_file, transcribe_lang, enable_diarization, meeting_type, output_lang):
+    """Process uploaded file - audio or text with optional speaker diarization.
+    
+    Args:
+        file_type: "audio" or "text"
+        audio_file: Audio file path (if file_type == "audio")
+        text_file: Text file path (if file_type == "text")
+        transcribe_lang: Language for audio transcription
+        enable_diarization: Whether to enable speaker diarization
+        meeting_type: Type of meeting
+        output_lang: Output language for analysis
+        
+    Returns:
+        Tuple of (status, transcript, summary, topics, actions, decisions, participants)
+    """
+    global chatbot, transcript_text, last_summary, last_topics, last_actions, last_decisions, current_language, current_filename
+    
+    logger.info(f"Processing upload: type={file_type}, meeting_type={meeting_type}, diarization={enable_diarization}")
+    
+    try:
+        # Step 1: Get transcript
+        transcript = ""
+        status_msg = ""
+        
+        if file_type == "audio":
+            if audio_file is None:
+                return "❌ Vui lòng upload file audio!", "", "", "", "", "", ""
+            
+            # Validate audio file
+            is_valid, error_msg = validate_file(
+                audio_file.name if hasattr(audio_file, 'name') else audio_file,
+                max_size_mb=200,
+                allowed_extensions=['.wav', '.mp3', '.m4a', '.webm', '.ogg']
+            )
+            if not is_valid:
+                return f"❌ {error_msg}", "", "", "", "", "", ""
+            
+            status_msg = "🔄 Đang transcribe audio..."
+            
+            # Transcribe with or without speaker diarization
+            if enable_diarization:
+                # Use speaker diarization
+                from src.audio.speaker_diarization import transcribe_with_speakers
+                
+                status_msg = "🔄 Đang transcribe với speaker diarization..."
+                
+                # Get transcript with speakers
+                for message in transcribe_with_speakers(audio_file, transcribe_lang):
+                    if message.startswith("📝 **Complete Transcript"):
+                        # Extract transcript from final message
+                        lines = message.split('\n')
+                        transcript_lines = []
+                        in_transcript = False
+                        for line in lines:
+                            if line.startswith('[') and ']:' in line:
+                                in_transcript = True
+                                transcript_lines.append(line)
+                            elif in_transcript and line.strip() and not line.startswith('---'):
+                                transcript_lines.append(line)
+                        transcript = '\n'.join(transcript_lines)
+                        break
+                
+                if not transcript:
+                    return "❌ Không thể transcribe audio với speaker diarization", "", "", "", "", "", ""
+                
+            else:
+                # Regular transcription without diarization
+                from src.audio.huggingface_stt import transcribe_audio_huggingface
+                
+                for message in transcribe_audio_huggingface(audio_file, transcribe_lang, realtime=False):
+                    if message.startswith("📝 **Transcript"):
+                        # Extract transcript
+                        lines = message.split('\n')
+                        transcript_lines = []
+                        for i, line in enumerate(lines):
+                            if i > 0 and line.strip() and not line.startswith('✅') and not line.startswith('💡'):
+                                transcript_lines.append(line)
+                        transcript = '\n'.join(transcript_lines).strip()
+                        break
+                
+                if not transcript:
+                    return "❌ Không thể transcribe audio", "", "", "", "", "", ""
+            
+            current_filename = Path(audio_file.name if hasattr(audio_file, 'name') else audio_file).name
+            
+        else:  # text file
+            if text_file is None:
+                return "❌ Vui lòng upload file text!", "", "", "", "", "", ""
+            
+            # Validate text file
+            is_valid, error_msg = validate_file(
+                text_file.name if hasattr(text_file, 'name') else text_file,
+                max_size_mb=50,
+                allowed_extensions=['.txt', '.docx']
+            )
+            if not is_valid:
+                return f"❌ {error_msg}", "", "", "", "", "", ""
+            
+            # Load text file
+            loader = TranscriptLoader()
+            transcript = loader.load_file(text_file.name if hasattr(text_file, 'name') else text_file)
+            current_filename = Path(text_file.name if hasattr(text_file, 'name') else text_file).name
+        
+        # Sanitize and preprocess transcript
+        transcript = sanitize_input(transcript, max_length=50000)
+        preprocessor = TranscriptPreprocessor()
+        transcript = preprocessor.clean_text(transcript)
+        transcript = preprocessor.truncate_text(transcript, max_length=15000)
+        transcript_text = transcript
+        
+        logger.info(f"Transcript ready: {len(transcript)} chars")
+        
+        # Step 2: Analyze with LLM
+        status_msg = "🔄 Đang phân tích với AI..."
+        
+        # Import meeting type functions
+        from src.rag.meeting_types import WorkshopFunctions, BrainstormingFunctions
+        
+        # Initialize LLM
+        llm_manager = LLMManager(
+            provider="gemini",
+            model_name="gemini-2.5-flash",
+            temperature=Settings.TEMPERATURE,
+            max_tokens=Settings.MAX_TOKENS,
+            api_key=Settings.GEMINI_API_KEY,
+        )
+        
+        chatbot = Chatbot(
+            llm_manager=llm_manager,
+            transcript=transcript,
+            language=output_lang,
+            meeting_type=meeting_type
+        )
+        
+        # Generate analysis
+        summary = chatbot.generate_summary()
+        topics = chatbot.extract_topics()
+        action_items = chatbot.extract_action_items_initially()
+        decisions = chatbot.extract_decisions()
+        
+        # Extract participants (if speaker diarization was used)
+        participants_text = "_Không có thông tin_"
+        if enable_diarization and file_type == "audio":
+            # Extract unique speakers from transcript
+            import re
+            speakers = set()
+            for line in transcript.split('\n'):
+                match = re.match(r'\[\d+:\d+\] \*\*(Guest-\d+)\*\*:', line)
+                if match:
+                    speakers.add(match.group(1))
+            
+            if speakers:
+                participants_text = f"**Số người tham gia:** {len(speakers)}\n\n"
+                participants_text += "**Danh sách:**\n"
+                for speaker in sorted(speakers):
+                    participants_text += f"- {speaker}\n"
+        
+        # Extract specialized data
+        specialized_data = {}
+        if meeting_type == "workshop":
+            specialized_data['key_learnings'] = WorkshopFunctions.extract_key_learnings(transcript)
+            specialized_data['exercises'] = WorkshopFunctions.extract_exercises(transcript)
+            specialized_data['qa_pairs'] = WorkshopFunctions.extract_qa_pairs(transcript)
+        elif meeting_type == "brainstorming":
+            ideas_result = BrainstormingFunctions.extract_ideas(transcript)
+            specialized_data['ideas'] = ideas_result
+            specialized_data['categorized_ideas'] = BrainstormingFunctions.categorize_ideas(ideas_result)
+            specialized_data['concerns'] = BrainstormingFunctions.extract_concerns(transcript)
+        
+        # Save results
+        last_summary = summary
+        last_topics = topics
+        last_actions = action_items
+        last_decisions = decisions
+        current_language = output_lang
+        
+        # Save to history
+        try:
+            history_manager.save_analysis(
+                filename=current_filename,
+                summary=summary,
+                topics=topics,
+                action_items=action_items,
+                decisions=decisions,
+                metadata={
+                    "language": output_lang,
+                    "meeting_type": meeting_type,
+                    "file_type": file_type,
+                    "speaker_diarization": enable_diarization,
+                    "specialized_data": specialized_data
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to save history: {e}")
+        
+        # Add to RAG system
+        if rag_system:
+            try:
+                rag_metadata = {
+                    "meeting_type": meeting_type,
+                    "language": output_lang,
+                    "filename": current_filename,
+                    "timestamp": datetime.now().isoformat()
+                }
+                # Use filename as meeting_id for simplicity, or generate a UUID
+                meeting_id = f"{Path(current_filename).stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                rag_system.add_meeting(meeting_id, transcript, rag_metadata)
+                logger.info(f"Added meeting {meeting_id} to RAG system")
+            except Exception as e:
+                logger.error(f"Failed to add to RAG: {e}")
+        
+        # Format outputs
+        topics_text = format_topics_by_type(topics, meeting_type, specialized_data, output_lang)
+        actions_text = format_actions(action_items, output_lang)
+        decisions_text = format_decisions_by_type(decisions, meeting_type, specialized_data, output_lang)
+        
+        success_msg = f"✅ Hoàn thành: {current_filename} | Loại: {meeting_type}"
+        if enable_diarization:
+            success_msg += " | Speaker Diarization: ON"
+        
+        return (
+            success_msg,
+            transcript,
+            summary,
+            topics_text,
+            actions_text,
+            decisions_text,
+            participants_text
+        )
+        
+    except Exception as e:
+        logger.error(f"Error processing upload: {str(e)}", exc_info=True)
+        user_message = get_user_friendly_message(e, output_lang)
+        return f"❌ Lỗi: {user_message}", "", "", "", "", "", ""
