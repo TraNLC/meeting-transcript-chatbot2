@@ -1,0 +1,692 @@
+{% extends "base.html" %}
+
+{% block title %}Ghi âm Browser - Akari AI{% endblock %}
+
+{% block page_styles %}
+<link href="{{ url_for('static', filename='css/recording.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="recording-container">
+    <div class="recording-card">
+        <div id="setupSection">
+            <div class="recording-header">
+                <div class="recording-icon">
+                    <i class="bi bi-laptop"></i>
+                </div>
+                <h2>Ghi âm Browser</h2>
+                <p class="text-muted">Ghi âm cuộc họp từ Zoom, Google Meet, Microsoft Teams</p>
+            </div>
+
+            <div class="setup-section">
+                <div class="form-group">
+                    <label class="form-label">Chọn ngôn ngữ</label>
+                    <select id="languageSelect" class="form-select">
+                        <option value="vi-VN">🇻🇳 Tiếng Việt</option>
+                        <option value="en-US">🇬🇧 English (US)</option>
+                        <option value="en-GB">🇬🇧 English (UK)</option>
+                        <option value="ja-JP">🇯🇵 日本語</option>
+                        <option value="ko-KR">🇰🇷 한국어</option>
+                        <option value="zh-CN">🇨🇳 中文 (简体)</option>
+                        <option value="zh-TW">🇹🇼 中文 (繁體)</option>
+                    </select>
+                    <small class="text-muted">
+                        💡 Tip: Chọn đúng ngôn ngữ tăng độ chính xác lên 20-30%
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tiêu đề (tùy chọn)</label>
+                    <input type="text" id="titleInput" class="form-control" placeholder="VD: Họp team hàng tuần">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">🚀 Colab WhisperX URL (Zero Cost)</label>
+                    <input type="text" id="colabUrlInput" class="form-control" placeholder="https://xxxx.ngrok-free.app">
+                    <small class="text-muted">Để trống nếu muốn dùng server local (có phí)</small>
+                </div>
+
+                <div class="alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Mô hình Zero Cost:</strong>
+                    <ul style="margin: 10px 0 0 20px; text-align: left;">
+                        <li><strong>Trong họp:</strong> Web Speech API hiển thị text real-time (chỉ để xem)</li>
+                        <li><strong>Sau họp:</strong> File ghi âm → Colab WhisperX → Gemini → Kết quả chính xác</li>
+                        <li><strong>Setup Colab:</strong> Mở file <code>colab_whisperx_server.ipynb</code> → Run All → Copy URL</li>
+                    </ul>
+                </div>
+
+                <div class="text-center">
+                    <button id="startBtn" class="btn-primary-gradient">
+                        <i class="bi bi-record-circle me-2"></i>Bắt đầu họp
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="recordingSection" class="hidden">
+            <div class="recording-header">
+                <div class="recording-timer" id="timer">00:00</div>
+                <div class="recording-status">
+                    <div class="recording-pulse"></div>
+                    <span>Đang ghi âm...</span>
+                </div>
+                <p class="text-muted mt-2" id="recordingTitle"></p>
+            </div>
+
+            <div class="transcript-container" id="transcriptContainer">
+                <div class="transcript-header">
+                    <div class="header-left">
+                        <span class="badge bg-info">
+                            <i class="bi bi-eye"></i> Live Preview
+                        </span>
+                        <small class="text-muted">Transcript chính xác + phân biệt người nói tự động sau khi kết thúc</small>
+                    </div>
+                    <div class="header-right">
+                        <div class="speaker-selector">
+                            <label>👤 Người nói hiện tại:</label>
+                            <select id="currentSpeaker" class="form-select form-select-sm">
+                                <option value="Speaker 1">Speaker 1</option>
+                                <option value="Speaker 2">Speaker 2</option>
+                                <option value="Speaker 3">Speaker 3</option>
+                                <option value="Speaker 4">Speaker 4</option>
+                                <option value="Speaker 5">Speaker 5</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary" onclick="addNewSpeaker()" title="Thêm người nói mới">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted ms-2">💡 Tip: Ctrl+1-9 để chuyển nhanh</small>
+                    </div>
+                </div>
+                <div id="liveTranscript" class="live-transcript">
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-mic" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Đang lắng nghe...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button id="stopBtn" class="btn-danger">
+                    <i class="bi bi-stop-circle me-2"></i>Dừng ghi âm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// ============================================
+// ZERO COST MODEL - Live Meeting
+// ============================================
+// Giai đoạn 1: Web Speech API (Real-time Effect)
+// Giai đoạn 2: MediaRecorder (High Quality Recording)
+// Giai đoạn 3: Colab WhisperX + Gemini (Processing)
+// ============================================
+
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingStartTime = null;
+let timerInterval = null;
+let recognition = null;
+let liveTranscriptText = '';
+let currentSpeaker = 'Speaker 1';
+let speakerCount = 5;
+let lastSpeakerChangeTime = 0;
+
+// Web Speech API Setup with Enhanced Accuracy
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    
+    // Cấu hình tăng độ chính xác
+    recognition.continuous = true;           // Ghi âm liên tục
+    recognition.interimResults = true;       // Hiển thị kết quả tạm thời
+    recognition.maxAlternatives = 3;         // Lấy 3 phương án tốt nhất (tăng từ 1)
+    
+    // Tăng độ nhạy và chính xác
+    if (recognition.grammars) {
+        // Có thể thêm grammar hints nếu biết từ khóa
+        const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+        const grammarList = new SpeechGrammarList();
+        recognition.grammars = grammarList;
+    }
+}
+
+document.getElementById('startBtn').addEventListener('click', async () => {
+    const language = document.getElementById('languageSelect').value;
+    const title = document.getElementById('titleInput').value || `Meeting - ${new Date().toLocaleString('vi-VN')}`;
+    const colabUrl = document.getElementById('colabUrlInput').value.trim();
+    
+    try {
+        // Request microphone access for recording
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: { 
+                echoCancellation: true, 
+                noiseSuppression: true, 
+                sampleRate: 44100 
+            }
+        });
+        
+        // Setup MediaRecorder for high-quality recording
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+            ? 'audio/webm;codecs=opus' 
+            : 'audio/webm';
+        
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = () => handleRecordingComplete(language, title, colabUrl);
+        mediaRecorder.start(1000); // Collect data every second
+        
+        // Start Web Speech API for live preview with Enhanced Accuracy
+        if (recognition) {
+            recognition.lang = language;
+            
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    
+                    // Lấy phương án tốt nhất (có confidence cao nhất)
+                    let bestTranscript = result[0].transcript;
+                    let bestConfidence = result[0].confidence;
+                    
+                    // So sánh với các phương án khác (nếu có)
+                    for (let j = 1; j < result.length; j++) {
+                        if (result[j].confidence > bestConfidence) {
+                            bestTranscript = result[j].transcript;
+                            bestConfidence = result[j].confidence;
+                        }
+                    }
+                    
+                    // Chỉ chấp nhận kết quả có confidence > 0.5
+                    if (result.isFinal) {
+                        if (bestConfidence > 0.5 || bestConfidence === undefined) {
+                            finalTranscript += bestTranscript + ' ';
+                        }
+                    } else {
+                        interimTranscript += bestTranscript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    // Thêm timestamp và speaker cho mỗi câu
+                    const timestamp = formatTimestamp((Date.now() - recordingStartTime) / 1000);
+                    liveTranscriptText += `[${timestamp}] **${currentSpeaker}**: ${finalTranscript}\n`;
+                }
+                
+                updateLiveTranscript(liveTranscriptText, interimTranscript);
+            };
+            
+            recognition.onerror = (event) => {
+                console.warn('Speech recognition error:', event.error);
+                
+                // Auto-restart on network error
+                if (event.error === 'network' || event.error === 'no-speech') {
+                    setTimeout(() => {
+                        if (mediaRecorder && mediaRecorder.state === 'recording') {
+                            recognition.start();
+                        }
+                    }, 1000);
+                }
+            };
+            
+            recognition.onend = () => {
+                // Auto-restart if still recording
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    setTimeout(() => recognition.start(), 100);
+                }
+            };
+            
+            recognition.start();
+        }
+        
+        // Switch UI
+        document.getElementById('setupSection').classList.add('hidden');
+        document.getElementById('recordingSection').classList.remove('hidden');
+        document.getElementById('recordingTitle').textContent = title;
+        
+        // Setup speaker selector
+        document.getElementById('currentSpeaker').addEventListener('change', (e) => {
+            currentSpeaker = e.target.value;
+            lastSpeakerChangeTime = Date.now();
+            console.log('Speaker changed to:', currentSpeaker);
+        });
+        
+        // Keyboard shortcuts for quick speaker switching (Ctrl+1, Ctrl+2, etc.)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
+                e.preventDefault();
+                const speakerNum = parseInt(e.key);
+                const speakerName = `Speaker ${speakerNum}`;
+                const select = document.getElementById('currentSpeaker');
+                
+                // Check if speaker exists
+                const option = Array.from(select.options).find(opt => opt.value === speakerName);
+                if (option) {
+                    select.value = speakerName;
+                    currentSpeaker = speakerName;
+                    showPopup(`Chuyển sang ${speakerName}`, 'info');
+                }
+            }
+        });
+        
+        // Start timer
+        recordingStartTime = Date.now();
+        timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timer').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }, 1000);
+        
+    } catch (error) {
+        showPopup(
+            error.name === 'NotAllowedError' 
+                ? 'Bạn cần cho phép truy cập microphone' 
+                : 'Lỗi: ' + error.message, 
+            'error'
+        );
+    }
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+    // Stop recording
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+    }
+    
+    // Stop speech recognition
+    if (recognition) {
+        recognition.stop();
+    }
+    
+    // Stop timer
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+    
+    // Stop audio stream
+    if (mediaRecorder && mediaRecorder.stream) {
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+});
+
+function updateLiveTranscript(finalText, interimText = '') {
+    const container = document.getElementById('liveTranscript');
+    
+    // Format final text (đã xác nhận)
+    const finalLines = finalText.split('\n').filter(line => line.trim());
+    const finalHTML = finalLines.map(line => {
+        // Match pattern: [00:00] **Speaker 1**: text
+        const match = line.match(/\[(\d{2}:\d{2})\]\s+\*\*(.*?)\*\*:\s+(.*)/);
+        if (match) {
+            const [, timestamp, speaker, text] = match;
+            const speakerClass = getSpeakerColorClass(speaker);
+            return `
+                <p>
+                    <span class="timestamp">${timestamp}</span>
+                    <span class="speaker-label ${speakerClass}">${speaker}</span>
+                    <span class="text-content">${text}</span>
+                </p>
+            `;
+        }
+        return `<p>${line}</p>`;
+    }).join('');
+    
+    // Format interim text (đang nhận diện - màu mờ)
+    const interimHTML = interimText ? `
+        <p class="interim">
+            <span class="speaker-label ${getSpeakerColorClass(currentSpeaker)}">${currentSpeaker}</span>
+            <span class="text-content">${interimText}</span>
+        </p>
+    ` : '';
+    
+    container.innerHTML = `
+        <div class="live-text">
+            ${finalHTML}
+            ${interimHTML}
+        </div>
+    `;
+    container.scrollTop = container.scrollHeight;
+}
+
+function getSpeakerColorClass(speaker) {
+    // Assign different colors to different speakers
+    const speakerNum = speaker.match(/\d+/);
+    if (speakerNum) {
+        const num = parseInt(speakerNum[0]);
+        return `speaker-color-${(num % 5) + 1}`;
+    }
+    return 'speaker-color-1';
+}
+
+function addNewSpeaker() {
+    speakerCount++;
+    const newSpeaker = `Speaker ${speakerCount}`;
+    const select = document.getElementById('currentSpeaker');
+    const option = document.createElement('option');
+    option.value = newSpeaker;
+    option.textContent = newSpeaker;
+    select.appendChild(option);
+    select.value = newSpeaker;
+    currentSpeaker = newSpeaker;
+    showPopup(`Đã thêm ${newSpeaker}`, 'success');
+}
+
+async function handleRecordingComplete(language, title, colabUrl) {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    const audioSizeMB = (audioBlob.size / 1024 / 1024).toFixed(2);
+    
+    showLoading(
+        '🚀 Đang xử lý với WhisperX + Gemini...', 
+        `File audio: ${audioSizeMB}MB | Có thể mất 2-5 phút`
+    );
+    
+    try {
+        let transcriptResult = null;
+        
+        // Option 1: Use Colab WhisperX (Zero Cost)
+        if (colabUrl) {
+            transcriptResult = await processWithColab(audioBlob, colabUrl);
+        }
+        
+        // Option 2: Use local server (fallback)
+        if (!transcriptResult) {
+            transcriptResult = await processWithLocalServer(audioBlob, language, title);
+        }
+        
+        hideLoading();
+        
+        if (transcriptResult && transcriptResult.success) {
+            showPopup('✅ Xử lý hoàn tất!', 'success');
+            
+            // Display results
+            displayMeetingResults(transcriptResult);
+        } else {
+            throw new Error(transcriptResult?.error || 'Processing failed');
+        }
+        
+    } catch (error) {
+        hideLoading();
+        showPopup('❌ Lỗi: ' + error.message, 'error');
+    }
+}
+
+async function processWithColab(audioBlob, colabUrl) {
+    try {
+        console.log('🚀 Processing with Colab WhisperX...');
+        
+        // Step 1: Send to Colab for transcription
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'meeting.webm');
+        
+        const transcribeResponse = await fetch(`${colabUrl}/transcribe`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!transcribeResponse.ok) {
+            throw new Error('Colab transcription failed');
+        }
+        
+        const transcriptData = await transcribeResponse.json();
+        
+        // Step 2: Format transcript with speakers
+        let formattedTranscript = '';
+        if (transcriptData.segments) {
+            for (const segment of transcriptData.segments) {
+                const timestamp = formatTimestamp(segment.start);
+                const speaker = segment.speaker || 'Unknown';
+                const text = segment.text;
+                formattedTranscript += `[${timestamp}] **${speaker}**: ${text}\n`;
+            }
+        }
+        
+        // Step 3: Send to Gemini for summary (via local server)
+        const summaryResponse = await fetch('/api/upload/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                transcript: formattedTranscript,
+                file_type: 'text',
+                meeting_type: 'meeting',
+                output_lang: 'vi',
+                ai_model: 'gemini-2.5-flash'
+            })
+        });
+        
+        const summaryData = await summaryResponse.json();
+        
+        return {
+            success: true,
+            transcript: formattedTranscript,
+            summary: summaryData.summary,
+            topics: summaryData.topics,
+            actions: summaryData.actions,
+            decisions: summaryData.decisions,
+            participants: summaryData.participants
+        };
+        
+    } catch (error) {
+        console.error('Colab processing error:', error);
+        return null;
+    }
+}
+
+async function processWithLocalServer(audioBlob, language, title) {
+    try {
+        console.log('🖥️ Processing with local server...');
+        
+        const formData = new FormData();
+        formData.append('audio', audioBlob, `recording_${Date.now()}.webm`);
+        formData.append('language', language.split('-')[0]); // vi-VN -> vi
+        formData.append('title', title);
+        
+        const response = await fetch('/api/recording/save', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Local server processing failed');
+        }
+        
+        const data = await response.json();
+        return {
+            success: true,
+            recording_id: data.recording_id,
+            redirect: '/history'
+        };
+        
+    } catch (error) {
+        console.error('Local server error:', error);
+        return null;
+    }
+}
+
+function formatTimestamp(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function displayMeetingResults(data) {
+    // Redirect to results page or display inline
+    if (data.redirect) {
+        setTimeout(() => window.location.href = data.redirect, 1500);
+    } else {
+        // Display results inline (similar to upload.html)
+        const container = document.getElementById('transcriptContainer');
+        container.innerHTML = `
+            <div class="result-summary">
+                <h3>📝 Summary</h3>
+                <p>${data.summary || 'N/A'}</p>
+                
+                <h3>🎯 Key Topics</h3>
+                <p>${data.topics || 'N/A'}</p>
+                
+                <h3>✅ Action Items</h3>
+                <p>${data.actions || 'N/A'}</p>
+                
+                <h3>💡 Decisions</h3>
+                <p>${data.decisions || 'N/A'}</p>
+                
+                <h3>💬 Transcript</h3>
+                <pre>${data.transcript || 'N/A'}</pre>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="btn-primary" onclick="window.location.href='/history'">
+                    Xem lịch sử
+                </button>
+                <button class="btn-secondary" onclick="location.reload()">
+                    Họp mới
+                </button>
+            </div>
+        `;
+    }
+}
+</script>
+
+<style>
+.transcript-header {
+    padding: 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.transcript-header .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.transcript-header .header-right {
+    display: flex;
+    align-items: center;
+}
+
+.speaker-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.speaker-selector label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.speaker-selector select {
+    min-width: 120px;
+    border: 1px solid #ced4da;
+}
+
+.speaker-selector button {
+    padding: 4px 8px;
+}
+
+.live-transcript {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: white;
+}
+
+.live-text {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #333;
+}
+
+.live-text p {
+    margin-bottom: 10px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.live-text p.interim {
+    color: #999;
+    font-style: italic;
+    opacity: 0.7;
+}
+
+.live-text .timestamp {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.live-text .speaker-label {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.live-text .text-content {
+    color: #333;
+}
+
+/* Speaker colors */
+.speaker-color-1 { background: #e3f2fd; color: #1976d2; }
+.speaker-color-2 { background: #f3e5f5; color: #7b1fa2; }
+.speaker-color-3 { background: #e8f5e9; color: #388e3c; }
+.speaker-color-4 { background: #fff3e0; color: #f57c00; }
+.speaker-color-5 { background: #fce4ec; color: #c2185b; }
+.speaker-color-6 { background: #e0f2f1; color: #00796b; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.result-summary {
+    padding: 20px;
+    text-align: left;
+}
+
+.result-summary h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.result-summary pre {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+</style>
+{% endblock %}

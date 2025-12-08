@@ -1,0 +1,689 @@
+{% extends "base.html" %}
+
+{% block title %}Upload & Phân tích - Akari AI{% endblock %}
+
+{% block page_styles %}
+<link href="{{ url_for('static', filename='css/upload.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-header">
+        <h1>Upload & Phân tích</h1>
+        <p>Upload file audio, video hoặc text để phân tích bằng AI</p>
+    </div>
+
+    <div class="upload-main-card">
+        <!-- Upload Zone -->
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">
+                <i class="bi bi-cloud-arrow-up"></i>
+            </div>
+            <h3>Kéo thả file vào đây</h3>
+            <p>hoặc</p>
+            <button type="button" class="btn-choose-file" onclick="document.getElementById('fileInput').click()">
+                Chọn file
+            </button>
+            <input type="file" id="fileInput" accept="audio/*,video/*,.txt,.docx,.pdf" style="display: none;">
+            <small>Hỗ trợ: MP3, WAV, MP4, TXT, DOCX, PDF (tối đa 100MB)</small>
+        </div>
+
+        <!-- File Selected Info -->
+        <div class="file-selected" id="fileSelected">
+            <div class="file-selected-icon">
+                <i class="bi bi-file-earmark-check"></i>
+            </div>
+            <div class="file-selected-info">
+                <div class="file-selected-name" id="fileName"></div>
+                <div class="file-selected-meta">
+                    <span id="fileSize"></span> • <span id="fileType"></span>
+                </div>
+            </div>
+            <button class="file-selected-remove" onclick="removeFile()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Settings -->
+        <div class="upload-settings" id="settingsSection">
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label>Ngôn ngữ</label>
+                    <select id="languageSelect">
+                        <option value="vi">🇻🇳 Tiếng Việt</option>
+                        <option value="en">🇬🇧 English</option>
+                        <option value="ja">🇯🇵 日本語</option>
+                        <option value="ko">🇰🇷 한국어</option>
+                        <option value="zh">🇨🇳 中文</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label>Loại cuộc họp</label>
+                    <select id="meetingTypeSelect">
+                        <option value="meeting">Cuộc họp</option>
+                        <option value="interview">Phỏng vấn</option>
+                        <option value="presentation">Thuyết trình</option>
+                        <option value="brainstorm">Brainstorming</option>
+                        <option value="training">Đào tạo</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label>🤖 AI Model</label>
+                    <select id="aiModelSelect">
+                        <option value="gpt-4o">GPT-4o (Azure) - Nhanh & Mạnh ⚡</option>
+                        <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash - Miễn phí 🆓</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro - Chất lượng cao 🌟</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Zero Cost Option -->
+            <div class="zero-cost-option" id="zeroCostOption" style="display: none;">
+                <div class="alert alert-success">
+                    <i class="bi bi-rocket-takeoff me-2"></i>
+                    <strong>🚀 Zero Cost Mode</strong>
+                    <p class="mb-2">Sử dụng Colab WhisperX (GPU miễn phí) để transcribe audio</p>
+                    <div class="form-group mb-0">
+                        <label class="form-label-sm">Colab WhisperX URL:</label>
+                        <input type="text" id="colabUrlInput" class="form-control form-control-sm" 
+                               placeholder="https://xxxx.ngrok-free.app">
+                        <small class="text-muted">
+                            Để trống nếu muốn dùng server local (có phí). 
+                            <a href="#" onclick="showColabGuide(); return false;">Hướng dẫn setup Colab</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Speaker Diarization (only for audio) -->
+            <div class="setting-item-checkbox" id="speakerDiarizationOption" style="display: none;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="enableDiarization">
+                    <span>🎤 Phân biệt giọng nói (Speaker Diarization)</span>
+                    <small>Nhận diện và gán nhãn cho từng người nói trong audio</small>
+                </label>
+            </div>
+
+            <button id="uploadBtn" class="btn-upload">
+                <i class="bi bi-upload me-2"></i>Upload và phân tích
+            </button>
+        </div>
+    </div>
+
+        <!-- Results (Dynamic Layout) -->
+        <div class="result-container hidden" id="resultContainer">
+            <!-- Content will be dynamically generated based on file type -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let selectedFile = null;
+    let selectedFileType = null; // 'audio' or 'text'
+
+    // File input change
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+    // Drag and drop
+    const uploadZone = document.getElementById('uploadZone');
+    
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            handleFile(file);
+        }
+    }
+
+    function handleFile(file) {
+        selectedFile = file;
+        
+        // Detect file type from extension
+        const fileName = file.name.toLowerCase();
+        if (fileName.endsWith('.txt') || fileName.endsWith('.docx') || fileName.endsWith('.pdf')) {
+            selectedFileType = 'text';
+            // Hide speaker diarization option for text files
+            document.getElementById('speakerDiarizationOption').style.display = 'none';
+            // Hide zero cost option for text files
+            document.getElementById('zeroCostOption').style.display = 'none';
+        } else {
+            selectedFileType = 'audio';
+            // Show speaker diarization option for audio files
+            document.getElementById('speakerDiarizationOption').style.display = 'block';
+            // Show zero cost option for audio files
+            document.getElementById('zeroCostOption').style.display = 'block';
+        }
+        
+        // Show file info
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        document.getElementById('fileType').textContent = getFileType(file.name);
+        document.getElementById('fileSelected').classList.add('active');
+        document.getElementById('settingsSection').classList.add('active');
+        document.getElementById('uploadZone').style.display = 'none';
+    }
+    
+    function removeFile() {
+        selectedFile = null;
+        selectedFileType = null;
+        document.getElementById('fileSelected').classList.remove('active');
+        document.getElementById('settingsSection').classList.remove('active');
+        document.getElementById('uploadZone').style.display = 'block';
+        document.getElementById('fileInput').value = '';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function getFileType(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const types = {
+            'mp3': 'Audio MP3',
+            'wav': 'Audio WAV',
+            'webm': 'Audio WebM',
+            'mp4': 'Video MP4',
+            'txt': 'Text',
+            'docx': 'Word Document',
+            'pdf': 'PDF Document'
+        };
+        return types[ext] || 'Unknown';
+    }
+
+    // Upload button
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+        if (!selectedFile) {
+            showPopup('Vui lòng chọn file', 'error');
+            return;
+        }
+
+        const language = document.getElementById('languageSelect').value;
+        const meetingType = document.getElementById('meetingTypeSelect').value;
+        const aiModel = document.getElementById('aiModelSelect').value;
+        const colabUrl = document.getElementById('colabUrlInput')?.value.trim();
+
+        const fileName = selectedFile.name.toLowerCase();
+        let fileType = 'audio';
+        let fieldName = 'audio_file';
+
+        if (fileName.endsWith('.txt') || fileName.endsWith('.docx') || fileName.endsWith('.pdf')) {
+            fileType = 'text';
+            fieldName = 'text_file';
+        }
+
+        // Show loading
+        const fileSizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
+        showLoading(
+            fileType === 'audio' && colabUrl 
+                ? '🚀 Đang xử lý với Colab WhisperX + Gemini...' 
+                : 'Đang xử lý file...', 
+            `File: ${fileSizeMB}MB | Có thể mất 2-5 phút`
+        );
+
+        try {
+            let transcriptResult = null;
+            
+            // Option 1: Use Colab WhisperX for audio (Zero Cost)
+            if (fileType === 'audio' && colabUrl) {
+                transcriptResult = await processWithColab(selectedFile, colabUrl, language);
+            }
+            
+            // Option 2: Use local server (fallback or for text files)
+            if (!transcriptResult) {
+                transcriptResult = await processWithLocalServer(
+                    selectedFile, 
+                    fileType, 
+                    fieldName, 
+                    language, 
+                    meetingType, 
+                    aiModel
+                );
+            }
+            
+            hideLoading();
+            
+            if (transcriptResult && transcriptResult.success) {
+                displayResults(transcriptResult);
+            } else {
+                throw new Error(transcriptResult?.error || 'Processing failed');
+            }
+            
+        } catch (error) {
+            hideLoading();
+            showPopup('❌ Lỗi: ' + error.message, 'error');
+        }
+    });
+    
+    async function processWithColab(file, colabUrl, language) {
+        try {
+            console.log('🚀 Processing with Colab WhisperX...');
+            
+            // Step 1: Send to Colab for transcription
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const transcribeResponse = await fetch(`${colabUrl}/transcribe`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!transcribeResponse.ok) {
+                throw new Error('Colab transcription failed');
+            }
+            
+            const transcriptData = await transcribeResponse.json();
+            
+            // Step 2: Format transcript with speakers
+            let formattedTranscript = '';
+            if (transcriptData.segments) {
+                for (const segment of transcriptData.segments) {
+                    const timestamp = formatTimestamp(segment.start);
+                    const speaker = segment.speaker || 'Unknown';
+                    const text = segment.text;
+                    formattedTranscript += `[${timestamp}] **${speaker}**: ${text}\n`;
+                }
+            }
+            
+            // Step 3: Send to Gemini for summary (via local server)
+            const aiModel = document.getElementById('aiModelSelect').value;
+            const meetingType = document.getElementById('meetingTypeSelect').value;
+            
+            const summaryResponse = await fetch('/api/upload/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transcript: formattedTranscript,
+                    file_type: 'text',
+                    meeting_type: meetingType,
+                    output_lang: language,
+                    ai_model: aiModel
+                })
+            });
+            
+            const summaryData = await summaryResponse.json();
+            
+            return {
+                success: true,
+                transcript: formattedTranscript,
+                summary: summaryData.summary,
+                topics: summaryData.topics,
+                actions: summaryData.actions,
+                decisions: summaryData.decisions,
+                participants: summaryData.participants
+            };
+            
+        } catch (error) {
+            console.error('Colab processing error:', error);
+            return null;
+        }
+    }
+    
+    async function processWithLocalServer(file, fileType, fieldName, language, meetingType, aiModel) {
+        try {
+            console.log('🖥️ Processing with local server...');
+            
+            const formData = new FormData();
+            formData.append(fieldName, file);
+            formData.append('transcribe_lang', language);
+            formData.append('file_type', fileType);
+            formData.append('meeting_type', meetingType);
+            formData.append('output_lang', language);
+            formData.append('ai_model', aiModel);
+            
+            // Add speaker diarization option (only for audio)
+            if (fileType === 'audio') {
+                const enableDiarization = document.getElementById('enableDiarization').checked;
+                formData.append('enable_diarization', enableDiarization);
+            }
+            
+            const response = await fetch('/api/upload/process', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            if (data.status && data.status.includes('✅')) {
+                return {
+                    success: true,
+                    transcript: data.transcript,
+                    summary: data.summary,
+                    topics: data.topics,
+                    actions: data.actions,
+                    decisions: data.decisions,
+                    participants: data.participants
+                };
+            } else {
+                throw new Error(data.status || 'Processing failed');
+            }
+            
+        } catch (error) {
+            console.error('Local server error:', error);
+            return null;
+        }
+    }
+    
+    function formatTimestamp(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+    
+    function showColabGuide() {
+        const guide = `
+📚 Hướng dẫn setup Colab WhisperX:
+
+1. Mở file colab_whisperx_server.ipynb trong Google Colab
+2. Chọn Runtime > Change runtime type > GPU (T4)
+3. Lấy ngrok token tại: https://dashboard.ngrok.com/get-started/your-authtoken
+4. Lấy HuggingFace token tại: https://huggingface.co/settings/tokens
+5. Sửa Cell 2 với tokens của bạn
+6. Chạy Runtime > Run all
+7. Copy URL ngrok hiển thị
+8. Dán vào ô "Colab WhisperX URL" ở trên
+
+Chi tiết: Xem file ZERO_COST_GUIDE.md
+        `;
+        alert(guide);
+    }
+
+    function displayResults(data) {
+        const resultContainer = document.getElementById('resultContainer');
+        
+        // Detect layout type based on file type
+        const isAudio = selectedFileType === 'audio';
+        
+        // Build layout HTML
+        let layoutHTML = '';
+        
+        if (isAudio) {
+            // Audio Layout: Notes + Transcript with Audio Player
+            layoutHTML = `
+                <div class="result-layout-two-column">
+                    <!-- Left Panel: Notes -->
+                    <div class="notes-panel">
+                        <div class="panel-header">
+                            <h2>📝 Notes</h2>
+                            <div class="panel-actions">
+                                <button class="btn-icon" onclick="exportNotes()" title="Export Notes">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="notes-content">
+                            <!-- Summary -->
+                            <div class="note-section">
+                                <h3><i class="bi bi-file-text"></i> Summary</h3>
+                                <div class="note-text">${data.summary || 'Không có tóm tắt'}</div>
+                            </div>
+                            
+                            <!-- Key Topics -->
+                            <div class="note-section">
+                                <h3><i class="bi bi-tags"></i> Key Topics</h3>
+                                <div class="note-text">${data.topics || 'Không có chủ đề'}</div>
+                            </div>
+                            
+                            <!-- Action Items -->
+                            <div class="note-section">
+                                <h3><i class="bi bi-check2-square"></i> Action Items</h3>
+                                <div class="note-text">${data.actions || 'Không có hành động'}</div>
+                            </div>
+                            
+                            <!-- Decisions -->
+                            <div class="note-section">
+                                <h3><i class="bi bi-lightbulb"></i> Key Decisions</h3>
+                                <div class="note-text">${data.decisions || 'Không có quyết định'}</div>
+                            </div>
+                            
+                            <!-- Participants (if available) -->
+                            ${data.participants ? `
+                            <div class="note-section">
+                                <h3><i class="bi bi-people"></i> Participants</h3>
+                                <div class="note-text">${data.participants}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Right Panel: Transcript -->
+                    <div class="transcript-panel">
+                        <div class="panel-header">
+                            <h2>💬 Transcript</h2>
+                            <div class="panel-actions">
+                                <button class="btn-icon" onclick="copyTranscript()" title="Copy Transcript">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                                <button class="btn-icon" onclick="searchTranscript()" title="Search">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="transcript-content" id="transcriptContent">
+                            ${formatTranscript(data.transcript || 'Không có transcript')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Text Layout: Notes + Original Content
+            layoutHTML = `
+                <div class="result-layout-two-column">
+                    <!-- Left Panel: Notes -->
+                    <div class="notes-panel">
+                        <div class="panel-header">
+                            <h2>📝 Analysis</h2>
+                            <div class="panel-actions">
+                                <button class="btn-icon" onclick="exportNotes()" title="Export Analysis">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="notes-content">
+                            <!-- Summary -->
+                            <div class="note-section">
+                                <h3><i class="bi bi-file-text"></i> Summary</h3>
+                                <div class="note-text">${data.summary || 'Không có tóm tắt'}</div>
+                            </div>
+                            
+                            <!-- Key Topics -->
+                            <div class="note-section">
+                                <h3><i class="bi bi-tags"></i> Key Topics</h3>
+                                <div class="note-text">${data.topics || 'Không có chủ đề'}</div>
+                            </div>
+                            
+                            <!-- Action Items -->
+                            <div class="note-section">
+                                <h3><i class="bi bi-check2-square"></i> Action Items</h3>
+                                <div class="note-text">${data.actions || 'Không có hành động'}</div>
+                            </div>
+                            
+                            <!-- Decisions -->
+                            <div class="note-section">
+                                <h3><i class="bi bi-lightbulb"></i> Key Decisions</h3>
+                                <div class="note-text">${data.decisions || 'Không có quyết định'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Panel: Original Content -->
+                    <div class="content-panel">
+                        <div class="panel-header">
+                            <h2>📄 Original Content</h2>
+                            <div class="panel-actions">
+                                <button class="btn-icon" onclick="copyContent()" title="Copy Content">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                                <button class="btn-icon" onclick="searchContent()" title="Search">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="content-text">
+                            <pre id="originalContent">${data.transcript || 'Không có nội dung'}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Add action buttons
+        layoutHTML += `
+            <div class="action-buttons-modern">
+                <button class="btn-action primary" onclick="exportFile('txt')">
+                    <i class="bi bi-file-text"></i>
+                    <span>Export TXT</span>
+                </button>
+                <button class="btn-action primary" onclick="exportFile('docx')">
+                    <i class="bi bi-file-word"></i>
+                    <span>Export DOCX</span>
+                </button>
+                <button class="btn-action secondary" onclick="window.location.href='/history'">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Lịch sử</span>
+                </button>
+                <button class="btn-action secondary" onclick="location.reload()">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span>Phân tích mới</span>
+                </button>
+            </div>
+        `;
+        
+        // Inject HTML
+        resultContainer.innerHTML = layoutHTML;
+        resultContainer.classList.remove('hidden');
+        resultContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function exportNotes() {
+        exportFile('txt');
+    }
+    
+    function copyContent() {
+        const text = document.getElementById('originalContent').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            showPopup('Đã copy nội dung!', 'success');
+        }).catch(() => {
+            showPopup('Không thể copy', 'error');
+        });
+    }
+    
+    function searchContent() {
+        const searchTerm = prompt('Tìm kiếm trong nội dung:');
+        if (searchTerm) {
+            const content = document.getElementById('originalContent');
+            const text = content.textContent;
+            const regex = new RegExp(searchTerm, 'gi');
+            const highlighted = text.replace(regex, match => `<mark>${match}</mark>`);
+            content.innerHTML = highlighted;
+        }
+    }
+    
+    function formatTranscript(transcript) {
+        // Check if transcript has speaker labels (format: [00:00] **Guest-1**: text)
+        const hasSpeakers = transcript.includes('**Guest-') || transcript.includes('**SPEAKER_');
+        
+        if (hasSpeakers) {
+            // Format with speaker styling
+            const lines = transcript.split('\n');
+            let html = '<div class="transcript-with-speakers">';
+            
+            for (const line of lines) {
+                if (line.trim() === '') continue;
+                
+                // Match pattern: [00:00] **Guest-1**: text
+                const match = line.match(/\[(\d{2}:\d{2})\]\s+\*\*(.*?)\*\*:\s+(.*)/);
+                
+                if (match) {
+                    const [, timestamp, speaker, text] = match;
+                    const speakerClass = getSpeakerClass(speaker);
+                    
+                    html += `
+                        <div class="transcript-line">
+                            <div class="transcript-timestamp">${timestamp}</div>
+                            <div class="transcript-speaker ${speakerClass}">${speaker}</div>
+                            <div class="transcript-text">${text}</div>
+                        </div>
+                    `;
+                } else {
+                    // Regular line without speaker
+                    html += `<div class="transcript-line-plain">${line}</div>`;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        } else {
+            // Plain transcript without speakers
+            return `<pre>${transcript}</pre>`;
+        }
+    }
+    
+    function getSpeakerClass(speaker) {
+        // Assign different colors to different speakers
+        const speakerNum = speaker.match(/\d+/);
+        if (speakerNum) {
+            const num = parseInt(speakerNum[0]);
+            return `speaker-${(num % 5) + 1}`; // Cycle through 5 colors
+        }
+        return 'speaker-1';
+    }
+    
+    function searchTranscript() {
+        const searchTerm = prompt('Tìm kiếm trong transcript:');
+        if (searchTerm) {
+            const transcript = document.getElementById('transcriptContent');
+            const text = transcript.textContent;
+            const regex = new RegExp(searchTerm, 'gi');
+            const highlighted = text.replace(regex, match => `<mark>${match}</mark>`);
+            transcript.innerHTML = highlighted;
+        }
+    }
+
+    function exportFile(type) {
+        window.open(`/api/export/${type}`, '_blank');
+    }
+
+    function copyTranscript() {
+        const text = document.getElementById('transcriptText').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            showPopup('Đã copy transcript!', 'success');
+        }).catch(() => {
+            showPopup('Không thể copy', 'error');
+        });
+    }
+</script>
+{% endblock %}
