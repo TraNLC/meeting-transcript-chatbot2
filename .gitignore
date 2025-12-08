@@ -1,6 +1,9 @@
-# Environment
+# Environment - NEVER commit these files!
 .env
 .env.local
+.env.*.local
+*.env
+!.env.example
 
 # Python
 __pycache__/
@@ -34,3 +37,24 @@ htmlcov/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# API Keys & Secrets
+*_secrets.json
+*_credentials.json
+*.pem
+*.key
+*.cert
+
+# Logs with potential sensitive data
+logs/
+*.log
+
+# Colab notebooks with filled tokens (keep template only)
+*_filled.ipynb
+
+# Test/Upload files
+data/uploads/
+data/exports/
+data/history/
+data/recordings/
+data/tts_output/
