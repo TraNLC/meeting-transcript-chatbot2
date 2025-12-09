@@ -1,0 +1,1072 @@
+{% extends "base.html" %}
+
+{% block title %}Kết quả phân tích - Akari AI{% endblock %}
+
+{% block page_styles %}
+<link href="{{ url_for('static', filename='css/analysis.css') }}?v=20251208_v4" rel="stylesheet">
+<style>
+    /* VERSION 4.0 - FIXED ALL SYNTAX ERRORS */
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analysis-container">
+    <!-- File Info Bar -->
+    <div class="file-info-bar">
+        <div class="file-info-content">
+            <div class="file-info-left">
+                <div class="file-info-icon">
+                    <i class="bi bi-file-earmark-check"></i>
+                </div>
+                <div class="file-info-details">
+                    <div class="file-info-name">
+                        <i class="bi bi-check-circle-fill" style="color: #10b981; margin-right: 0.5rem;"></i>
+                        <span id="fileName">Loading...</span>
+                    </div>
+                    <div class="file-info-meta" id="fileMeta">
+                        Loading...
+                    </div>
+                </div>
+            </div>
+            <div class="file-info-actions">
+                <button onclick="downloadAllNotes()" class="file-action-btn primary">
+                    <i class="bi bi-download"></i>
+                    <span>Download</span>
+                </button>
+                <button onclick="window.location.href='/upload'" class="file-action-btn secondary">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>File mới</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2 Column Grid -->
+    <div class="result-grid">
+        <!-- Left: Analysis -->
+        <div class="analysis-panel">
+            <h2 class="panel-title"><i class="bi bi-journal-text"></i> Notes</h2>
+
+            <!-- Summary -->
+            <div class="analysis-section">
+                <div class="section-title">
+                    <div class="section-icon-box icon-summary">📝</div>
+                    <h3>Tóm tắt cuộc họp</h3>
+                </div>
+                <div class="section-body" id="summaryContent">
+                    Loading...
+                </div>
+            </div>
+
+            <!-- Topics -->
+            <div class="analysis-section">
+                <div class="section-title">
+                    <div class="section-icon-box icon-agenda">📋</div>
+                    <h3>Chủ đề thảo luận</h3>
+                </div>
+                <div class="section-body">
+                    <ul class="agenda-items" id="topicsContent">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Action Items -->
+            <div class="analysis-section">
+                <div class="section-title">
+                    <div class="section-icon-box icon-actions">✅</div>
+                    <h3>Hành động cần làm</h3>
+                </div>
+                <div class="section-body">
+                    <div class="action-items-list" id="actionsContent">
+                        Loading...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decisions -->
+            <div class="analysis-section">
+                <div class="section-title">
+                    <div class="section-icon-box icon-decisions">🎯</div>
+                    <h3>Quyết định quan trọng</h3>
+                </div>
+                <div class="section-body">
+                    <ul class="decision-items" id="decisionsContent">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Tabs (Ask AI + Transcript) -->
+        <div class="transcript-panel">
+            <!-- Tab Headers -->
+            <div class="transcript-tabs">
+                <button class="transcript-tab active" onclick="switchTab('askAI')" id="tabAskAI">
+                    <i class="bi bi-robot"></i> Ask AI
+                </button>
+                <button class="transcript-tab" onclick="switchTab('transcript')" id="tabTranscript">
+                    <i class="bi bi-chat-left-text"></i> Transcript
+                </button>
+            </div>
+
+            <!-- Ask AI Tab Content -->
+            <div class="tab-content active" id="contentAskAI">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-welcome">
+                            <div class="welcome-icon">🤖</div>
+                            <h4>Ask AI về cuộc họp này</h4>
+                            <p>Hỏi bất cứ điều gì về nội dung, quyết định, hoặc hành động trong meeting</p>
+
+                            <!-- Suggested Questions -->
+                            <div class="suggested-questions" id="suggestedQuestions">
+                                <div class="suggested-label">💡 Câu hỏi gợi ý:</div>
+                                <!-- Will be populated dynamically based on meeting content -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput"
+                            placeholder="Ask anything about this meeting..."
+                            onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="chat-send-btn" onclick="sendMessage()">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transcript Tab Content -->
+            <div class="tab-content" id="contentTranscript">
+                <!-- Audio Player (Hidden by default, shown when audio available) -->
+                <div id="audioPlayerSection"
+                    style="display: none; padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <i class="bi bi-mic-fill" style="color: #3b82f6; font-size: 1.2rem;"></i>
+                        <audio id="recordedAudioPlayer" controls style="flex: 1; height: 40px;">
+                            Your browser does not support audio playback.
+                        </audio>
+                    </div>
+                </div>
+
+                <div class="transcript-panel-header">
+                    <div class="transcript-tools">
+                        <button class="transcript-tool-btn" onclick="searchInTranscript()" title="Tìm kiếm">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <button class="transcript-tool-btn" onclick="copyFullTranscript()" title="Copy">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                        <div class="dropdown" style="display: inline-block;">
+                            <button class="transcript-tool-btn" title="Download" onclick="toggleDownloadMenu()">
+                                <i class="bi bi-download"></i>
+                            </button>
+                            <div id="downloadMenu" class="download-dropdown"
+                                style="display: none; position: absolute; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 0.5rem; min-width: 160px; z-index: 1000;">
+                                <button onclick="downloadTranscriptTxt()"
+                                    style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"
+                                    onmouseover="this.style.background='#f3f4f6'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <i class="bi bi-file-text"></i> TXT
+                                </button>
+                                <button onclick="downloadTranscriptDocx()"
+                                    style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"
+                                    onmouseover="this.style.background='#f3f4f6'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <i class="bi bi-file-word"></i> DOCX
+                                </button>
+                                <button onclick="downloadRecordedAudio()"
+                                    style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"
+                                    onmouseover="this.style.background='#f3f4f6'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <i class="bi bi-file-music"></i> Audio (MP3)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="transcript-body" id="transcriptBody">
+                    <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                        <p>Không có transcript trong session</p>
+                        <button onclick="loadOriginalFile()"
+                            style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            <i class="bi bi-file-text"></i> Load file gốc
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    console.log('%c═══════════════════════════════════════════════════════', 'color: #4facfe; font-weight: bold');
+    console.log('%c🎨 ANALYSIS.HTML LOADED - VERSION 4.0 (NO SYNTAX ERRORS)', 'color: #00ff00; font-size: 16px; font-weight: bold');
+    console.log('%c⏰ Timestamp:', new Date().toISOString(), 'color: #ffaa00');
+    console.log('%c✅ If you see this, the file loaded successfully!', 'color: #00ff00; font-weight: bold');
+    console.log('%c═══════════════════════════════════════════════════════', 'color: #4facfe; font-weight: bold');
+
+    // Get data from sessionStorage
+    const analysisData = JSON.parse(sessionStorage.getItem('analysisData') || '{}');
+    const fileInfo = JSON.parse(sessionStorage.getItem('fileInfo') || '{}');
+
+    console.log('📦 Analysis Data:', analysisData);
+    console.log('📄 File Info:', fileInfo);
+    console.log('🔍 Topics type:', typeof analysisData.topics);
+    console.log('🔍 Topics value:', analysisData.topics);
+    console.log('🔍 Actions type:', typeof analysisData.actions);
+    console.log('🔍 Decisions type:', typeof analysisData.decisions);
+
+    // Display file info
+    console.log('📄 Processing FILE INFO...');
+    if (fileInfo.name) {
+        console.log('  - File name:', fileInfo.name);
+        console.log('  - File size:', fileInfo.size);
+        console.log('  - File type:', fileInfo.type);
+
+        document.getElementById('fileName').textContent = fileInfo.name;
+        document.getElementById('fileMeta').textContent = `${fileInfo.size || ''} • ${fileInfo.type || ''} • Phân tích hoàn tất`;
+
+        console.log('✅ File info displayed');
+    } else {
+        console.warn('⚠️ No file info found');
+    }
+
+    // Display results
+    console.log('📝 Processing SUMMARY...');
+    if (analysisData.summary) {
+        console.log('  - Type:', typeof analysisData.summary);
+        console.log('  - Length:', analysisData.summary.length);
+        console.log('  - Preview:', analysisData.summary.substring(0, 100));
+
+        document.getElementById('summaryContent').innerHTML = formatText(analysisData.summary);
+
+        console.log('✅ Summary rendered successfully');
+    } else {
+        console.warn('⚠️ No summary found');
+    }
+
+    if (analysisData.topics) {
+        console.log('📋 Processing TOPICS...');
+        console.log('  - Original type:', typeof analysisData.topics);
+        console.log('  - Original value:', analysisData.topics);
+
+        let topics = analysisData.topics;
+
+        // Handle different formats
+        if (typeof topics === 'string') {
+            console.log('  - Parsing as STRING');
+            // Parse formatted text (e.g., "### 1. Topic\nDescription\n\n### 2. Topic2...")
+            topics = topics.split(/###\s*\d+\./).filter(t => t.trim()).map(t => {
+                const lines = t.trim().split('\n');
+                return lines[0].trim(); // Get first line as topic
+            });
+            console.log('  - Parsed topics:', topics);
+        } else if (Array.isArray(topics)) {
+            console.log('  - Processing as ARRAY');
+            // Already array, extract text from objects if needed
+            topics = topics.map((topic, idx) => {
+                console.log(`    - Topic ${idx} type:`, typeof topic, 'value:', topic);
+                if (typeof topic === 'object') {
+                    const extracted = topic.topic || topic.description || topic.text || JSON.stringify(topic);
+                    console.log(`    - Extracted:`, extracted);
+                    return extracted;
+                }
+                return topic;
+            });
+        } else {
+            console.log('  - Unknown format, setting to empty array');
+            topics = [];
+        }
+
+        console.log('  - Final topics array:', topics);
+
+        document.getElementById('topicsContent').innerHTML = topics.map((topic, idx) => {
+            console.log(`  - Rendering topic ${idx}:`, topic, 'type:', typeof topic);
+            return `
+                <li class="agenda-item">
+                    <span class="agenda-bullet">•</span>
+                    <span>${formatText(topic)}</span>
+                </li>
+            `;
+        }).join('');
+
+        console.log('✅ Topics rendered successfully');
+    }
+
+    if (analysisData.actions) {
+        console.log('✅ Processing ACTIONS...');
+        console.log('  - Original type:', typeof analysisData.actions);
+        console.log('  - Original value:', analysisData.actions);
+
+        let actions = analysisData.actions;
+
+        // Parse if it's formatted text
+        if (typeof actions === 'string') {
+            console.log('  - Parsing as STRING');
+            actions = parseActionItems(actions);
+            console.log('  - Parsed actions:', actions);
+        } else if (Array.isArray(actions)) {
+            console.log('  - Already ARRAY, count:', actions.length);
+        } else {
+            console.log('  - Unknown format, setting to empty array');
+            actions = [];
+        }
+
+        console.log('  - Final actions array:', actions);
+
+        console.log('🔧 Building actions HTML...');
+
+        const actionsHtml = actions.map((action, idx) => {
+            console.log(`  - Rendering action ${idx}:`, action);
+            console.log('    - assignee:', action.assignee);
+            console.log('    - task:', action.task);
+            console.log('    - deadline:', action.deadline);
+
+            const assigneeName = action.assignee || 'Chưa phân công';
+            const assigneeInitial = getInitial(action.assignee);
+            console.log('    - assigneeInitial:', assigneeInitial);
+
+            const taskHtml = formatText(action.task);
+            console.log('    - taskHtml:', taskHtml);
+
+            const deadlineHtml = action.deadline ?
+                '<div class="action-deadline"><i class="bi bi-calendar-event"></i> ' + action.deadline + '</div>' : '';
+            console.log('    - deadlineHtml:', deadlineHtml);
+
+            const html = '<div class="action-item-card">' +
+                '<div class="action-item-header">' +
+                '<input type="checkbox" class="action-checkbox" id="action-' + idx + '">' +
+                '<div class="action-assignee">' +
+                '<div class="assignee-avatar">' + assigneeInitial + '</div>' +
+                '<span class="assignee-name">' + assigneeName + '</span>' +
+                '</div></div>' +
+                '<div class="action-task">' + taskHtml + '</div>' +
+                deadlineHtml +
+                '</div>';
+
+            console.log('    - Generated HTML length:', html.length);
+            return html;
+        }).join('');
+
+        console.log('  - Total actions HTML length:', actionsHtml.length);
+        console.log('  - Setting innerHTML...');
+
+        try {
+            document.getElementById('actionsContent').innerHTML = actionsHtml;
+            console.log('✅ Actions HTML set successfully');
+        } catch (error) {
+            console.error('❌ Error setting actions HTML:', error);
+            console.error('  - Error message:', error.message);
+            console.error('  - Error stack:', error.stack);
+        }
+
+        console.log('✅ Actions rendered successfully');
+        setupActionCheckboxes();
+    }
+
+    if (analysisData.decisions) {
+        console.log('🎯 Processing DECISIONS...');
+        console.log('  - Original type:', typeof analysisData.decisions);
+        console.log('  - Original value:', analysisData.decisions);
+
+        let decisions = analysisData.decisions;
+
+        // Handle different formats
+        if (typeof decisions === 'string') {
+            console.log('  - Parsing as STRING');
+            // Parse formatted text (e.g., "### 1. Decision\n- Context: ...\n\n### 2. Decision2...")
+            decisions = decisions.split(/###\s*\d+\./).filter(d => d.trim()).map(d => {
+                const lines = d.trim().split('\n');
+                return lines[0].trim(); // Get first line as decision
+            });
+            console.log('  - Parsed decisions:', decisions);
+        } else if (Array.isArray(decisions)) {
+            console.log('  - Processing as ARRAY');
+            decisions = decisions.map((decision, idx) => {
+                console.log(`    - Decision ${idx} type:`, typeof decision, 'value:', decision);
+                if (typeof decision === 'object') {
+                    const extracted = decision.decision || decision.text || JSON.stringify(decision);
+                    console.log(`    - Extracted:`, extracted);
+                    return extracted;
+                }
+                return decision;
+            });
+        } else {
+            console.log('  - Unknown format, setting to empty array');
+            decisions = [];
+        }
+
+        console.log('  - Final decisions array:', decisions);
+
+        document.getElementById('decisionsContent').innerHTML = decisions.map((decision, idx) => {
+            console.log(`  - Rendering decision ${idx}:`, decision, 'type:', typeof decision);
+            return `
+                <li class="decision-item">
+                    <span class="decision-dot"></span>
+                    <span>${formatText(decision)}</span>
+                </li>
+            `;
+        }).join('');
+
+        console.log('✅ Decisions rendered successfully');
+    }
+
+    console.log('💬 Checking TRANSCRIPT...');
+    console.log('  - analysisData.transcript exists?', !!analysisData.transcript);
+    console.log('  - Type:', typeof analysisData.transcript);
+    console.log('  - Length:', analysisData.transcript?.length);
+    console.log('  - Preview:', analysisData.transcript?.substring(0, 200));
+    console.log('  - Full analysisData:', analysisData);
+
+    // FIXED: Ensure transcript ONLY loads in transcript tab - NO OTHER PLACES
+    console.log('🔧 Loading transcript ONLY into #transcriptBody');
+
+    // Only load transcript if it exists in analysisData
+    if (analysisData.transcript && analysisData.transcript.trim().length > 0) {
+        console.log('  - Found transcript in analysisData, loading into RIGHT TAB ONLY');
+        console.log('  - Transcript content:', analysisData.transcript);
+        loadTranscriptFromData(analysisData.transcript);
+    } else {
+        console.log('  - No transcript in analysisData, setting up empty tab');
+        console.warn('⚠️ TRANSCRIPT IS EMPTY OR MISSING!');
+        setupEmptyTranscriptTab();
+    }
+
+    // Helper functions
+    function formatText(text) {
+        console.log('🎨 formatText called with:', text, 'type:', typeof text);
+
+        if (!text) {
+            console.log('  - Empty text, returning empty string');
+            return '';
+        }
+
+        // Convert to string if it's an object
+        if (typeof text === 'object') {
+            console.log('  - Converting object to string');
+            text = text.topic || text.task || text.decision || JSON.stringify(text);
+            console.log('  - Converted to:', text);
+        }
+
+        // Ensure it's a string
+        if (typeof text !== 'string') {
+            console.log('  - Converting to string:', text);
+            text = String(text);
+        }
+
+        console.log('  - Final text before replace:', text, 'type:', typeof text);
+
+        const result = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>');
+
+        console.log('  - Formatted result:', result);
+        return result;
+    }
+
+    function getInitial(name) {
+        if (!name) return '?';
+        return name.charAt(0).toUpperCase();
+    }
+
+    function parseActionItems(text) {
+        if (!text) return [];
+        const lines = text.split('\n').filter(l => l.trim());
+        return lines.map(line => {
+            const match = line.match(/[-•*]\s*(?:\[(.*?)\])?\s*(.*?)(?:\((.*?)\))?$/);
+            if (match) {
+                return {
+                    assignee: match[1] || '',
+                    task: match[2] || line,
+                    deadline: match[3] || ''
+                };
+            }
+            return { assignee: '', task: line.replace(/^[-•*]\s*/, ''), deadline: '' };
+        });
+    }
+
+    function formatTranscriptWithSpeakers(transcript) {
+        console.log('🎬 formatTranscriptWithSpeakers called');
+        console.log('  - Input type:', typeof transcript);
+        console.log('  - Input length:', transcript?.length);
+        console.log('  - First 200 chars:', transcript?.substring(0, 200));
+
+        if (!transcript) {
+            console.warn('  - No transcript provided');
+            return '<p class="text-muted">Không có transcript</p>';
+        }
+
+        const lines = transcript.split('\n').filter(l => l.trim());
+        console.log('  - Total lines:', lines.length);
+
+        if (lines.length === 0) {
+            console.warn('  - No lines after split');
+            return '<p class="text-muted">Transcript trống</p>';
+        }
+
+        let html = '';
+        const speakerColors = ['#e3f2fd', '#f3e5f5', '#e8f5e9', '#fff3e0', '#fce4ec', '#e0f2f1'];
+
+        lines.forEach((line, idx) => {
+            // Try to match speaker format: [00:00] **Speaker**: text
+            const match = line.match(/\[(\d{2}:\d{2})\]\s+\*\*(.*?)\*\*:\s+(.*)/);
+
+            if (match) {
+                const [, time, speaker, text] = match;
+                const speakerNum = speaker.match(/\d+/);
+                const colorIdx = speakerNum ? parseInt(speakerNum[0]) % speakerColors.length : 0;
+
+                html += `
+                    <div class="transcript-line">
+                        <div class="transcript-time">${time}</div>
+                        <div class="transcript-speaker" style="background: ${speakerColors[colorIdx]}">
+                            ${speaker}
+                        </div>
+                        <div class="transcript-text">${text}</div>
+                    </div>
+                `;
+            } else if (line.trim()) {
+                // Plain text line - just display it
+                html += `
+                    <div class="transcript-line">
+                        <div class="transcript-text" style="width: 100%;">${line}</div>
+                    </div>
+                `;
+            }
+        });
+
+        console.log('  - Generated HTML length:', html.length);
+        console.log('  - HTML preview:', html.substring(0, 200));
+
+        return html || '<p class="text-muted">Không thể format transcript</p>';
+    }
+
+    function setupActionCheckboxes() {
+        document.querySelectorAll('.action-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                const card = this.closest('.action-item-card');
+                if (this.checked) {
+                    card.style.opacity = '0.6';
+                    card.querySelector('.action-task').style.textDecoration = 'line-through';
+                } else {
+                    card.style.opacity = '1';
+                    card.querySelector('.action-task').style.textDecoration = 'none';
+                }
+            });
+        });
+    }
+
+    function searchInTranscript() {
+        const query = prompt('Tìm kiếm trong transcript:');
+        if (!query) return;
+
+        const body = document.getElementById('transcriptBody');
+        const text = body.innerHTML;
+        const regex = new RegExp(`(${query})`, 'gi');
+        const highlighted = text.replace(regex, '<mark>$1</mark>');
+        body.innerHTML = highlighted;
+    }
+
+    function copyFullTranscript() {
+        const body = document.getElementById('transcriptBody');
+        const text = body.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            showPopup('✅ Đã copy transcript!', 'success');
+        }).catch(() => {
+            showPopup('❌ Không thể copy', 'error');
+        });
+    }
+
+    function downloadTranscriptTxt() {
+        const body = document.getElementById('transcriptBody');
+        const text = body.innerText;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `transcript_${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function downloadAllNotes() {
+        window.open('/api/export/txt', '_blank');
+    }
+
+    // ============================================================================
+    // TRANSCRIPT LOADING - FIXED TO ONLY LOAD IN RIGHT TAB
+    // ============================================================================
+
+    function clearTranscriptFromWrongPlaces() {
+        console.log('🧹 Clearing transcript from wrong places...');
+
+        // Clear any transcript content from LEFT PANEL (analysis panel)
+        const leftPanel = document.querySelector('.analysis-panel');
+        if (leftPanel) {
+            const transcriptElements = leftPanel.querySelectorAll('pre, .transcript-line, .transcript-content, [class*="transcript"]');
+            transcriptElements.forEach(el => {
+                if (el.textContent && (
+                    el.textContent.includes('[00:') ||
+                    el.textContent.includes('Speaker') ||
+                    el.textContent.includes('Cuộc họp') ||
+                    el.textContent.length > 500
+                )) {
+                    console.log('🗑️ Removing transcript from LEFT panel:', el.tagName);
+                    el.remove();
+                }
+            });
+        }
+
+        // Clear from analysis sections
+        const wrongElements = document.querySelectorAll('.analysis-section pre, .section-body pre');
+        wrongElements.forEach(el => {
+            if (el.textContent && el.textContent.length > 300) {
+                console.log('🗑️ Removing long text content from analysis sections');
+                el.remove();
+            }
+        });
+
+        // Clear any transcript content OUTSIDE the transcript-panel
+        const outsideElements = document.querySelectorAll('body > div:not(.analysis-container) pre, .analysis-container > div:not(.result-grid) pre');
+        outsideElements.forEach(el => {
+            if (el.textContent && el.textContent.length > 200) {
+                console.log('🗑️ Removing transcript content from outside transcript-panel');
+                el.remove();
+            }
+        });
+
+        // Ensure ONLY transcriptBody in transcript-panel has transcript content
+        const allPres = document.querySelectorAll('pre');
+        allPres.forEach(el => {
+            const isInTranscriptBody = el.closest('#transcriptBody');
+            if (!isInTranscriptBody && el.textContent && el.textContent.length > 200) {
+                console.log('🗑️ Removing transcript from wrong location:', el.parentElement?.className);
+                el.remove();
+            }
+        });
+    }
+
+    function setupEmptyTranscriptTab() {
+        console.log('📝 Setting up empty transcript tab...');
+        const transcriptBody = document.getElementById('transcriptBody');
+        if (transcriptBody) {
+            transcriptBody.innerHTML = `
+                <div style="text-align: center; padding: 3rem 2rem; color: #6b7280;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Transcript chưa được tải</h4>
+                    <p style="margin: 0 0 1.5rem 0;">Click nút bên dưới để tải nội dung file gốc</p>
+                    <button onclick="loadOriginalFile()" style="
+                        padding: 0.75rem 1.5rem; 
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        color: white; 
+                        border: none; 
+                        border-radius: 8px; 
+                        cursor: pointer; 
+                        font-weight: 600;
+                        transition: transform 0.2s ease;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="bi bi-file-text"></i> Tải file gốc
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    function loadTranscriptFromData(transcriptContent) {
+        console.log('📄 Loading transcript from data into RIGHT TAB...');
+        const transcriptBody = document.getElementById('transcriptBody');
+
+        if (transcriptBody && transcriptContent) {
+            // Parse and format transcript with speaker labels and timestamps
+            const formattedHTML = formatTranscriptHTML(transcriptContent);
+            transcriptBody.innerHTML = formattedHTML;
+            console.log('✅ Transcript loaded from data successfully!');
+        }
+    }
+
+    // NEW: Format transcript with speaker labels and timestamps
+    // SIMPLIFIED: Format transcript with color-coded speakers (NO BORDERS, NO AVATARS)
+    function formatTranscriptHTML(transcript) {
+        if (!transcript || typeof transcript !== 'string') {
+            return '<p class="text-muted" style="padding: 2rem; text-align: center;">Không có transcript</p>';
+        }
+
+        const lines = transcript.split('\n');
+        let html = '<div class="transcript-formatted" style="padding: 1.5rem; line-height: 1.9; font-family: \'Inter\', -apple-system, system-ui, sans-serif;">';
+
+        // Regex pattern to match: [00:15] **Speaker-1**: text
+        const speakerPattern = /^\[(\d{2}:\d{2})\]\s+\*\*(.+?)\*\*:\s*(.+)$/;
+
+        let speakerColor = {};
+        const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+        let colorIndex = 0;
+
+        lines.forEach(line => {
+            line = line.trim();
+            if (!line || line.includes('**Transcript') || line.includes('===')) return;
+
+            const match = line.match(speakerPattern);
+
+            if (match) {
+                const timestamp = match[1];
+                const speaker = match[2];
+                const text = match[3];
+
+                // Assign color to new speaker
+                if (!speakerColor[speaker]) {
+                    speakerColor[speaker] = colors[colorIndex % colors.length];
+                    colorIndex++;
+                }
+
+                const color = speakerColor[speaker];
+
+                // Simple single-line format - just color-coded speaker name
+                html += `
+                    <div class="transcript-line" style="margin-bottom: 0.8rem; display: flex; gap: 0.75rem; align-items: flex-start;">
+                        <span class="timestamp" style="flex-shrink: 0; background: #f3f4f6; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; color: #6b7280; font-weight: 500; font-family: 'SF Mono', monospace; min-width: 48px; text-align: center;">${timestamp}</span>
+                        <div style="flex: 1;">
+                            <span class="speaker-name" style="font-weight: 600; color: ${color}; margin-right: 0.5rem;">${speaker}:</span>
+                            <span class="message-text" style="color: #1e293b;">${text}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `<p style="color: #64748b; font-size: 0.9rem; margin: 0.5rem 0 0.5rem 3.5rem;">${line}</p>`;
+            }
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    // Download menu toggle
+    function toggleDownloadMenu() {
+        const menu = document.getElementById('downloadMenu');
+        if (menu) {
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function (event) {
+        const menu = document.getElementById('downloadMenu');
+        if (menu && !event.target.closest('.dropdown')) {
+            menu.style.display = 'none';
+        }
+    });
+
+    // Download as DOCX
+    function downloadTranscriptDocx() {
+        const body = document.getElementById('transcriptBody');
+        const text = body ? body.innerText : '';
+
+        const docContent = `<html><head><meta charset="utf-8"><title>Transcript</title></head><body style="font-family: Arial; padding: 20px;"><h1>Meeting Transcript</h1><pre style="white-space: pre-wrap;">${text}</pre></body></html>`;
+
+        const blob = new Blob([docContent], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `transcript_${Date.now()}.doc`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toggleDownloadMenu();
+    }
+
+    // Download recorded audio
+    function downloadRecordedAudio() {
+        const audioPlayer = document.getElementById('recordedAudioPlayer');
+        if (audioPlayer && audioPlayer.src) {
+            const a = document.createElement('a');
+            a.href = audioPlayer.src;
+            a.download = `recording_${Date.now()}.webm`;
+            a.click();
+        } else {
+            if (typeof showPopup === 'function') {
+                showPopup('Không có file audio để download', 'error');
+            }
+        }
+        toggleDownloadMenu();
+    }
+
+    function loadTranscriptFromFile() {
+        console.log('🔄 Loading transcript from file...');
+
+        const fileName = document.getElementById('fileName')?.textContent;
+        if (!fileName || fileName === 'Loading...') {
+            console.warn('⚠️ No filename available');
+            return;
+        }
+
+        console.log('📄 Loading file content for RIGHT TAB...');
+
+        fetch('/api/upload/read-file', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: fileName })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.content) {
+                    console.log('✅ File content loaded, placing in RIGHT TAB ONLY');
+
+                    // Find transcript body in the RIGHT TAB
+                    const transcriptBody = document.getElementById('transcriptBody');
+
+                    if (transcriptBody) {
+                        // Load directly into transcript tab - NO extra wrapper divs
+                        transcriptBody.innerHTML = `
+                        <pre style="white-space: pre-wrap; font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; line-height: 1.6; margin: 0; color: #1e293b; font-size: 0.9rem; padding: 1.5rem; height: 100%; overflow-y: auto;">${data.content}</pre>
+                    `;
+
+                        console.log('✅ Transcript loaded into RIGHT TAB successfully!');
+
+                        // Save to analysisData for Ask AI
+                        analysisData.transcript = data.content;
+                        sessionStorage.setItem('analysisData', JSON.stringify(analysisData));
+
+                        // Auto-switch to transcript tab to show the result
+                        setTimeout(() => {
+                            switchTab('transcript');
+                        }, 300);
+
+                    } else {
+                        console.error('❌ Transcript body element not found!');
+                    }
+                } else {
+                    console.error('❌ No file content received');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error loading transcript:', error);
+            });
+    }
+
+    async function loadOriginalFile() {
+        console.log('🔄 Manual load original file triggered...');
+
+        // Clear any transcript from wrong places first
+        clearTranscriptFromWrongPlaces();
+
+        // Load transcript from file
+        loadTranscriptFromFile();
+    }
+
+    // ============================================================================
+    // ASK AI TAB
+    // ============================================================================
+
+    function switchTab(tabName) {
+        console.log('🔄 Switching to tab:', tabName);
+
+        // Update tab buttons
+        document.querySelectorAll('.transcript-tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('active');
+
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById('content' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('active');
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        console.log('💬 Sending message:', message);
+
+        // Add user message to chat
+        addChatMessage('user', message);
+        input.value = '';
+
+        // Show typing indicator
+        addTypingIndicator();
+
+        try {
+            // Send to backend
+            const response = await fetch('/api/chat/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    context: {
+                        summary: analysisData.summary,
+                        topics: analysisData.topics,
+                        actions: analysisData.actions,
+                        decisions: analysisData.decisions,
+                        transcript: analysisData.transcript
+                    }
+                })
+            });
+
+            const data = await response.json();
+
+            // Remove typing indicator
+            removeTypingIndicator();
+
+            if (data.error) {
+                addChatMessage('error', data.error);
+            } else {
+                addChatMessage('ai', data.response);
+
+                // Show suggested questions after AI response
+                setTimeout(() => {
+                    showSuggestedQuestions();
+                }, 1000);
+            }
+
+        } catch (error) {
+            removeTypingIndicator();
+            addChatMessage('error', 'Lỗi kết nối: ' + error.message);
+        }
+    }
+
+    function addChatMessage(type, text) {
+        const messagesContainer = document.getElementById('chatMessages');
+
+        // Remove welcome message if exists
+        const welcome = messagesContainer.querySelector('.chat-welcome');
+        if (welcome) welcome.remove();
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${type}`;
+
+        if (type === 'user') {
+            messageDiv.innerHTML = `
+                <div class="message-avatar user-avatar">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="message-content">${text}</div>
+            `;
+        } else if (type === 'ai') {
+            messageDiv.innerHTML = `
+                <div class="message-avatar ai-avatar">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div class="message-content">${formatText(text)}</div>
+            `;
+        } else if (type === 'error') {
+            messageDiv.innerHTML = `
+                <div class="message-avatar error-avatar">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="message-content">${text}</div>
+            `;
+        }
+
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+        const messagesContainer = document.getElementById('chatMessages');
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'chat-message ai typing-indicator';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.innerHTML = `
+            <div class="message-avatar ai-avatar">
+                <i class="bi bi-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        messagesContainer.appendChild(typingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) indicator.remove();
+    }
+
+    function askSuggested(question) {
+        document.getElementById('chatInput').value = question;
+        sendMessage();
+    }
+
+    function showSuggestedQuestions() {
+        const messagesContainer = document.getElementById('chatMessages');
+
+        // Remove existing suggestions
+        const existingSuggestions = messagesContainer.querySelector('.suggested-questions-chat');
+        if (existingSuggestions) existingSuggestions.remove();
+
+        // Create new suggestions
+        const suggestionsDiv = document.createElement('div');
+        suggestionsDiv.className = 'suggested-questions-chat';
+        suggestionsDiv.innerHTML = `
+            <div style="padding: 1rem; border-top: 1px solid #e5e7eb; background: #f9fafb;">
+                <div style="font-size: 0.875rem; font-weight: 600; color: #6b7280; margin-bottom: 0.75rem;">💡 Câu hỏi gợi ý:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <button onclick="askSuggested('Ai chịu trách nhiệm action items?')" class="suggested-btn-small">Ai chịu trách nhiệm action items?</button>
+                    <button onclick="askSuggested('Deadline nào cần ưu tiên nhất?')" class="suggested-btn-small">Deadline nào cần ưu tiên nhất?</button>
+                    <button onclick="askSuggested('Quyết định quan trọng nhất là gì?')" class="suggested-btn-small">Quyết định quan trọng nhất là gì?</button>
+                    <button onclick="askSuggested('Next steps là gì?')" class="suggested-btn-small">Next steps là gì?</button>
+                </div>
+            </div>
+        `;
+
+        messagesContainer.appendChild(suggestionsDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Generate smart suggested questions based on meeting content
+    function generateSuggestedQuestions() {
+        const questions = [];
+
+        // Always include these
+        questions.push('Tóm tắt 3 điểm chính của meeting?');
+
+        // If has actions
+        if (analysisData.actions && analysisData.actions.length > 0) {
+            questions.push('Ai chịu trách nhiệm action items?');
+            questions.push('Deadline nào cần ưu tiên nhất?');
+        }
+
+        // If has decisions
+        if (analysisData.decisions && analysisData.decisions.length > 0) {
+            questions.push('Quyết định quan trọng nhất là gì?');
+        }
+
+        // If has topics
+        if (analysisData.topics && analysisData.topics.length > 0) {
+            questions.push('Chủ đề nào được thảo luận nhiều nhất?');
+        }
+
+        // Always include
+        questions.push('Có vấn đề gì chưa được giải quyết?');
+        questions.push('Next steps là gì?');
+
+        // Render questions
+        const container = document.getElementById('suggestedQuestions');
+        if (container) {
+            const questionsHtml = questions.slice(0, 5).map(q =>
+                `<button class="suggested-btn" onclick="askSuggested('${q}')">${q}</button>`
+            ).join('');
+
+            container.innerHTML = '<div class="suggested-label">💡 Câu hỏi gợi ý:</div>' + questionsHtml;
+        }
+    }
+
+    // Generate questions after data is loaded
+    if (analysisData && Object.keys(analysisData).length > 0) {
+        generateSuggestedQuestions();
+    }
+
+    // ============================================================================
+    // INITIALIZATION COMPLETE
+    // ============================================================================
+
+    console.log('✅ Analysis page initialization complete');
+
+
+</script>
+{% endblock %}

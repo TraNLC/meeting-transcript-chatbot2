@@ -15,11 +15,15 @@ class TranscriptPreprocessor:
         Returns:
             Text đã được làm sạch
         """
-        # Remove multiple spaces
-        text = " ".join(text.split())
-        # Remove multiple newlines
-        text = "\n".join([line.strip() for line in text.split("\n") if line.strip()])
-        return text.strip()
+        lines = text.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            line = line.strip()
+            if line:
+                # Normalize internal spaces within 
+                line = " ".join(line.split())
+                cleaned_lines.append(line)
+        return "\n".join(cleaned_lines)
     
     @staticmethod
     def truncate_text(text: str, max_length: int = 15000) -> str:

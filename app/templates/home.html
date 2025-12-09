@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Akari AI - Trang chủ{% endblock %}
+
+{% block page_styles %}
+<link href="{{ url_for('static', filename='css/home.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block navbar_actions %}
+<select id="languageSelect" class="form-select" style="width: auto;">
+    <option value="vi">🇻🇳 Tiếng Việt</option>
+    <option value="en">🇬🇧 English</option>
+</select>
+{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <h1 class="hero-title">{{ t['home_title'] }}</h1>
+    <p class="hero-subtitle">{{ t['home_subtitle'] }}</p>
+</section>
+
+<section class="action-cards-grid">
+    <a href="/recording/browser" class="action-card">
+        <div class="action-card-icon">
+            <i class="bi bi-laptop"></i>
+        </div>
+        <div class="action-card-content">
+            <h3 class="action-card-title">{{ t['browser_record'] }}</h3>
+            <p class="action-card-description">{{ t['browser_desc'] }}</p>
+        </div>
+        <i class="bi bi-arrow-right action-card-arrow"></i>
+    </a>
+
+    <a href="/recording/mic" class="action-card">
+        <div class="action-card-icon">
+            <i class="bi bi-mic-fill"></i>
+        </div>
+        <div class="action-card-content">
+            <h3 class="action-card-title">{{ t['mic_record'] }}</h3>
+            <p class="action-card-description">{{ t['mic_desc'] }}</p>
+        </div>
+        <i class="bi bi-arrow-right action-card-arrow"></i>
+    </a>
+
+    <a href="/upload" class="action-card">
+        <div class="action-card-icon">
+            <i class="bi bi-cloud-upload"></i>
+        </div>
+        <div class="action-card-content">
+            <h3 class="action-card-title">{{ t['upload'] }}</h3>
+            <p class="action-card-description">{{ t['upload_desc'] }}</p>
+        </div>
+        <i class="bi bi-arrow-right action-card-arrow"></i>
+    </a>
+
+    <a href="/history" class="action-card">
+        <div class="action-card-icon">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="action-card-content">
+            <h3 class="action-card-title">{{ t['history'] }}</h3>
+            <p class="action-card-description">{{ t['history_desc'] }}</p>
+        </div>
+        <i class="bi bi-arrow-right action-card-arrow"></i>
+    </a>
+</section>
+{% endblock %}

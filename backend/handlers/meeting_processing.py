@@ -355,7 +355,9 @@ def export_to_txt(content_data=None):
     
     if content_data:
         filename = f"export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        filepath = Path("data/exports") / filename
+        # Use absolute path from project root
+        project_root = Path(__file__).parent.parent.parent
+        filepath = project_root / "data" / "exports" / filename
         filepath.parent.mkdir(parents=True, exist_ok=True)
         filepath.write_text(content_data, encoding='utf-8')
         return str(filepath)
@@ -377,7 +379,9 @@ def export_to_txt(content_data=None):
     content.append("\n\n" + "=" * 80)
     
     filename = f"meeting_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    filepath = Path("data/exports") / filename
+    # Use absolute path from project root
+    project_root = Path(__file__).parent.parent.parent
+    filepath = project_root / "data" / "exports" / filename
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_text("\n".join(content), encoding='utf-8')
     
@@ -399,7 +403,9 @@ def export_to_docx(content_data=None):
             doc.add_header
             doc.add_paragraph(content_data)
             filename = f"export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
-            filepath = Path("data/exports") / filename
+            # Use absolute path from project root
+            project_root = Path(__file__).parent.parent.parent
+            filepath = project_root / "data" / "exports" / filename
             filepath.parent.mkdir(parents=True, exist_ok=True)
             doc.save(str(filepath))
             return str(filepath)
@@ -441,7 +447,9 @@ def export_to_docx(content_data=None):
                 doc.add_paragraph(topic.get('description', ''), style='List Bullet 2')
         
         filename = f"meeting_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
-        filepath = Path("data/exports") / filename
+        # Use absolute path from project root
+        project_root = Path(__file__).parent.parent.parent
+        filepath = project_root / "data" / "exports" / filename
         filepath.parent.mkdir(parents=True, exist_ok=True)
         doc.save(str(filepath))
         
@@ -532,106 +540,205 @@ def save_recording_and_transcribe(audio_file, title, language, transcript_text):
         return f"❌ Lỗi: {str(e)}", ""
 
 
-def process_upload(file_type, audio_file, text_file, transcribe_lang, enable_diarization, meeting_type, output_lang):
-    """Process uploaded file."""
-    # Logic adapted from process_file but handling audio/text differentiation
+
+def _convert_json_to_transcript(data):
+    """Convert Whisper/WhisperX JSON to formatted text transcript."""
+    transcript_text = ""
+    segments = []
     
-    # 1. Get Transcript
-    transcript = ""
-    participants_text = ""
+    # Identify structure and extract segments
+    if isinstance(data, dict):
+        if 'segments' in data: segments = data['segments']
+        elif 'chunks' in data: segments = data['chunks']
+        elif 'text' in data and isinstance(data['text'], str): return data['text']
+    elif isinstance(data, list): 
+        segments = data
+
+    # Parse segments
+    formatted_lines = []
+    for seg in segments:
+        if not isinstance(seg, dict): continue
+        start = seg.get('start', 0)
+        speaker = seg.get('speaker', 'Unknown')
+        text = seg.get('text', '').strip()
+        if not text: continue
+        
+        try:
+            m, s = divmod(int(float(start)), 60)
+            time_str = f"{m:02d}:{s:02d}"
+        except:
+            time_str = "00:00"
+        
+        formatted_lines.append(f"[{time_str}] **{speaker}**: {text}")
     
+    if formatted_lines:
+        return "\n\n".join(formatted_lines)
+    return ""
+
+
+def process_upload(file_type, audio_file=None, text_file=None, transcribe_lang='vi', 
+                   enable_diarization=False, meeting_type='meeting', output_lang='vi', colab_url=None):
+    """
+    Process uploaded files (Audio, Text, or JSON) with Colab Server support.
+    
+    Args:
+        colab_url: Optional URL to Google Colab WhisperX server (via ngrok)
+        
+    Returns: (status, transcript, summary, topics, actions, decisions, participants)
+    """
+    logger.info(f"process_upload called: type={file_type}, colab={colab_url}")
+
     try:
+        # A. Audio Processing
         if file_type == 'audio' and audio_file:
-            # Import STT here to avoid circular dependencies if any
-            from backend.audio.huggingface_stt import transcribe_audio_huggingface
+            transcript = ""
             
-            # Transcribe
-            logger.info(f"Transcribing audio file: {audio_file}")
+            # 1. Priority: Colab Server (Zero Cost Model)
+            if colab_url and len(colab_url.strip()) > 5:
+                logger.info(f"Using Colab Server: {colab_url}")
+                try:
+                    import requests
+                    
+                    # Normalize URL
+                    colab_url = colab_url.strip()
+                    if not colab_url.startswith('http'): 
+                        colab_url = f"http://{colab_url}"
+                    
+                    # Construct API Endpoint
+                    api_url = f"{colab_url.rstrip('/')}/transcribe"
+                    logger.info(f"Posting audio to: {api_url}")
+                    
+                    files = {'file': open(audio_file, 'rb')}
+                    data = {'language': transcribe_lang}
+                    
+                    # Long timeout for audio processing (15 mins)
+                    res = requests.post(api_url, files=files, data=data, timeout=900)
+                    
+                    if res.status_code == 200:
+                        json_data = res.json()
+                        transcript = _convert_json_to_transcript(json_data)
+                        
+                        if not transcript:
+                            # Fallback if conversion returned empty but data exists
+                            transcript = json_data.get('text', '')
+                            if not transcript:
+                                return "❌ Colab returned empty transcript", "", "", "", "", "", ""
+                                
+                        logger.info(f"Colab processing success! Transcript len: {len(transcript)}")
+                    else:
+                        err_msg = f"Colab Error {res.status_code}: {res.text}"
+                        logger.error(err_msg)
+                        return f"❌ {err_msg}", "", "", "", "", "", ""
+                        
+                except Exception as e:
+                    logger.error(f"Colab Connection Failed: {e}")
+                    return f"❌ Could not connect to Colab: {str(e)}", "", "", "", "", "", ""
             
-            try:
-                transcript_updates = transcribe_audio_huggingface(audio_file, transcribe_lang, realtime=False)
+            # 2. Fallback: Local HuggingFace/Whisper (if no Colab URL)
+            else:
+                logger.info(f"Processing audio locally: {audio_file}")
                 
-                # Consume generator - the function yields strings, last one contains full transcript
-                transcript = ""
-                update_count = 0
-                last_update = ""
-                
-                for update in transcript_updates:
-                    update_count += 1
-                    if isinstance(update, str):
-                        last_update = update
-                        # Extract transcript from the formatted message
-                        # The final message contains the full transcript between the header and footer
-                        if "**Transcript Hoàn Chỉnh**" in update or "**Transcript ({" in update:
-                            # Extract text between header and footer
-                            lines = update.split('\n')
-                            transcript_lines = []
-                            in_transcript = False
-                            for line in lines:
-                                if '**Transcript' in line or '📝' in line:
-                                    in_transcript = True
-                                    continue
-                                if in_transcript and (line.startswith('✅') or line.startswith('💡')):
-                                    break
-                                if in_transcript and line.strip():
-                                    transcript_lines.append(line.strip())
-                            
-                            if transcript_lines:
-                                transcript = '\n'.join(transcript_lines)
-                                logger.debug(f"Extracted transcript: {len(transcript)} chars")
-                
-                # If no transcript extracted from formatted message, try to extract from last update
-                if not transcript and last_update:
-                    # Try to find any text content
-                    lines = last_update.split('\n')
-                    for i, line in enumerate(lines):
-                        if line.strip() and not line.startswith(('📝', '✅', '💡', '⚙️', '🔄', '⚠️', '🚨', '📊', '🎤', '🔍')):
-                            # This might be transcript content
-                            transcript = '\n'.join([l.strip() for l in lines[i:] if l.strip() and not l.startswith(('✅', '💡'))])
-                            break
-                
-                logger.info(f"Transcription complete: {len(transcript)} chars from {update_count} updates")
-                
-            except Exception as transcribe_error:
-                logger.error(f"Transcription error: {transcribe_error}", exc_info=True)
-                return f"❌ Lỗi transcribe: {str(transcribe_error)}", "", "", "", "", "", ""
+                try:
+                    # Choose pipeline based on diarization flag
+                    if enable_diarization:
+                        logger.info("Using Speaker Diarization pipeline")
+                        from backend.audio.speaker_diarization import transcribe_with_speakers
+                        generator = transcribe_with_speakers(audio_file, transcribe_lang)
+                    else:
+                        logger.info("Using Standard Whisper pipeline")
+                        from backend.audio.huggingface_stt import transcribe_audio_huggingface
+                        generator = transcribe_audio_huggingface(audio_file, transcribe_lang, realtime=False)
+
+                    # Consume generator to get the final result
+                    final_output = ""
+                    for update in generator:
+                        if isinstance(update, str):
+                            final_output = update
+                        elif isinstance(update, dict) and 'text' in update:
+                            final_output = update['text']
+                    
+                    # The final output from our generators is usually a formatted markdown report
+                    # We use it as the transcript. 
+                    # Note: Ideally we should strip the header/footer metadata for 'clean' processing
+                    # but current process_file logic handles raw text reasonably well.
+                    transcript = final_output.strip()
+
+                except Exception as e:
+                    logger.error(f"Local Transcription Error: {e}")
+                    return f"❌ Audio Error: {str(e)}", "", "", "", "", "", ""
+
+            if not transcript or len(transcript) < 5:
+                 return "❌ Transcription failed or empty", "", "", "", "", "", ""
+
+            # Save transcript to temp file and process analysis
+            import tempfile
+            import os
             
-            if not transcript or len(transcript.strip()) == 0:
-                logger.warning("Empty transcript after transcription")
-                return "❌ Không thể chuyển đổi giọng nói thành văn bản (transcript rỗng)", "", "", "", "", "", ""
-                
-            # Create a temp file for the transcript to pass to process_file
-            # process_file expects a file-like object with .name or a path string
-            temp_transcript_path = Path(audio_file).with_suffix('.txt')
-            temp_transcript_path.write_text(transcript, encoding='utf-8')
+            fd, temp_path = tempfile.mkstemp(suffix='.txt', text=True)
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                f.write(transcript)
             
-            logger.info(f"Transcript saved to {temp_transcript_path}, processing as text...")
+            # Common processing
+            class MockFile: 
+                def __init__(self, n): self.name = str(n)
             
-            # Recursive call as text file
-            # We pass the path string directly
-            class MockFile:
-                def __init__(self, name):
-                    self.name = str(name)
+            result = process_file(MockFile(temp_path), meeting_type, output_lang)
             
-            mock_file = MockFile(temp_transcript_path)
-            result = process_file(mock_file, meeting_type, output_lang)
-            logger.info(f"process_file returned: {type(result)}, len={len(result) if isinstance(result, tuple) else 'N/A'}")
+            # Cleanup
+            try: os.unlink(temp_path)
+            except: pass
+            
             return result
 
+        # B. Text/JSON Processing
         elif file_type == 'text' and text_file:
-             # Use the text file directly
-             class MockFile:
-                 def __init__(self, name):
-                     self.name = str(name)
-             
-             mock_file = MockFile(text_file)
-             result = process_file(mock_file, meeting_type, output_lang)
-             logger.info(f"process_file returned: {type(result)}, len={len(result) if isinstance(result, tuple) else 'N/A'}")
-             return result
-             
-        logger.warning(f"Invalid file type or missing file: type={file_type}, audio={audio_file}, text={text_file}")
-        return "⚠️ Invalid file type or missing file", "", "", "", "", "", ""
-        
+            logger.info(f"Processing text file: {text_file}")
+            
+            # Handle JSON Import (WhisperX Output)
+            if text_file.lower().endswith('.json'):
+                try:
+                    import json
+                    import tempfile
+                    import os
+                    
+                    with open(text_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    transcript_text = _convert_json_to_transcript(data)
+                    
+                    if not transcript_text:
+                         return "❌ Invalid JSON Transcript", "", "", "", "", "", ""
+                        
+                    # Save normalized text
+                    fd, temp_path = tempfile.mkstemp(suffix='.txt', text=True)
+                    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                        f.write(transcript_text)
+                        
+                    class MockFile: 
+                        def __init__(self, n): self.name = str(n)
+                    
+                    result = process_file(MockFile(temp_path), meeting_type, output_lang)
+                    
+                    try: os.unlink(temp_path)
+                    except: pass
+                    
+                    # Override transcript with formatted one
+                    status, _, summary, topics, actions, decisions, participants = result
+                    return (status, transcript_text, summary, topics, actions, decisions, participants)
+
+                except Exception as e:
+                    logger.error(f"JSON Parse Error: {e}")
+                    return f"❌ JSON Error: {str(e)}", "", "", "", "", "", ""
+            
+            # Handle Standard Text/DOCX
+            else:
+                 class MockFile: 
+                     def __init__(self, n): self.name = str(n)
+                 return process_file(MockFile(text_file), meeting_type, output_lang)
+
+        else:
+            return "❌ Invalid file input", "", "", "", "", "", ""
+
     except Exception as e:
-        logger.error(f"Error in process_upload: {e}", exc_info=True)
-        return f"❌ Lỗi: {str(e)}", "", "", "", "", "", ""
+        logger.error(f"Process Upload Critical Error: {str(e)}", exc_info=True)
+        return f"❌ System Error: {str(e)}", "", "", "", "", "", ""

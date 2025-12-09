@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Akari AI - Meeting Assistant{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo/logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/logo/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo/logo.png') }}">
+
+    <!-- CDN Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Base Styles -->
+    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
+
+    <!-- Page Specific Styles -->
+    {% block page_styles %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="modern-navbar">
+        <div class="navbar-content">
+            <a href="/" class="navbar-brand">
+                <img src="{{ url_for('static', filename='images/logo/logoHeader.png') }}" alt="Akari AI"
+                    class="navbar-logo">
+                <span>Akari AI</span>
+            </a>
+            <div class="navbar-actions">
+                <select id="languageSelect" class="navbar-select me-2"
+                    style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary);">
+                    <option value="vi">🇻🇳 Tiếng Việt</option>
+                    <option value="en">🇬🇧 English</option>
+                </select>
+
+                <button id="themeToggle" class="btn p-2 me-2"
+                    style="color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                    <i class="bi bi-moon-fill"></i>
+                </button>
+
+                {% block navbar_actions %}
+                <a href="/" class="btn-home">
+                    <i class="bi bi-house-door me-2"></i>Trang chủ
+                </a>
+                {% endblock %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Custom Popup -->
+    <div class="custom-popup-overlay" id="customPopup">
+        <div class="custom-popup">
+            <div class="custom-popup-icon" id="popupIcon">
+                <i class="bi bi-x-circle"></i>
+            </div>
+            <div class="custom-popup-title" id="popupTitle">Thông báo</div>
+            <div class="custom-popup-message" id="popupMessage">Nội dung thông báo</div>
+            <button class="custom-popup-button" id="popupButton">OK</button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <img src="{{ url_for('static', filename='images/logo/logo.png') }}" alt="Loading">
+            </div>
+            <div class="loading-text" id="loadingText">Đang xử lý...</div>
+            <div class="loading-subtext" id="loadingSubtext">Vui lòng đợi</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+    <script>
+        // Popup utilities
+        function showPopup(message, type = 'error', title = '') {
+            const popup = document.getElementById('customPopup');
+            const icon = document.getElementById('popupIcon');
+            const titleEl = document.getElementById('popupTitle');
+            const messageEl = document.getElementById('popupMessage');
+            const iconElement = icon.querySelector('i');
+
+            icon.className = 'custom-popup-icon ' + type;
+            if (type === 'error') {
+                iconElement.className = 'bi bi-x-circle';
+                titleEl.textContent = title || 'Lỗi';
+            } else if (type === 'success') {
+                iconElement.className = 'bi bi-check-circle';
+                titleEl.textContent = title || 'Thành công';
+            } else {
+                iconElement.className = 'bi bi-info-circle';
+                titleEl.textContent = title || 'Thông báo';
+            }
+
+            messageEl.textContent = message;
+            popup.classList.add('active');
+        }
+
+        function hidePopup() {
+            document.getElementById('customPopup').classList.remove('active');
+        }
+
+        function showLoading(text = 'Đang xử lý...', subtext = 'Vui lòng đợi') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingSubtext').textContent = subtext;
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        document.getElementById('popupButton')?.addEventListener('click', hidePopup);
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

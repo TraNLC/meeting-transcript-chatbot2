@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch sử - Akari AI{% endblock %}
+
+{% block page_styles %}
+<link href="{{ url_for('static', filename='css/history.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="history-header">
+        <div class="history-icon">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <h2>Lịch sử cuộc họp</h2>
+        <p class="text-muted mb-0">Xem lại các cuộc họp và phân tích đã thực hiện</p>
+    </div>
+
+    <!-- AI Semantic Search Bar -->
+    <div class="search-section" style="margin-bottom: 1.5rem;">
+        <div class="search-bar"
+            style="display: flex; gap: 0.5rem; align-items: center; background: white; padding: 0.75rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <i class="bi bi-search" style="color: #6366f1; font-size: 1.25rem;"></i>
+            <input id="searchInput" type="text"
+                placeholder="🤖 Tìm cuộc họp với AI... (VD: 'cuộc họp về kế hoạch ngân sách')"
+                style="flex: 1; border: none; outline: none; font-size: 1rem; padding: 0.25rem;" />
+            <button id="searchBtn" class="btn btn-primary" onclick="performSemanticSearch()"
+                style="padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; border-radius: 8px; color: white; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="bi bi-stars"></i>
+                Tìm kiếm AI
+            </button>
+            <button id="clearSearchBtn" class="btn btn-outline-secondary" onclick="clearSearch()"
+                style="display: none; padding: 0.5rem 1rem; border-radius: 8px;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div id="searchStatus" style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;"></div>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label class="filter-label">Loại cuộc họp</label>
+                <select id="filterType" class="filter-select">
+                    <option value="all">Tất cả</option>
+                    <option value="meeting">Cuộc họp</option>
+                    <option value="interview">Phỏng vấn</option>
+                    <option value="presentation">Thuyết trình</option>
+                    <option value="brainstorm">Brainstorming</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Sắp xếp</label>
+                <select id="filterSort" class="filter-select">
+                    <option value="newest">Mới nhất</option>
+                    <option value="oldest">Cũ nhất</option>
+                    <option value="name">Tên A-Z</option>
+                    <option value="relevance" id="relevanceOption" style="display: none;">Liên quan nhất</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">&nbsp;</label>
+                <button class="btn btn-outline-secondary w-100" onclick="loadHistory()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Làm mới
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="meetingsContainer">
+        <div class="loading-state">
+            <div class="loading-spinner mb-3"></div>
+            <p class="text-muted">Đang tải...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // NO DATA STORAGE IN FRONTEND - all from backend!
+    let isSearchMode = false; // Track if we're showing search results
+
+    // Load history on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadHistory();
+    });
+
+    // Filter change listeners
+    document.getElementById('filterType').addEventListener('change', filterMeetings);
+    document.getElementById('filterSort').addEventListener('change', filterMeetings);
+
+    // Search input - trigger search on Enter key
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            performSemanticSearch();
+        }
+    });
+
+    // Semantic Search Function (AI-powered!)
+    async function performSemanticSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+
+        if (!query) {
+            alert('Vui lòng nhập từ khóa tìm kiếm');
+            return;
+        }
+
+        const container = document.getElementById('meetingsContainer');
+        const searchStatus = document.getElementById('searchStatus');
+
+        // Show loading
+        container.innerHTML = '<div class="loading-state"><div class="loading-spinner mb-3"></div><p class="text-muted">Đang tìm kiếm với AI...</p></div>';
+        searchStatus.innerHTML = '<i class="bi bi-stars"></i> Đang phân tích câu hỏi của bạn...';
+
+        try {
+            // Get filter type for metadata filtering
+            const filterType = document.getElementById('filterType').value;
+            const filters = filterType !== 'all' ? { meeting_type: filterType } : null;
+
+            // Call backend semantic search API
+            // ALL LOGIC IS IN BACKEND - FRONTEND ONLY DISPLAYS!
+            const response = await fetch('/api/history/semantic-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: query,
+                    top_k: 20,
+                    filters: filters
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Update UI state
+            isSearchMode = true;
+            document.getElementById('clearSearchBtn').style.display = 'block';
+            document.getElementById('relevanceOption').style.display = 'block';
+            document.getElementById('filterSort').value = 'relevance';
+
+            if (data.results && data.results.length > 0) {
+                searchStatus.innerHTML = `<i class="bi bi-check-circle text-success"></i> Tìm thấy ${data.results.length} cuộc họp liên quan`;
+                renderSearchResults(data.results);
+            } else {
+                searchStatus.innerHTML = '<i class="bi bi-info-circle text-warning"></i> Không tìm thấy cuộc họp phù hợp';
+                showEmptyState('Không tìm thấy kết quả', 'Thử tìm kiếm với từ khóa khác');
+            }
+
+        } catch (error) {
+            console.error('Search error:', error);
+            searchStatus.innerHTML = '<i class="bi bi-exclamation-triangle text-danger"></i> Lỗi khi tìm kiếm';
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="bi bi-exclamation-triangle"></i></div><h4>Lỗi tìm kiếm</h4><p class="text-muted">Vui lòng thử lại</p></div>';
+        }
+    }
+
+    // Clear search and return to normal view
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchStatus').innerHTML = '';
+        document.getElementById('clearSearchBtn').style.display = 'none';
+        document.getElementById('relevanceOption').style.display = 'none';
+        document.getElementById('filterSort').value = 'newest';
+        isSearchMode = false;
+
+        // Reload normal history
+        loadHistory();
+    }
+
+    // Render search results with relevance scores
+    function renderSearchResults(results) {
+        const container = document.getElementById('meetingsContainer');
+
+        const html = `
+            <div class="meetings-grid">
+                ${results.map(result => createSearchResultCard(result)).join('')}
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Add click listeners
+        document.querySelectorAll('.meeting-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const meetingId = card.dataset.meetingId;
+                window.location.href = `/meeting/${encodeURIComponent(meetingId)}`;
+            });
+        });
+    }
+
+    // Create card for search result (with relevance score)
+    function createSearchResultCard(result) {
+        const date = result.timestamp ? new Date(result.timestamp).toLocaleString('vi-VN') : 'N/A';
+        const score = (result.score * 100).toFixed(0); // Convert to percentage
+        const scoreColor = score > 70 ? '#10b981' : score > 50 ? '#f59e0b' : '#6b7280';
+
+        return `
+            <div class="meeting-card" data-meeting-id="${result.id}">
+                <div class="meeting-icon-wrapper">
+                    <div class="meeting-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                </div>
+                <div class="meeting-content">
+                    <div class="meeting-title">${result.title}</div>
+                    <div class="meeting-summary" style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                        ${result.summary}
+                    </div>
+                    <div class="meeting-meta">
+                        <div class="meeting-meta-item">
+                            <i class="bi bi-calendar3"></i>
+                            <span>${date}</span>
+                        </div>
+                        <div class="meeting-meta-item" style="color: ${scoreColor}; font-weight: 600;">
+                            <i class="bi bi-stars"></i>
+                            <span>Phù hợp ${score}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="meeting-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </div>
+        `;
+    }
+
+    async function loadHistory() {
+        const container = document.getElementById('meetingsContainer');
+        container.innerHTML = '<div class="loading-state"><div class="loading-spinner mb-3"></div><p class="text-muted">Đang tải...</p></div>';
+
+        try {
+            // Get filter and sort params
+            const filterType = document.getElementById('filterType').value;
+            const sortBy = document.getElementById('filterSort').value;
+
+            // Call backend API with params - ALL LOGIC IN BACKEND!
+            const response = await fetch(`/api/history/list?filter_type=${filterType}&sort_by=${sortBy}&limit=50`);
+            const data = await response.json();
+
+            if (data.history && data.history.length > 0) {
+                // Just render - no logic!
+                renderMeetings(data.history);
+            } else {
+                showEmptyState();
+            }
+        } catch (error) {
+            console.error('Error loading history:', error);
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="bi bi-exclamation-triangle"></i></div><h4>Lỗi tải dữ liệu</h4><p class="text-muted">Vui lòng thử lại sau</p></div>';
+        }
+    }
+
+    // NO FILTER LOGIC HERE - just reload with new params
+    function filterMeetings() {
+        loadHistory(); // Backend does all filtering and sorting!
+    }
+
+    function renderMeetings(meetings) {
+        const container = document.getElementById('meetingsContainer');
+
+        if (meetings.length === 0) {
+            showEmptyState();
+            return;
+        }
+
+        const html = `
+            <div class="meetings-grid">
+                ${meetings.map(meeting => createMeetingCard(meeting)).join('')}
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Add click listeners
+        document.querySelectorAll('.meeting-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const meetingId = card.dataset.meetingId;
+                window.location.href = `/meeting/${encodeURIComponent(meetingId)}`;
+            });
+        });
+    }
+
+    function createMeetingCard(meeting) {
+        const date = meeting.timestamp ? new Date(meeting.timestamp).toLocaleString('vi-VN') : 'N/A';
+        const duration = meeting.duration || '0:00';
+        const title = meeting.title || 'Cuộc họp';
+        const language = meeting.language || 'vi';
+
+        const languageFlags = {
+            'vi': '🇻🇳',
+            'en': '🇬🇧',
+            'ja': '🇯🇵',
+            'ko': '🇰🇷',
+            'zh': '🇨🇳'
+        };
+
+        return `
+            <div class="meeting-card" data-meeting-id="${meeting.id}">
+                <div class="meeting-icon-wrapper">
+                    <div class="meeting-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                </div>
+                <div class="meeting-content">
+                    <div class="meeting-title">${title}</div>
+                    <div class="meeting-meta">
+                        <div class="meeting-meta-item">
+                            <i class="bi bi-calendar3"></i>
+                            <span>${date}</span>
+                        </div>
+                        <div class="meeting-meta-item">
+                            <i class="bi bi-clock"></i>
+                            <span>${duration}</span>
+                        </div>
+                        <div class="meeting-meta-item">
+                            <span>${languageFlags[language] || '🌐'}</span>
+                            <span>${language.toUpperCase()}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="meeting-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </div>
+        `;
+    }
+
+    function showEmptyState() {
+        const container = document.getElementById('meetingsContainer');
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <h4>Chưa có cuộc họp nào</h4>
+                <p class="text-muted mb-4">Bắt đầu ghi âm hoặc upload file để tạo cuộc họp đầu tiên</p>
+                <a href="/" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Tạo cuộc họp mới
+                </a>
+            </div>
+        `;
+    }
+</script>
+{% endblock %}

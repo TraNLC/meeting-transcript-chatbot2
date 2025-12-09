@@ -1,0 +1,173 @@
+# ============================================================================
+# PDF FILE UPLOAD & AI ANALYSIS TEST CASES
+# Focus: PDF parsing and AI analysis
+# ============================================================================
+
+test_suite:
+  name: "PDF File Upload & AI Analysis"
+  endpoint: "http://localhost:5000/api/upload/process"
+  file_type: "text"
+  description: "Test PDF parsing and AI analysis quality"
+
+test_cases:
+  # ============================================================================
+  # BASIC PDF PARSING & AI ANALYSIS
+  # ============================================================================
+  
+  - id: PDF001
+    name: "Simple PDF - Parsing and AI analysis"
+    priority: "critical"
+    category: "pdf_parsing"
+    input:
+      file: "mocks/meeting_report.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 50"
+        - "len(response['transcript']) > 100"
+  
+  - id: PDF002
+    name: "Multi-page PDF - AI comprehensive analysis"
+    priority: "high"
+    category: "pdf_parsing"
+    input:
+      file: "mocks/long_meeting_report.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 100"
+        - "len(response['topics']) > 50"
+  
+  # ============================================================================
+  # PDF FORMAT VARIATIONS
+  # ============================================================================
+  
+  - id: PDF101
+    name: "PDF with images - AI text extraction"
+    priority: "high"
+    category: "pdf_format"
+    input:
+      file: "mocks/meeting_with_images.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      description: "Should extract text, ignore images"
+  
+  - id: PDF102
+    name: "PDF with tables - AI structured data"
+    priority: "medium"
+    category: "pdf_format"
+    input:
+      file: "mocks/meeting_with_tables.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 50"
+  
+  - id: PDF103
+    name: "Scanned PDF (image-based) - OCR handling"
+    priority: "medium"
+    category: "pdf_format"
+    input:
+      file: "mocks/scanned_meeting.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      description: "May need OCR support"
+  
+  # ============================================================================
+  # PDF SECURITY & VALIDATION
+  # ============================================================================
+  
+  - id: PDF201
+    name: "Password-protected PDF"
+    priority: "high"
+    category: "pdf_security"
+    input:
+      file: "mocks/protected_meeting.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 400
+      error_contains: "password"
+  
+  - id: PDF202
+    name: "Corrupted PDF file"
+    priority: "medium"
+    category: "pdf_validation"
+    input:
+      file: "corrupted.pdf"
+      file_content: "Not a real PDF content"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 400
+      error_contains: "PDF"
+  
+  - id: PDF203
+    name: "Empty PDF (no text)"
+    priority: "medium"
+    category: "pdf_validation"
+    input:
+      file: "mocks/empty_meeting.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      description: "Should handle empty PDF"
+  
+  # ============================================================================
+  # PDF SIZE & PERFORMANCE
+  # ============================================================================
+  
+  - id: PDF301
+    name: "Large PDF (> 10MB) - Performance"
+    priority: "medium"
+    category: "pdf_performance"
+    input:
+      file: "mocks/large_meeting_report.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      max_response_time: 180
+      description: "May hit size limit"
+  
+  - id: PDF302
+    name: "PDF with 100+ pages - AI summary"
+    priority: "low"
+    category: "pdf_performance"
+    input:
+      file: "mocks/very_long_report.pdf"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      max_response_time: 300
+
+test_summary:
+  total_cases: 11
+  focus: "PDF parsing and AI analysis"
+  categories:
+    - "PDF text extraction"
+    - "PDF format handling"
+    - "PDF security"
+    - "PDF performance"

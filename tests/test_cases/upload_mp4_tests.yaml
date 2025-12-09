@@ -1,0 +1,177 @@
+# ============================================================================
+# MP4 VIDEO FILE UPLOAD & AI ANALYSIS TEST CASES
+# Focus: MP4 audio extraction + STT + AI analysis
+# ============================================================================
+
+test_suite:
+  name: "MP4 Video File Upload & AI Analysis"
+  endpoint: "http://localhost:5000/api/upload/process"
+  file_type: "audio"
+  description: "Test MP4 video audio extraction, transcription and AI analysis"
+
+test_cases:
+  # ============================================================================
+  # BASIC MP4 AUDIO EXTRACTION & AI ANALYSIS
+  # ============================================================================
+  
+  - id: MP4001
+    name: "Clear MP4 video - Audio extraction + STT + AI"
+    priority: "critical"
+    category: "mp4_stt_ai"
+    input:
+      file: "mocks/clear_meeting.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 100"
+        - "len(result['summary']) > 50"
+        - "len(result['topics']) > 0"
+  
+  - id: MP4002
+    name: "English MP4 - Audio extraction + STT + AI"
+    priority: "high"
+    category: "mp4_stt_ai"
+    input:
+      file: "mocks/english_meeting.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "en"
+      output_lang: "en"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+        - "len(result['summary']) > 30"
+  
+  # ============================================================================
+  # MP4 QUALITY VARIATIONS
+  # ============================================================================
+  
+  - id: MP4101
+    name: "Low quality MP4 (360p) - STT quality"
+    priority: "medium"
+    category: "mp4_quality"
+    input:
+      file: "mocks/low_quality_meeting.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 20"
+  
+  - id: MP4102
+    name: "High quality MP4 (1080p) - STT quality"
+    priority: "medium"
+    category: "mp4_quality"
+    input:
+      file: "mocks/high_quality_meeting.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 100"
+  
+  # ============================================================================
+  # MP4 DURATION TESTS
+  # ============================================================================
+  
+  - id: MP4201
+    name: "Short MP4 (< 30s) - STT + AI"
+    priority: "medium"
+    category: "mp4_duration"
+    input:
+      file: "mocks/short_meeting.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 10"
+      max_response_time: 30
+  
+  - id: MP4202
+    name: "Medium MP4 (5-10 min) - STT + AI"
+    priority: "high"
+    category: "mp4_duration"
+    input:
+      file: "mocks/medium_meeting.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 500"
+        - "len(result['summary']) > 100"
+      max_response_time: 180
+  
+  - id: MP4203
+    name: "Long MP4 (> 30 min) - STT + AI chunking"
+    priority: "medium"
+    category: "mp4_duration"
+    input:
+      file: "mocks/long_meeting.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      max_response_time: 600
+      description: "May need chunking"
+  
+  # ============================================================================
+  # MP4 CODEC VARIATIONS
+  # ============================================================================
+  
+  - id: MP4301
+    name: "MP4 with H.264 codec - Audio extraction"
+    priority: "high"
+    category: "mp4_codec"
+    input:
+      file: "mocks/meeting_h264.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+  
+  - id: MP4302
+    name: "MP4 with H.265 codec - Audio extraction"
+    priority: "medium"
+    category: "mp4_codec"
+    input:
+      file: "mocks/meeting_h265.mp4"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+
+test_summary:
+  total_cases: 9
+  focus: "MP4 video audio extraction and AI analysis"
+  categories:
+    - "MP4 audio extraction"
+    - "MP4 quality handling"
+    - "MP4 duration handling"
+    - "MP4 codec support"

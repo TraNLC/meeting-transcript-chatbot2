@@ -1,0 +1,56 @@
+﻿
+======================================================================
+COMPREHENSIVE TEST SUITE - UPLOAD PAGE (40 TESTS)
+======================================================================
+
+
+--- EASY TESTS (1-15) ---
+鉁?Test 1: Page loads
+鉁?Test 2: Has title
+鉁?Test 3: Has file input
+鉁?Test 4: Has upload button
+鉁?Test 5: Has meeting type selector
+鉁?Test 6: Has language selector
+鉁?Test 7: API endpoint exists
+鉁?Test 8: Has CSS
+鉁?Test 9: Has JavaScript
+鉁?Test 10: 
+鉁?Test 11: 
+鉁?Test 12: Has instructions
+鉁?Test 13: 
+鉁?Test 14: Valid HTML structure
+鉁?Test 15: VERSION 2.0
+
+--- MEDIUM TESTS (16-30) ---
+鉁?Test 16: Empty file rejected
+鉁?Test 17: Small file handled (200)
+鉁?Test 18: Special chars in filename handled
+鉁?Test 19: Missing file_type validated
+鉁?Test 20: Missing language handled (200)
+鉁?Test 21: Vietnamese text handled (500)
+鉁?Test 22: Response is JSON dict
+鉁?Test 23: Concurrent uploads handled
+鉁?Test 24: GET rejected (405)
+鉁?Test 25: Upload completed in 5.5s
+鉁?Test 26: History check code found (commented)
+鉁?Test 27: Page loads (no filter logic expected)
+鉁?Test 28: Encoding OK (text/html; charset=utf-8)
+鉁?Test 29: No 500 error
+鉁?Test 30: Returns JSON (application/json)
+
+--- HARD TESTS (31-40) ---
+鉁?Test 31: 
+鉁?Test 32: Large file handled (200)
+鉁?Test 33: SQL injection sanitized
+鉁?Test 34: XSS content handled
+鉁?Test 35: Path traversal sanitized
+鉁?Test 36: Unicode handled (500)
+鉁?Test 37: Valid JSON response
+鉁?Test 38: Invalid extension rejected
+鉁?Test 39: Timeout handled gracefully
+鉁?Test 40: Binary file rejected
+
+======================================================================
+RESULTS: 36 passed, 4 failed
+======================================================================
+

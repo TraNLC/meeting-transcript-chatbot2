@@ -44,7 +44,7 @@ class TranscriptLoader:
     @staticmethod
     def _load_txt(file_path: Path) -> str:
         """Load file TXT."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8-sig") as f:
             return f.read()
 
     @staticmethod

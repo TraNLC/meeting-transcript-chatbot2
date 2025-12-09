@@ -1,0 +1,242 @@
+# ============================================================================
+# TEXT FILE UPLOAD & AI ANALYSIS TEST CASES
+# Focus: API analysis and AI quality
+# ============================================================================
+
+test_suite:
+  name: "Text File Upload & AI Analysis"
+  endpoint: "http://localhost:5000/api/upload/process"
+  file_type: "text"
+  description: "Test AI analysis quality for text files"
+
+test_cases:
+  # ============================================================================
+  # BASIC AI ANALYSIS TESTS
+  # ============================================================================
+  
+  - id: TXT001
+    name: "Meeting transcript - AI summary quality"
+    priority: "critical"
+    category: "ai_analysis"
+    input:
+      file: "mocks/meeting_sample.txt"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 100"
+        - "'dự án' in response['summary'].lower()"
+        - "len(response['topics']) > 0"
+        - "len(response['actions']) > 0"
+        - "'quyết định' in response['decisions'].lower() or 'phê duyệt' in response['decisions'].lower()"
+  
+  - id: TXT002
+    name: "Interview transcript - AI extraction"
+    priority: "high"
+    category: "ai_analysis"
+    input:
+      file: "mocks/interview_sample.txt"
+      file_type: "text"
+      meeting_type: "interview"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "'phỏng vấn' in response['summary'].lower() or 'ứng viên' in response['summary'].lower()"
+        - "len(response['summary']) > 50"
+  
+  - id: TXT003
+    name: "Brainstorm - AI idea extraction"
+    priority: "high"
+    category: "ai_analysis"
+    input:
+      file: "mocks/brainstorm_sample.txt"
+      file_type: "text"
+      meeting_type: "brainstorm"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "'ý tưởng' in response['summary'].lower() or 'brainstorm' in response['summary'].lower()"
+        - "len(response['topics']) > 0"
+  
+  # ============================================================================
+  # MULTI-LANGUAGE AI TESTS
+  # ============================================================================
+  
+  - id: TXT101
+    name: "English output - AI translation quality"
+    priority: "high"
+    category: "ai_multilang"
+    input:
+      file: "mocks/meeting_sample.txt"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "en"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "'project' in response['summary'].lower() or 'meeting' in response['summary'].lower()"
+        - "len(response['summary']) > 50"
+  
+  - id: TXT102
+    name: "Japanese output - AI translation"
+    priority: "medium"
+    category: "ai_multilang"
+    input:
+      file: "mocks/meeting_sample.txt"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "ja"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 30"
+  
+  # ============================================================================
+  # AI CONTENT UNDERSTANDING TESTS
+  # ============================================================================
+  
+  - id: TXT201
+    name: "Short content - AI minimum viable analysis"
+    priority: "medium"
+    category: "ai_understanding"
+    input:
+      file: "short_meeting.txt"
+      file_content: "Cuộc họp bắt đầu lúc 9h. Anh Nam đề xuất tăng ngân sách. Chị Lan đồng ý. Quyết định: Phê duyệt."
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 20"
+        - "'ngân sách' in response['summary'].lower() or 'phê duyệt' in response['summary'].lower()"
+  
+  - id: TXT202
+    name: "Complex content - AI deep analysis"
+    priority: "high"
+    category: "ai_understanding"
+    input:
+      file: "mocks/brainstorm_sample.txt"
+      file_type: "text"
+      meeting_type: "brainstorm"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 100"
+        - "len(response['topics']) > 50"
+        - "'ý tưởng' in response['topics'].lower() or 'idea' in response['topics'].lower()"
+  
+  - id: TXT203
+    name: "Technical content - AI terminology handling"
+    priority: "high"
+    category: "ai_understanding"
+    input:
+      file: "technical_meeting.txt"
+      file_content: "Cuộc họp technical về API integration. Thảo luận về REST API, WebSocket, và GraphQL. Quyết định sử dụng REST API với JWT authentication. Backend sẽ dùng Python Flask, frontend dùng React."
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "'API' in response['summary'] or 'api' in response['summary'].lower()"
+        - "len(response['summary']) > 50"
+  
+  # ============================================================================
+  # AI ACTION ITEMS EXTRACTION
+  # ============================================================================
+  
+  - id: TXT301
+    name: "Action items - AI extraction accuracy"
+    priority: "critical"
+    category: "ai_extraction"
+    input:
+      file: "action_meeting.txt"
+      file_content: "Cuộc họp về dự án. Anh Nam cần hoàn thành báo cáo trước 10/12. Chị Lan sẽ review code vào 12/12. Anh Minh phải fix bug critical trong 2 ngày. Deadline cuối cùng: 15/12/2025."
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['actions']) > 50"
+        - "'10/12' in response['actions'] or '12/12' in response['actions'] or 'deadline' in response['actions'].lower()"
+  
+  - id: TXT302
+    name: "Decisions - AI extraction accuracy"
+    priority: "critical"
+    category: "ai_extraction"
+    input:
+      file: "decision_meeting.txt"
+      file_content: "Cuộc họp quyết định chiến lược. Quyết định 1: Tăng ngân sách 20%. Quyết định 2: Thuê thêm 3 developer. Quyết định 3: Launch sản phẩm vào Q1 2026. Tất cả đã được phê duyệt."
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['decisions']) > 50"
+        - "'20%' in response['decisions'] or 'ngân sách' in response['decisions'].lower()"
+        - "'developer' in response['decisions'].lower() or 'thuê' in response['decisions'].lower()"
+  
+  # ============================================================================
+  # AI EDGE CASES
+  # ============================================================================
+  
+  - id: TXT401
+    name: "Minimal content - AI graceful handling"
+    priority: "medium"
+    category: "ai_edge_case"
+    input:
+      file: "minimal.txt"
+      file_content: "Họp xong."
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      description: "AI should handle minimal content gracefully"
+  
+  - id: TXT402
+    name: "No clear structure - AI understanding"
+    priority: "medium"
+    category: "ai_edge_case"
+    input:
+      file: "unstructured.txt"
+      file_content: "Nói chuyện về nhiều thứ. Có người nói về dự án. Có người nói về ngân sách. Cuối cùng không rõ quyết định gì."
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 20"
+  
+  - id: TXT403
+    name: "Mixed languages - AI language detection"
+    priority: "medium"
+    category: "ai_edge_case"
+    input:
+      file: "mixed_lang.txt"
+      file_content: "Meeting started at 9 AM. Cuộc họp thảo luận về project mới. We decided to increase budget by 20%. Quyết định: Phê duyệt dự án."
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(response['summary']) > 50"
+
+test_summary:
+  total_cases: 14
+  focus: "AI analysis quality and accuracy"
+  categories:
+    - "AI summary generation"
+    - "AI information extraction"
+    - "AI multi-language support"
+    - "AI edge case handling"

@@ -6,8 +6,8 @@ from pathlib import Path
 # Add project root to path to verify src imports work
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from src.audio.huggingface_stt import transcribe_audio_huggingface
-from src.audio.speaker_diarization import SpeakerDiarizer
+from backend.audio.huggingface_stt import transcribe_audio_huggingface
+from backend.audio.speaker_diarization import SpeakerDiarizer
 
 class AudioService:
     _instance = None

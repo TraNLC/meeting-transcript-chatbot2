@@ -34,9 +34,23 @@ def create_app(config_name='default'):
     
     from .blueprints.api_rag import rag_bp
     app.register_blueprint(rag_bp, url_prefix='/api/rag')
+    
+    from .blueprints.api_history import history_bp
+    app.register_blueprint(history_bp, url_prefix='/api/history')
 
     # Register Socket events
     from .services import socket_service
     socket_service.init_socket_events(socketio)
+
+    # Global Context Processor for Localization
+    from app.translations import get_translations
+    from flask import request
+
+    @app.context_processor
+    def inject_translations():
+        # Priority: 1. Query Param, 2. Cookie, 3. Default 'vi'
+        lang = request.args.get('lang') or request.cookies.get('akari_lang') or 'vi'
+        t = get_translations(lang)
+        return dict(t=t, lang=lang)
 
     return app

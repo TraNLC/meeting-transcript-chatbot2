@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 search_bp = Blueprint('search', __name__)
 
 try:
-    from src.handlers.search_handlers import get_vectordb_stats_ui, search_meetings_ui
+    from backend.handlers.search_handlers import get_vectordb_stats_ui, search_meetings_ui
     SEARCH_AVAILABLE = True
 except ImportError:
     SEARCH_AVAILABLE = False

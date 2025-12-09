@@ -6,11 +6,11 @@ import sys
 # We can import directly from src as before, assuming sys.path in run.py handles it
 # OR we put the sys.path append in app/__init__.py or run.py
 
-from src.handlers.recording_management import (
+from backend.handlers.recording_management import (
     load_selected_recording,
     delete_selected_recording
 )
-from src.handlers.meeting_processing import save_recording_and_transcribe
+from backend.handlers.meeting_processing import save_recording_and_transcribe
 
 recording_bp = Blueprint('recording', __name__)
 
@@ -57,14 +57,53 @@ def delete_recording(recording_id):
 
 @recording_bp.route('/save', methods=['POST'])
 def save_recording():
-    data = request.json
-    status, rec_id = save_recording_and_transcribe(
-        data.get('audio_path'),
-        data.get('title'),
-        data.get('language'),
-        data.get('transcript')
-    )
-    return jsonify({
-        'status': status,
-        'recording_id': rec_id
-    })
+    """Save recording from browser/mic with audio file upload"""
+    try:
+        # Check if audio file is in request
+        if 'audio' in request.files:
+            audio_file = request.files['audio']
+            title = request.form.get('title', 'Recording')
+            language = request.form.get('language', 'vi')
+            
+            # Save audio file
+            from pathlib import Path
+            import time
+            
+            recordings_dir = Path('data/recordings')
+            recordings_dir.mkdir(parents=True, exist_ok=True)
+            
+            timestamp = int(time.time())
+            filename = f"recording_{timestamp}.webm"
+            audio_path = recordings_dir / filename
+            audio_file.save(str(audio_path))
+            
+            # Process with transcription
+            status, rec_id = save_recording_and_transcribe(
+                str(audio_path),
+                title,
+                language,
+                None  # transcript will be generated
+            )
+            
+            return jsonify({
+                'status': status,
+                'recording_id': rec_id
+            })
+        else:
+            # Old JSON format
+            data = request.json
+            status, rec_id = save_recording_and_transcribe(
+                data.get('audio_path'),
+                data.get('title'),
+                data.get('language'),
+                data.get('transcript')
+            )
+            return jsonify({
+                'status': status,
+                'recording_id': rec_id
+            })
+    except Exception as e:
+        return jsonify({
+            'status': f'Error: {str(e)}',
+            'recording_id': None
+        }), 500

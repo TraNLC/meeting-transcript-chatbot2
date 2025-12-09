@@ -1,0 +1,186 @@
+# ============================================================================
+# DOCX FILE UPLOAD & AI ANALYSIS TEST CASES
+# Focus: DOCX parsing and AI analysis
+# ============================================================================
+
+test_suite:
+  name: "DOCX File Upload & AI Analysis"
+  endpoint: "http://localhost:5000/api/upload/process"
+  file_type: "text"
+  description: "Test DOCX parsing and AI analysis quality"
+
+test_cases:
+  # ============================================================================
+  # BASIC DOCX PARSING & AI ANALYSIS
+  # ============================================================================
+  
+  - id: DOCX001
+    name: "Simple DOCX - Parsing and AI analysis"
+    priority: "critical"
+    category: "docx_parsing"
+    input:
+      file: "mocks/meeting_report.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['summary']) > 50"
+        - "len(result['transcript']) > 100"
+  
+  - id: DOCX002
+    name: "Multi-page DOCX - AI comprehensive analysis"
+    priority: "high"
+    category: "docx_parsing"
+    input:
+      file: "mocks/long_meeting_report.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['summary']) > 100"
+        - "len(result['topics']) > 50"
+  
+  # ============================================================================
+  # DOCX FORMAT VARIATIONS
+  # ============================================================================
+  
+  - id: DOCX101
+    name: "DOCX with images - AI text extraction"
+    priority: "high"
+    category: "docx_format"
+    input:
+      file: "mocks/meeting_with_images.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      description: "Should extract text, ignore images"
+  
+  - id: DOCX102
+    name: "DOCX with tables - AI structured data"
+    priority: "medium"
+    category: "docx_format"
+    input:
+      file: "mocks/meeting_with_tables.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['summary']) > 50"
+  
+  - id: DOCX103
+    name: "DOCX with formatting - Bold, Italic, Underline"
+    priority: "medium"
+    category: "docx_format"
+    input:
+      file: "mocks/formatted_meeting.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['summary']) > 50"
+  
+  - id: DOCX104
+    name: "DOCX with headers and footers"
+    priority: "low"
+    category: "docx_format"
+    input:
+      file: "mocks/meeting_with_headers.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+  
+  # ============================================================================
+  # DOCX SECURITY & VALIDATION
+  # ============================================================================
+  
+  - id: DOCX201
+    name: "Password-protected DOCX"
+    priority: "high"
+    category: "docx_security"
+    input:
+      file: "mocks/protected_meeting.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 400
+      error_contains: "password"
+  
+  - id: DOCX202
+    name: "Corrupted DOCX file"
+    priority: "medium"
+    category: "docx_validation"
+    input:
+      file: "corrupted.docx"
+      file_content: "Not a real DOCX content"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: 400
+      error_contains: "DOCX"
+  
+  - id: DOCX203
+    name: "Empty DOCX (no text)"
+    priority: "medium"
+    category: "docx_validation"
+    input:
+      file: "mocks/empty_meeting.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      description: "Should handle empty DOCX"
+  
+  # ============================================================================
+  # DOCX SIZE & PERFORMANCE
+  # ============================================================================
+  
+  - id: DOCX301
+    name: "Large DOCX (> 10MB) - Performance"
+    priority: "medium"
+    category: "docx_performance"
+    input:
+      file: "mocks/large_meeting_report.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      max_response_time: 180
+      description: "May hit size limit"
+  
+  - id: DOCX302
+    name: "DOCX with 100+ pages - AI summary"
+    priority: "low"
+    category: "docx_performance"
+    input:
+      file: "mocks/very_long_report.docx"
+      file_type: "text"
+      meeting_type: "meeting"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      max_response_time: 300
+
+test_summary:
+  total_cases: 12
+  focus: "DOCX parsing and AI analysis"
+  categories:
+    - "DOCX text extraction"
+    - "DOCX format handling"
+    - "DOCX security"
+    - "DOCX performance"

@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 rag_bp = Blueprint('rag', __name__)
 
 try:
-    from src.handlers.rag_handlers import query_rag_system
+    from backend.handlers.rag_handlers import query_rag_system
     RAG_AVAILABLE = True
 except ImportError:
     RAG_AVAILABLE = False

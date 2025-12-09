@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Chi tiết cuộc họp - Akari AI{% endblock %}
+
+{% block page_styles %}
+<link href="{{ url_for('static', filename='css/history.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div id="loadingState" class="loading-state">
+        <div class="loading-spinner mb-3"></div>
+        <p class="text-muted">Đang tải...</p>
+    </div>
+
+    <div id="contentState" style="display: none;">
+        <div class="detail-header">
+            <div class="detail-title" id="meetingTitle">Cuộc họp</div>
+            <div class="detail-meta" id="meetingMeta">
+                <!-- Meta will be inserted here -->
+            </div>
+            <div class="action-bar">
+                <button class="btn-action" onclick="window.location.href='/history'">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Quay lại</span>
+                </button>
+                <button class="btn-action" onclick="exportFile('txt')">
+                    <i class="bi bi-file-text"></i>
+                    <span>Export TXT</span>
+                </button>
+                <button class="btn-action" onclick="exportFile('docx')">
+                    <i class="bi bi-file-word"></i>
+                    <span>Export DOCX</span>
+                </button>
+                <button class="btn-action" onclick="toggleChat()">
+                    <i class="bi bi-chat-dots"></i>
+                    <span>Chat AI</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="content-tabs">
+            <button class="content-tab active" data-tab="summary">
+                <i class="bi bi-file-text me-2"></i>Tóm tắt
+            </button>
+            <button class="content-tab" data-tab="transcript">
+                <i class="bi bi-chat-left-text me-2"></i>Transcript
+            </button>
+            <button class="content-tab" data-tab="analysis">
+                <i class="bi bi-graph-up me-2"></i>Phân tích
+            </button>
+        </div>
+
+        <div class="content-panel active" id="summaryPanel">
+            <div class="content-card">
+                <h5><i class="bi bi-file-text"></i>Tóm tắt cuộc họp</h5>
+                <div id="summaryContent"></div>
+            </div>
+            <div class="content-card">
+                <h5><i class="bi bi-tag"></i>Chủ đề chính</h5>
+                <div id="topicsContent"></div>
+            </div>
+        </div>
+
+        <div class="content-panel" id="transcriptPanel">
+            <div class="content-card">
+                <h5><i class="bi bi-chat-left-text"></i>Nội dung đầy đủ</h5>
+                <div class="transcript-text" id="transcriptContent"></div>
+            </div>
+        </div>
+
+        <div class="content-panel" id="analysisPanel">
+            <div class="content-card">
+                <h5><i class="bi bi-check2-square"></i>Hành động cần làm</h5>
+                <div id="actionsContent"></div>
+            </div>
+            <div class="content-card">
+                <h5><i class="bi bi-lightbulb"></i>Quyết định quan trọng</h5>
+                <div id="decisionsContent"></div>
+            </div>
+            <div class="content-card">
+                <h5><i class="bi bi-people"></i>Người tham gia</h5>
+                <div id="participantsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Widget -->
+<div class="chat-widget" id="chatWidget" style="display: none;">
+    <div class="chat-header">
+        <span>💬 Chat với AI</span>
+        <button onclick="toggleChat()" style="background: none; border: none; color: white; cursor: pointer;">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="chat-body" id="chatBody">
+        <div class="chat-message ai">
+            <div class="chat-bubble">
+                Xin chào! Tôi có thể giúp bạn phân tích cuộc họp này. Hãy hỏi tôi bất cứ điều gì!
+            </div>
+        </div>
+    </div>
+    <div class="chat-footer">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Nhập câu hỏi...">
+        <button class="chat-send" id="chatSend">
+            <i class="bi bi-send"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const meetingId = "{{ meeting_id }}";
+    let meetingData = null;
+
+    // Load meeting detail on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadMeetingDetail();
+    });
+
+    // Tab switching
+    document.querySelectorAll('.content-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            
+            document.querySelectorAll('.content-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+            
+            tab.classList.add('active');
+            document.getElementById(tabName + 'Panel').classList.add('active');
+        });
+    });
+
+    // Chat
+    document.getElementById('chatSend').addEventListener('click', sendMessage);
+    document.getElementById('chatInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    async function loadMeetingDetail() {
+        try {
+            const response = await fetch(`/api/recording/load/${encodeURIComponent(meetingId)}`);
+            const data = await response.json();
+            
+            meetingData = data;
+            displayMeetingDetail(data);
+            
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('contentState').style.display = 'block';
+        } catch (error) {
+            console.error('Error loading meeting:', error);
+            document.getElementById('loadingState').innerHTML = `
+                <div class="text-center text-danger">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                    <p class="mt-3">Lỗi tải dữ liệu</p>
+                </div>
+            `;
+        }
+    }
+
+    function displayMeetingDetail(data) {
+        const info = data.info || {};
+        const title = info.title || data.filename || 'Cuộc họp';
+        const timestamp = info.timestamp ? new Date(info.timestamp).toLocaleString('vi-VN') : 'N/A';
+        const duration = info.duration || '0:00';
+        const language = info.language || 'vi';
+
+        document.getElementById('meetingTitle').textContent = title;
+        document.getElementById('meetingMeta').innerHTML = `
+            <div class="detail-meta-item">
+                <i class="bi bi-calendar3"></i>
+                <span>${timestamp}</span>
+            </div>
+            <div class="detail-meta-item">
+                <i class="bi bi-clock"></i>
+                <span>${duration}</span>
+            </div>
+            <div class="detail-meta-item">
+                <i class="bi bi-translate"></i>
+                <span>${language.toUpperCase()}</span>
+            </div>
+        `;
+
+        document.getElementById('summaryContent').innerHTML = data.summary || info.summary || 'Không có tóm tắt';
+        document.getElementById('topicsContent').innerHTML = data.topics || info.topics || 'Không có chủ đề';
+        document.getElementById('transcriptContent').textContent = data.transcript || 'Không có transcript';
+        document.getElementById('actionsContent').innerHTML = data.actions || info.actions || 'Không có hành động';
+        document.getElementById('decisionsContent').innerHTML = data.decisions || info.decisions || 'Không có quyết định';
+        document.getElementById('participantsContent').innerHTML = data.participants || info.participants || 'Không có thông tin';
+    }
+
+    function toggleChat() {
+        const widget = document.getElementById('chatWidget');
+        widget.style.display = widget.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        addChatMessage(message, 'user');
+        input.value = '';
+
+        try {
+            const response = await fetch('/api/chat/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+            if (data.answer) {
+                addChatMessage(data.answer, 'ai');
+            } else {
+                addChatMessage('Xin lỗi, tôi không thể trả lời câu hỏi này.', 'ai');
+            }
+        } catch (error) {
+            console.error('Chat error:', error);
+            addChatMessage('Xin lỗi, đã có lỗi xảy ra.', 'ai');
+        }
+    }
+
+    function addChatMessage(text, sender) {
+        const chatBody = document.getElementById('chatBody');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${sender}`;
+        messageDiv.innerHTML = `<div class="chat-bubble">${text}</div>`;
+        chatBody.appendChild(messageDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function exportFile(type) {
+        window.open(`/api/export/${type}`, '_blank');
+    }
+</script>
+{% endblock %}

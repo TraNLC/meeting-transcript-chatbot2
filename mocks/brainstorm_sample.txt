@@ -1,0 +1,102 @@
+Brainstorming Session: Tính năng mới cho Meeting AI
+Ngày: 7/12/2025
+Thời gian: 2h chiều
+
+Tham gia: Team Development (6 người)
+
+---
+
+VÒNG 1: Ý TƯỞNG TỰ DO (30 phút)
+
+1. Real-time transcription trong cuộc họp
+   - Hiển thị transcript ngay khi người nói
+   - Hỗ trợ nhiều ngôn ngữ đồng thời
+
+2. AI Meeting Assistant với voice
+   - User có thể hỏi AI bằng giọng nói
+   - AI trả lời bằng voice synthesis
+
+3. Smart action items extraction
+   - Tự động phát hiện task và assign người
+   - Tích hợp với Jira, Trello
+
+4. Meeting analytics dashboard
+   - Thống kê thời gian nói của mỗi người
+   - Phân tích sentiment và engagement
+
+5. Auto-generate meeting slides
+   - Tạo PowerPoint từ transcript
+   - Visual summary với charts
+
+6. Multi-language support
+   - Dịch real-time sang nhiều ngôn ngữ
+   - Hỗ trợ 50+ ngôn ngữ
+
+7. Video meeting integration
+   - Tích hợp với Zoom, Google Meet
+   - Record và analyze video
+
+8. AI-powered search
+   - Tìm kiếm trong tất cả meetings
+   - Semantic search với RAG
+
+---
+
+VÒNG 2: ĐÁNH GIÁ VÀ VOTE (20 phút)
+
+Top 3 ý tưởng được vote nhiều nhất:
+1. Real-time transcription (6 votes) ⭐⭐⭐
+2. Smart action items extraction (5 votes) ⭐⭐
+3. AI Meeting Assistant với voice (4 votes) ⭐
+
+---
+
+VÒNG 3: PHÁT TRIỂN Ý TƯỞNG (40 phút)
+
+Ý tưởng được chọn: Real-time transcription
+
+Chi tiết:
+- Technology: WebSocket + Whisper API
+- UI: Live transcript panel bên cạnh video
+- Features:
+  + Auto-scroll theo người nói
+  + Highlight keywords
+  + Speaker diarization
+  + Export transcript
+  
+Challenges:
+- Latency phải < 2 giây
+- Cost optimization cho API calls
+- Accuracy với nhiều accent
+
+Solutions:
+- Use streaming API
+- Implement caching
+- Fine-tune model cho tiếng Việt
+
+---
+
+VÒNG 4: ACTION PLAN (30 phút)
+
+Sprint 1 (2 tuần):
+- Research WebSocket implementation
+- Test Whisper streaming API
+- Design UI mockup
+
+Sprint 2 (2 tuần):
+- Implement backend WebSocket
+- Integrate Whisper API
+- Build frontend UI
+
+Sprint 3 (2 tuần):
+- Testing và optimization
+- Deploy beta version
+- Gather user feedback
+
+---
+
+Kết luận:
+- Ý tưởng khả thi và có giá trị cao
+- Timeline: 6 tuần
+- Budget estimate: $2000
+- Next meeting: 14/12/2025

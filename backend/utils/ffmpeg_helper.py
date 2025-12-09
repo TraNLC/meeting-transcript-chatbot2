@@ -18,6 +18,7 @@ def setup_ffmpeg_path():
         # Local project folder
         project_root / "ffmpeg-8.0.1-essentials_build" / "bin",
         project_root / "ffmpeg" / "bin",
+        project_root / "bin" / "ffmpeg-8.0.1-essentials_build" / "bin", # Add nested path
         
         # Common Windows locations
         Path("C:/ffmpeg/bin"),
@@ -69,6 +70,11 @@ def get_ffmpeg_path():
     
     if local_ffmpeg.exists():
         return str(local_ffmpeg)
+        
+    # Check nested bin path
+    nested_ffmpeg = project_root / "bin" / "ffmpeg-8.0.1-essentials_build" / "bin" / "ffmpeg.exe"
+    if nested_ffmpeg.exists():
+        return str(nested_ffmpeg)
     
     return None
 

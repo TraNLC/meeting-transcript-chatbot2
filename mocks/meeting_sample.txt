@@ -1,0 +1,45 @@
+Cuộc họp bắt đầu lúc 9h sáng ngày 7/12/2025.
+
+Chủ đề chính: Thảo luận về dự án phát triển hệ thống AI Meeting Assistant.
+
+Người tham gia:
+- Anh Nam (Project Manager)
+- Chị Lan (Tech Lead)
+- Anh Minh (Backend Developer)
+- Chị Hoa (Frontend Developer)
+
+Nội dung cuộc họp:
+
+1. Báo cáo tiến độ:
+   - Backend API đã hoàn thành 80%
+   - Frontend UI đã hoàn thành 70%
+   - Tích hợp AI đang trong giai đoạn testing
+
+2. Vấn đề gặp phải:
+   - API key Gemini bị giới hạn quota
+   - Cần tối ưu performance cho file lớn
+   - UI cần cải thiện responsive trên mobile
+
+3. Đề xuất giải pháp:
+   - Anh Nam đề xuất: Sử dụng Azure OpenAI thay vì Gemini để tránh quota limit
+   - Chị Lan đề xuất: Implement chunking cho file lớn, xử lý từng phần
+   - Chị Hoa đề xuất: Redesign UI với mobile-first approach
+
+4. Quyết định:
+   - Chuyển sang sử dụng Azure OpenAI GPT-4o (đã được phê duyệt)
+   - Implement file chunking trong sprint tiếp theo
+   - Redesign UI mobile trong 2 tuần tới
+
+5. Hành động cần làm:
+   - Anh Minh: Tích hợp Azure OpenAI API - Deadline: 10/12/2025
+   - Chị Lan: Implement chunking mechanism - Deadline: 15/12/2025
+   - Chị Hoa: Redesign mobile UI - Deadline: 20/12/2025
+   - Anh Nam: Update documentation và test plan - Deadline: 12/12/2025
+
+6. Ngân sách:
+   - Tăng ngân sách API thêm 20% ($500/tháng)
+   - Phê duyệt mua thêm GPU server cho testing
+
+Cuộc họp kết thúc lúc 10h30 sáng.
+
+Cuộc họp tiếp theo: 14/12/2025 lúc 9h sáng.

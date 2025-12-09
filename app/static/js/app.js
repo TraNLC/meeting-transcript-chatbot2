@@ -129,17 +129,28 @@ function refreshHistory() {
         })
         .catch(err => {
             console.error('Error loading history:', err);
-            document.getElementById('recordingList').innerHTML = `
-                <div class="alert alert-danger small">
-                    Lỗi tải lịch sử: ${err.message}
-                </div>
-            `;
+            const recordingListEl = document.getElementById('recordingList');
+            if (recordingListEl) {
+                recordingListEl.innerHTML = `
+                    <div class="alert alert-danger small">
+                        Lỗi tải lịch sử: ${err.message}
+                    </div>
+                `;
+            }
         });
 }
 
 function renderHistoryList(recordings) {
+    const recordingListEl = document.getElementById('recordingList');
+
+    // If element doesn't exist (new UI), skip rendering
+    if (!recordingListEl) {
+        console.log('recordingList element not found - using new UI');
+        return;
+    }
+
     if (!recordings || recordings.length === 0) {
-        document.getElementById('recordingList').innerHTML = `
+        recordingListEl.innerHTML = `
             <div class="text-center text-muted py-5">
                 <i class="bi bi-inbox" style="font-size: 2rem;"></i>
                 <p class="mt-2 small">Chưa có bản ghi nào</p>
@@ -173,7 +184,7 @@ function renderHistoryList(recordings) {
         html += `</div>`;
     }
 
-    document.getElementById('recordingList').innerHTML = html;
+    recordingListEl.innerHTML = html;
 }
 
 function groupRecordingsByDate(recordings) {
@@ -267,7 +278,8 @@ function startRecording() {
     };
 
     // Close setup modal
-    bootstrap.Modal.getInstance(document.getElementById('recordingSetupModal')).hide();
+    const setupModal = bootstrap.Modal.getInstance(document.getElementById('recordingSetupModal'));
+    if (setupModal) setupModal.hide();
 
     // Check audio source
     if (audioSource === 'screen') {
@@ -275,7 +287,41 @@ function startRecording() {
         const screenModal = new bootstrap.Modal(document.getElementById('screenShareModal'));
         screenModal.show();
     } else {
-        // Start microphone recording directly
+        startMicrophoneRecording();
+    }
+}
+
+// Close modern modal helper
+function startModernRecording(language, audioSource = 'microphone') {
+    // Generate default title
+    const now = new Date();
+    const title = `Meeting - ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+
+    // Set config
+    currentRecordingConfig = {
+        title: title,
+        language: language || 'vi',
+        audioSource: audioSource,
+        realtimeMode: true,
+        translateLang: 'en'
+    };
+
+    // Close modern modal if open
+    const modalEl = document.getElementById('inPersonMeetingModal');
+    if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
+    const browserModalEl = document.getElementById('browserRecordingModal');
+    if (browserModalEl) {
+        const modal = bootstrap.Modal.getInstance(browserModalEl);
+        if (modal) modal.hide();
+    }
+
+    // Start recording
+    if (audioSource === 'screen') {
+        startScreenRecording();
+    } else {
         startMicrophoneRecording();
     }
 }

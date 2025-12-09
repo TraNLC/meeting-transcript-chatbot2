@@ -1,9 +1,1 @@
-
-    Cuộc họp bắt đầu lúc 9:00 sáng.
-    Chủ đề: Thảo luận về dự án AI.
-    Người tham gia: Nguyễn Văn A, Trần Thị B.
-    Quyết định: Sẽ implement RAG system.
-    Action items:
-    - Nguyễn Văn A: Setup environment (deadline: 10/12/2025)
-    - Trần Thị B: Research LangChain (deadline: 12/12/2025)
-    
+Test content

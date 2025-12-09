@@ -1,5 +1,5 @@
 from flask import Blueprint, request, send_file, jsonify
-from src.handlers.meeting_processing import export_to_txt, export_to_docx
+from backend.handlers.meeting_processing import export_to_txt, export_to_docx
 import os
 
 export_bp = Blueprint('export', __name__)

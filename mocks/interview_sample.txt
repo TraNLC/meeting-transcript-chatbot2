@@ -1,0 +1,38 @@
+Phỏng vấn ứng viên: Nguyễn Văn A
+Vị trí: Senior Backend Developer
+Ngày: 7/12/2025
+Người phỏng vấn: Chị Lan (Tech Lead)
+
+---
+
+Chị Lan: Xin chào anh, cảm ơn anh đã đến phỏng vấn hôm nay. Anh có thể giới thiệu về bản thân không?
+
+Ứng viên: Dạ, em tên là Nguyễn Văn A, hiện tại em có 5 năm kinh nghiệm làm Backend Developer. Em đã làm việc với Python, Node.js, và có kinh nghiệm về AI/ML integration.
+
+Chị Lan: Rất tốt. Anh có kinh nghiệm với LLM APIs không?
+
+Ứng viên: Dạ có, em đã làm việc với OpenAI GPT-4, Gemini, và Claude. Em cũng có kinh nghiệm deploy model với Ollama và LangChain.
+
+Chị Lan: Anh có thể kể về một dự án khó khăn nhất mà anh đã làm?
+
+Ứng viên: Dạ, em từng làm một hệ thống chatbot cho 10,000 users đồng thời. Thách thức lớn nhất là optimize latency và cost. Em đã implement caching, rate limiting, và load balancing để giải quyết.
+
+Chị Lan: Impressive! Anh có câu hỏi gì cho chúng tôi không?
+
+Ứng viên: Dạ, em muốn hỏi về tech stack và team size của dự án này?
+
+Chị Lan: Chúng tôi dùng Python Flask, Azure OpenAI, và team hiện tại có 4 người. Anh sẽ làm việc trực tiếp với em.
+
+Ứng viên: Dạ, em rất hứng thú với vị trí này.
+
+Chị Lan: Tuyệt vời! Chúng tôi sẽ liên hệ lại trong 3 ngày tới.
+
+---
+
+Đánh giá:
+- Kỹ năng kỹ thuật: 9/10
+- Communication: 8/10
+- Problem solving: 9/10
+- Phù hợp văn hóa: 8/10
+
+Quyết định: PASS - Chuyển sang vòng phỏng vấn với CEO

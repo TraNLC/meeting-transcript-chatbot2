@@ -1,0 +1,162 @@
+# ============================================================================
+# WEBM AUDIO FILE UPLOAD & AI ANALYSIS TEST CASES
+# Focus: WebM format STT + AI analysis (web recording format)
+# ============================================================================
+
+test_suite:
+  name: "WebM Audio File Upload & AI Analysis"
+  endpoint: "http://localhost:5000/api/upload/process"
+  file_type: "audio"
+  description: "Test WebM audio transcription and AI analysis"
+
+test_cases:
+  # ============================================================================
+  # BASIC WEBM TRANSCRIPTION & AI ANALYSIS
+  # ============================================================================
+  
+  - id: WEBM001
+    name: "Clear WebM audio - STT + AI analysis"
+    priority: "critical"
+    category: "webm_stt_ai"
+    input:
+      file: "mocks/clear_meeting.webm"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 100"
+        - "len(result['summary']) > 50"
+        - "len(result['topics']) > 0"
+  
+  - id: WEBM002
+    name: "English WebM - STT + AI analysis"
+    priority: "high"
+    category: "webm_stt_ai"
+    input:
+      file: "mocks/english_meeting.webm"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "en"
+      output_lang: "en"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+        - "len(result['summary']) > 30"
+  
+  # ============================================================================
+  # WEBM BROWSER RECORDING TESTS
+  # ============================================================================
+  
+  - id: WEBM101
+    name: "Chrome recorded WebM - STT quality"
+    priority: "high"
+    category: "webm_browser"
+    input:
+      file: "mocks/chrome_recording.webm"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+  
+  - id: WEBM102
+    name: "Firefox recorded WebM - STT quality"
+    priority: "medium"
+    category: "webm_browser"
+    input:
+      file: "mocks/firefox_recording.webm"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+  
+  # ============================================================================
+  # WEBM CODEC VARIATIONS
+  # ============================================================================
+  
+  - id: WEBM201
+    name: "WebM with Opus codec - STT quality"
+    priority: "high"
+    category: "webm_codec"
+    input:
+      file: "mocks/meeting_opus.webm"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+  
+  - id: WEBM202
+    name: "WebM with Vorbis codec - STT quality"
+    priority: "medium"
+    category: "webm_codec"
+    input:
+      file: "mocks/meeting_vorbis.webm"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+  
+  # ============================================================================
+  # WEBM DURATION TESTS
+  # ============================================================================
+  
+  - id: WEBM301
+    name: "Short WebM (< 30s) - STT + AI"
+    priority: "medium"
+    category: "webm_duration"
+    input:
+      file: "mocks/short_meeting.webm"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 10"
+      max_response_time: 30
+  
+  - id: WEBM302
+    name: "Medium WebM (5-10 min) - STT + AI"
+    priority: "high"
+    category: "webm_duration"
+    input:
+      file: "mocks/medium_meeting.webm"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 500"
+        - "len(result['summary']) > 100"
+      max_response_time: 180
+
+test_summary:
+  total_cases: 8
+  focus: "WebM audio transcription and AI analysis"
+  categories:
+    - "WebM transcription accuracy"
+    - "WebM browser recording support"
+    - "WebM codec support"
+    - "WebM duration handling"

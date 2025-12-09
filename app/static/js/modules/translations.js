@@ -1,19 +1,47 @@
-// Translation Dictionary
+// Translation Dictionary - Complete and Consistent Structure
 const translations = {
     vi: {
         app: {
-            title: "Meeting Analyzer Pro",
+            title: "Akari.AI",
             team: "Made by Team 3"
+        },
+        hero: {
+            title: "Tập trung vào điều quan trọng.",
+            highlight: "AI sẽ ghi chép.",
+            subtitle: "Tự động phiên âm, phân tích và tóm tắt cuộc họp của bạn"
+        },
+        cards: {
+            record: {
+                title: "Ghi âm ngay lập tức",
+                description: "Sử dụng microphone hoặc ghi âm màn hình"
+            },
+            upload: {
+                title: "Tải lên File Video/Audio",
+                description: "Tải lên từ máy tính hoặc Google Drive"
+            },
+            chat: {
+                description: "Hỏi AI về nội dung cuộc họp"
+            },
+            history: {
+                title: "Lịch sử",
+                description: "Xem và quản lý các cuộc họp đã qua"
+            }
+        },
+        search: {
+            title: "Tìm kiếm nhanh chóng",
+            subtitle: "Tìm bất cứ điều gì từ ghi chú và cuộc trò chuyện của bạn",
+            placeholder: "Tìm kiếm ghi chú...",
+            filters: {
+                allNotes: "Tất cả Ghi chú",
+                allTime: "Mọi thời gian",
+                allTypes: "Tất cả Loại"
+            }
         },
         sidebar: {
             recording: "Ghi âm",
             upload: "Tải lên",
             chat: "Chat AI",
             history: "Lịch sử"
-        },
-        initial: {
-            recordNow: "Ghi âm ngay lập tức",
-            clickToStart: "Nhấn để bắt đầu ghi âm"
         },
         chat: {
             title: "Trò chuyện với AI",
@@ -25,6 +53,7 @@ const translations = {
         history: {
             title: "Lịch sử Cuộc họp",
             refresh: "Làm mới",
+            noMeetings: "Chưa có cuộc họp nào",
             table: {
                 name: "Tên cuộc họp",
                 date: "Ngày tạo",
@@ -37,38 +66,75 @@ const translations = {
             modal: {
                 title: "Ghi âm ngay lập tức",
                 titleLabel: "Tiêu đề",
-                language: "Ngôn ngữ hợp",
+                language: "Ngôn ngữ",
                 audioSource: "Nguồn âm thanh",
                 microphone: "Microphone",
                 screen: "Tab/Màn hình (Screen Audio)",
-                autoTranslate: "Tự động dịch (Bạn có muốn bản phiên âm được dịch không?)",
-                translateTo: "Dịch sang"
+                autoTranslate: "Tự động dịch",
+                translateTo: "Dịch sang",
+                start: "Bắt đầu",
+                cancel: "Hủy"
+            }
+        },
+        modals: {
+            upload: {
+                maxSize: "Kích thước tối đa: 10.74GB",
+                processButton: "Xử lý & Phân tích"
             },
-            screenShare: {
-                why: "Tại sao chúng tôi cần bạn chia sẻ màn hình của bạn?",
-                explanation: "Nếu bạn chọn không chia sẻ màn hình, ứng dụng có thể không thu được âm thanh từ các nguồn bên ngoài như Teams hoặc Google Meet, và do đó có thể không hoạt động như mong đợi",
-                howTo: "Cách thu âm:",
-                step1: "Một cửa sổ bật lên sẽ yêu cầu bạn chọn màn hình chia sẻ",
-                step2: "Chọn tab \"Thẻ trình duyệt Chrome\"",
-                step3: "Chọn tab có audio đang phát",
-                step4: "BẬT checkbox \"Chia sẻ cả âm thanh trên thẻ\"",
-                step5: "Nhấn \"Chia sẻ\"",
-                allow: "Cho phép ghi âm màn hình"
+            online: {
+                urlPlaceholder: "Dán URL tại đây"
             }
         },
         common: {
             loading: "Đang tải...",
-            back: "Quay lại",
-            continue: "Tiếp tục",
-            confirm: "Xác nhận",
             processing: "Đang xử lý...",
-            pleaseWait: "Vui lòng đợi trong giây lát"
+            pleaseWait: "Vui lòng đợi một chút",
+            back: "Quay lại",
+            save: "Lưu",
+            saved: "Đã lưu",
+            download: "Tải xuống",
+            confirm: "Xác nhận",
+            continue: "Tiếp tục",
+            cancel: "Hủy",
+            close: "Đóng"
         }
     },
     en: {
         app: {
-            title: "Meeting Analyzer Pro",
+            title: "Akari.AI",
             team: "Made by Team 3"
+        },
+        hero: {
+            title: "Focus on what matters.",
+            highlight: "AI will take the notes.",
+            subtitle: "Automatically transcribe, analyze, and summarize your meetings"
+        },
+        cards: {
+            record: {
+                title: "Record Now",
+                description: "Using microphone or screen audio capture"
+            },
+            upload: {
+                title: "Upload Video/Audio File",
+                description: "Upload from computer or Google Drive"
+            },
+            chat: {
+                description: "Ask AI about meeting content"
+            },
+            history: {
+                title: "History",
+                description: "View and manage your past meetings"
+            }
+        },
+        search: {
+            title: "Find what you need instantly",
+            subtitle: "Find anything from your notes and past conversations",
+            placeholder: "Search Notes...",
+            filters: {
+                allNotes: "All Notes",
+                allTime: "All time",
+                allTypes: "All Types"
+            }
         },
         sidebar: {
             recording: "Recording",
@@ -76,23 +142,20 @@ const translations = {
             chat: "Chat AI",
             history: "History"
         },
-        initial: {
-            recordNow: "Record Now",
-            clickToStart: "Click to start recording"
-        },
         chat: {
             title: "Chat with AI",
             clear: "Clear chat",
             welcomeTitle: "AI Assistant",
-            welcomeMessage: "Ask me anything about your meetings!",
+            welcomeMessage: "Ask me anything about your meeting!",
             inputPlaceholder: "Type a message..."
         },
         history: {
             title: "Meeting History",
             refresh: "Refresh",
+            noMeetings: "No meetings yet",
             table: {
                 name: "Meeting Name",
-                date: "Date Created",
+                date: "Created Date",
                 duration: "Duration",
                 status: "Status",
                 actions: "Actions"
@@ -106,44 +169,77 @@ const translations = {
                 audioSource: "Audio Source",
                 microphone: "Microphone",
                 screen: "Tab/Screen (Screen Audio)",
-                autoTranslate: "Auto-translate (Do you want the transcript translated?)",
-                translateTo: "Translate to"
+                autoTranslate: "Auto Translate",
+                translateTo: "Translate to",
+                start: "Start",
+                cancel: "Cancel"
+            }
+        },
+        modals: {
+            upload: {
+                maxSize: "Max. file size: 10.74GB",
+                processButton: "Process & Analyze"
             },
-            screenShare: {
-                why: "Why do we need you to share your screen?",
-                explanation: "If you choose not to share your screen, the app may not capture audio from external sources like Teams or Google Meet, and may not work as expected",
-                howTo: "How to record:",
-                step1: "A popup will ask you to select a screen to share",
-                step2: "Select the \"Chrome Browser Tab\" tab",
-                step3: "Select the tab with audio playing",
-                step4: "ENABLE the \"Share tab audio\" checkbox",
-                step5: "Click \"Share\"",
-                allow: "Allow screen recording"
+            online: {
+                urlPlaceholder: "Paste URL here"
             }
         },
         common: {
             loading: "Loading...",
-            back: "Back",
-            continue: "Continue",
-            confirm: "Confirm",
             processing: "Processing...",
-            pleaseWait: "Please wait a moment"
+            pleaseWait: "Please wait a moment",
+            back: "Back",
+            save: "Save",
+            saved: "Saved",
+            download: "Download",
+            confirm: "Confirm",
+            continue: "Continue",
+            cancel: "Cancel",
+            close: "Close"
         }
     },
     ja: {
         app: {
-            title: "Meeting Analyzer Pro",
+            title: "Akari.AI",
             team: "Made by Team 3"
+        },
+        hero: {
+            title: "重要なことに集中してください。",
+            highlight: "AIがメモを取ります。",
+            subtitle: "会議を自動的に文字起こし、分析、要約します"
+        },
+        cards: {
+            record: {
+                title: "今すぐ録音",
+                description: "マイクまたは画面音声キャプチャを使用"
+            },
+            upload: {
+                title: "ビデオ/オーディオファイルをアップロード",
+                description: "コンピューターまたはGoogleドライブからアップロード"
+            },
+            chat: {
+                description: "会議内容についてAIに質問"
+            },
+            history: {
+                title: "履歴",
+                description: "過去の会議を表示および管理"
+            }
+        },
+        search: {
+            title: "必要なものを即座に検索",
+            subtitle: "メモや過去の会話から何でも検索",
+            placeholder: "メモを検索...",
+            filters: {
+                allNotes: "すべてのメモ",
+                allTime: "すべての期間",
+                allTypes: "すべてのタイプ"
+            }
         },
         sidebar: {
             recording: "録音",
             upload: "アップロード",
             chat: "AIチャット",
             history: "履歴"
-        },
-        initial: {
-            recordNow: "今すぐ録音",
-            clickToStart: "クリックして録音を開始"
         },
         chat: {
             title: "AIとチャット",
@@ -155,6 +251,7 @@ const translations = {
         history: {
             title: "会議履歴",
             refresh: "更新",
+            noMeetings: "まだ会議がありません",
             table: {
                 name: "会議名",
                 date: "作成日",
@@ -171,44 +268,77 @@ const translations = {
                 audioSource: "音声ソース",
                 microphone: "マイク",
                 screen: "タブ/画面（画面音声）",
-                autoTranslate: "自動翻訳（トランスクリプトを翻訳しますか？）",
-                translateTo: "翻訳先"
+                autoTranslate: "自動翻訳",
+                translateTo: "翻訳先",
+                start: "開始",
+                cancel: "キャンセル"
+            }
+        },
+        modals: {
+            upload: {
+                maxSize: "最大ファイルサイズ: 10.74GB",
+                processButton: "処理と分析"
             },
-            screenShare: {
-                why: "なぜ画面共有が必要ですか？",
-                explanation: "画面を共有しない場合、TeamsやGoogle Meetなどの外部ソースから音声をキャプチャできず、期待どおりに動作しない可能性があります",
-                howTo: "録音方法：",
-                step1: "ポップアップで共有する画面を選択するよう求められます",
-                step2: "「Chromeブラウザタブ」タブを選択",
-                step3: "音声が再生されているタブを選択",
-                step4: "「タブの音声を共有」チェックボックスを有効にする",
-                step5: "「共有」をクリック",
-                allow: "画面録画を許可"
+            online: {
+                urlPlaceholder: "URLを貼り付け"
             }
         },
         common: {
             loading: "読み込み中...",
-            back: "戻る",
-            continue: "続ける",
-            confirm: "確認",
             processing: "処理中...",
-            pleaseWait: "しばらくお待ちください"
+            pleaseWait: "少々お待ちください",
+            back: "戻る",
+            save: "保存",
+            saved: "保存済み",
+            download: "ダウンロード",
+            confirm: "確認",
+            continue: "続ける",
+            cancel: "キャンセル",
+            close: "閉じる"
         }
     },
     ko: {
         app: {
-            title: "Meeting Analyzer Pro",
+            title: "Akari.AI",
             team: "Made by Team 3"
+        },
+        hero: {
+            title: "중요한 것에 집중하세요.",
+            highlight: "AI가 메모를 작성합니다.",
+            subtitle: "회의를 자동으로 전사, 분석 및 요약합니다"
+        },
+        cards: {
+            record: {
+                title: "지금 녹음",
+                description: "마이크 또는 화면 오디오 캡처 사용"
+            },
+            upload: {
+                title: "비디오/오디오 파일 업로드",
+                description: "컴퓨터 또는 Google 드라이브에서 업로드"
+            },
+            chat: {
+                description: "회의 내용에 대해 AI에게 질문"
+            },
+            history: {
+                title: "기록",
+                description: "과거 회의 보기 및 관리"
+            }
+        },
+        search: {
+            title: "필요한 것을 즉시 찾기",
+            subtitle: "메모 및 과거 대화에서 무엇이든 찾기",
+            placeholder: "메모 검색...",
+            filters: {
+                allNotes: "모든 메모",
+                allTime: "모든 시간",
+                allTypes: "모든 유형"
+            }
         },
         sidebar: {
             recording: "녹음",
             upload: "업로드",
             chat: "AI 채팅",
             history: "기록"
-        },
-        initial: {
-            recordNow: "지금 녹음",
-            clickToStart: "클릭하여 녹음 시작"
         },
         chat: {
             title: "AI와 채팅",
@@ -219,10 +349,11 @@ const translations = {
         },
         history: {
             title: "회의 기록",
-            refresh: "새로고침",
+            refresh: "새로 고침",
+            noMeetings: "아직 회의가 없습니다",
             table: {
                 name: "회의 이름",
-                date: "생성일",
+                date: "생성 날짜",
                 duration: "기간",
                 status: "상태",
                 actions: "작업"
@@ -236,55 +367,89 @@ const translations = {
                 audioSource: "오디오 소스",
                 microphone: "마이크",
                 screen: "탭/화면 (화면 오디오)",
-                autoTranslate: "자동 번역 (녹취록을 번역하시겠습니까?)",
-                translateTo: "번역 대상"
+                autoTranslate: "자동 번역",
+                translateTo: "번역 대상",
+                start: "시작",
+                cancel: "취소"
+            }
+        },
+        modals: {
+            upload: {
+                maxSize: "최대 파일 크기: 10.74GB",
+                processButton: "처리 및 분석"
             },
-            screenShare: {
-                why: "화면 공유가 필요한 이유는 무엇입니까?",
-                explanation: "화면을 공유하지 않으면 Teams 또는 Google Meet과 같은 외부 소스에서 오디오를 캡처하지 못할 수 있으며 예상대로 작동하지 않을 수 있습니다",
-                howTo: "녹음 방법:",
-                step1: "팝업에서 공유할 화면을 선택하라는 메시지가 표시됩니다",
-                step2: "\"Chrome 브라우저 탭\" 탭 선택",
-                step3: "오디오가 재생 중인 탭 선택",
-                step4: "\"탭 오디오 공유\" 체크박스 활성화",
-                step5: "\"공유\" 클릭",
-                allow: "화면 녹화 허용"
+            online: {
+                urlPlaceholder: "URL 붙여넣기"
             }
         },
         common: {
             loading: "로딩 중...",
-            back: "뒤로",
-            continue: "계속",
-            confirm: "확인",
             processing: "처리 중...",
-            pleaseWait: "잠시 기다려 주세요"
+            pleaseWait: "잠시만 기다려주세요",
+            back: "뒤로",
+            save: "저장",
+            saved: "저장됨",
+            download: "다운로드",
+            confirm: "확인",
+            continue: "계속",
+            cancel: "취소",
+            close: "닫기"
         }
     },
     zh: {
         app: {
-            title: "Meeting Analyzer Pro",
+            title: "Akari.AI",
             team: "Made by Team 3"
+        },
+        hero: {
+            title: "专注于重要的事情。",
+            highlight: "AI 将做笔记。",
+            subtitle: "自动转录、分析和总结您的会议"
+        },
+        cards: {
+            record: {
+                title: "立即录音",
+                description: "使用麦克风或屏幕音频捕获"
+            },
+            upload: {
+                title: "上传视频/音频文件",
+                description: "从计算机或 Google 云端硬盘上传"
+            },
+            chat: {
+                description: "向 AI 询问会议内容"
+            },
+            history: {
+                title: "历史记录",
+                description: "查看和管理过去的会议"
+            }
+        },
+        search: {
+            title: "即时查找所需内容",
+            subtitle: "从笔记和过去的对话中查找任何内容",
+            placeholder: "搜索笔记...",
+            filters: {
+                allNotes: "所有笔记",
+                allTime: "所有时间",
+                allTypes: "所有类型"
+            }
         },
         sidebar: {
             recording: "录音",
             upload: "上传",
-            chat: "AI聊天",
-            history: "历史"
-        },
-        initial: {
-            recordNow: "立即录音",
-            clickToStart: "点击开始录音"
+            chat: "AI 聊天",
+            history: "历史记录"
         },
         chat: {
-            title: "与AI聊天",
+            title: "与 AI 聊天",
             clear: "清除聊天",
-            welcomeTitle: "AI助手",
-            welcomeMessage: "问我关于您的会议的任何问题！",
+            welcomeTitle: "AI 助手",
+            welcomeMessage: "问我关于您会议的任何问题！",
             inputPlaceholder: "输入消息..."
         },
         history: {
             title: "会议历史",
             refresh: "刷新",
+            noMeetings: "还没有会议",
             table: {
                 name: "会议名称",
                 date: "创建日期",
@@ -301,28 +466,38 @@ const translations = {
                 audioSource: "音频源",
                 microphone: "麦克风",
                 screen: "标签/屏幕（屏幕音频）",
-                autoTranslate: "自动翻译（您想翻译转录吗？）",
-                translateTo: "翻译为"
+                autoTranslate: "自动翻译",
+                translateTo: "翻译为",
+                start: "开始",
+                cancel: "取消"
+            }
+        },
+        modals: {
+            upload: {
+                maxSize: "最大文件大小: 10.74GB",
+                processButton: "处理和分析"
             },
-            screenShare: {
-                why: "为什么我们需要您共享屏幕？",
-                explanation: "如果您选择不共享屏幕，应用程序可能无法从Teams或Google Meet等外部源捕获音频，并且可能无法按预期工作",
-                howTo: "如何录音：",
-                step1: "弹出窗口将要求您选择要共享的屏幕",
-                step2: "选择\"Chrome浏览器标签\"标签",
-                step3: "选择正在播放音频的标签",
-                step4: "启用\"共享标签音频\"复选框",
-                step5: "点击\"共享\"",,
-                allow: "允许屏幕录制"
+            online: {
+                urlPlaceholder: "粘贴 URL"
             }
         },
         common: {
             loading: "加载中...",
-            back: "返回",
-            continue: "继续",
-            confirm: "确认",
             processing: "处理中...",
-            pleaseWait: "请稍候"
+            pleaseWait: "请稍候",
+            back: "返回",
+            save: "保存",
+            saved: "已保存",
+            download: "下载",
+            confirm: "确认",
+            continue: "继续",
+            cancel: "取消",
+            close: "关闭"
         }
     }
 };
+
+// Export for use in other modules
+if (typeof window !== 'undefined') {
+    window.translations = translations;
+}

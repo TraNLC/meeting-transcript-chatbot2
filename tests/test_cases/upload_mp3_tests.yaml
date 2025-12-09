@@ -1,0 +1,142 @@
+# ============================================================================
+# MP3 AUDIO FILE UPLOAD & AI ANALYSIS TEST CASES
+# Focus: MP3 format STT + AI analysis
+# ============================================================================
+
+test_suite:
+  name: "MP3 Audio File Upload & AI Analysis"
+  endpoint: "http://localhost:5000/api/upload/process"
+  file_type: "audio"
+  description: "Test MP3 audio transcription and AI analysis"
+
+test_cases:
+  # ============================================================================
+  # BASIC MP3 TRANSCRIPTION & AI ANALYSIS
+  # ============================================================================
+  
+  - id: MP3001
+    name: "Clear MP3 audio - STT + AI analysis"
+    priority: "critical"
+    category: "mp3_stt_ai"
+    input:
+      file: "mocks/clear_meeting.mp3"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 100"
+        - "len(result['summary']) > 50"
+        - "len(result['topics']) > 0"
+  
+  - id: MP3002
+    name: "English MP3 - STT + AI analysis"
+    priority: "high"
+    category: "mp3_stt_ai"
+    input:
+      file: "mocks/english_meeting.mp3"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "en"
+      output_lang: "en"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+        - "len(result['summary']) > 30"
+  
+  # ============================================================================
+  # MP3 BITRATE VARIATIONS
+  # ============================================================================
+  
+  - id: MP3101
+    name: "Low bitrate MP3 (64kbps) - STT quality"
+    priority: "medium"
+    category: "mp3_quality"
+    input:
+      file: "mocks/low_bitrate_meeting.mp3"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 20"
+  
+  - id: MP3102
+    name: "High bitrate MP3 (320kbps) - STT quality"
+    priority: "medium"
+    category: "mp3_quality"
+    input:
+      file: "mocks/high_bitrate_meeting.mp3"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 100"
+  
+  # ============================================================================
+  # MP3 DURATION TESTS
+  # ============================================================================
+  
+  - id: MP3201
+    name: "Short MP3 (< 30s) - STT + AI"
+    priority: "medium"
+    category: "mp3_duration"
+    input:
+      file: "mocks/short_meeting.mp3"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 10"
+      max_response_time: 30
+  
+  - id: MP3202
+    name: "Medium MP3 (5-10 min) - STT + AI"
+    priority: "high"
+    category: "mp3_duration"
+    input:
+      file: "mocks/medium_meeting.mp3"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 500"
+        - "len(result['summary']) > 100"
+      max_response_time: 180
+  
+  - id: MP3203
+    name: "Long MP3 (> 30 min) - STT + AI chunking"
+    priority: "medium"
+    category: "mp3_duration"
+    input:
+      file: "mocks/long_meeting.mp3"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: [200, 400]
+      max_response_time: 600
+      description: "May need chunking"
+
+test_summary:
+  total_cases: 8
+  focus: "MP3 audio transcription and AI analysis"
+  categories:
+    - "MP3 transcription accuracy"
+    - "MP3 bitrate handling"
+    - "MP3 duration handling"

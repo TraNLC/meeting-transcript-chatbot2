@@ -26,6 +26,7 @@ class HistoryManager:
         topics: List[Dict],
         action_items: List[Dict],
         decisions: List[Dict],
+        transcript: str = "",
         metadata: Optional[Dict] = None
     ) -> str:
         """Save analysis results to history.
@@ -36,6 +37,7 @@ class HistoryManager:
             topics: List of topics
             action_items: List of action items
             decisions: List of decisions
+            transcript: Original transcript text
             metadata: Additional metadata
             
         Returns:
@@ -50,6 +52,7 @@ class HistoryManager:
             "id": history_id,
             "timestamp": datetime.now().isoformat(),
             "original_file": filename,
+            "transcript": transcript,
             "summary": summary,
             "topics": topics,
             "action_items": action_items,

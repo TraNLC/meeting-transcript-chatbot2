@@ -1,0 +1,156 @@
+# ============================================================================
+# WAV AUDIO FILE UPLOAD & AI ANALYSIS TEST CASES
+# Focus: WAV format STT + AI analysis (highest quality)
+# ============================================================================
+
+test_suite:
+  name: "WAV Audio File Upload & AI Analysis"
+  endpoint: "http://localhost:5000/api/upload/process"
+  file_type: "audio"
+  description: "Test WAV audio transcription and AI analysis"
+
+test_cases:
+  # ============================================================================
+  # BASIC WAV TRANSCRIPTION & AI ANALYSIS
+  # ============================================================================
+  
+  - id: WAV001
+    name: "Clear WAV audio - STT + AI analysis"
+    priority: "critical"
+    category: "wav_stt_ai"
+    input:
+      file: "mocks/clear_meeting.wav"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 100"
+        - "len(result['summary']) > 50"
+        - "len(result['topics']) > 0"
+  
+  - id: WAV002
+    name: "Interview WAV - AI speaker detection"
+    priority: "high"
+    category: "wav_stt_ai"
+    input:
+      file: "mocks/interview_audio.wav"
+      file_type: "audio"
+      meeting_type: "interview"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+      enable_diarization: true
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 100"
+        - "'speaker' in result['transcript'].lower() or 'người' in result['transcript'].lower()"
+  
+  # ============================================================================
+  # WAV QUALITY VARIATIONS
+  # ============================================================================
+  
+  - id: WAV101
+    name: "Noisy WAV - STT robustness"
+    priority: "high"
+    category: "wav_quality"
+    input:
+      file: "mocks/noisy_meeting.wav"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 20"
+      description: "STT should handle noise"
+  
+  - id: WAV102
+    name: "Low quality WAV (8kHz) - STT handling"
+    priority: "medium"
+    category: "wav_quality"
+    input:
+      file: "mocks/low_quality.wav"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      description: "Should transcribe despite low quality"
+  
+  - id: WAV103
+    name: "Multiple speakers WAV - AI speaker separation"
+    priority: "high"
+    category: "wav_quality"
+    input:
+      file: "mocks/multi_speaker.wav"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+      enable_diarization: true
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 100"
+  
+  # ============================================================================
+  # WAV SAMPLE RATE TESTS
+  # ============================================================================
+  
+  - id: WAV201
+    name: "WAV 16kHz - Standard quality"
+    priority: "high"
+    category: "wav_sample_rate"
+    input:
+      file: "mocks/meeting_16khz.wav"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+  
+  - id: WAV202
+    name: "WAV 44.1kHz - High quality"
+    priority: "medium"
+    category: "wav_sample_rate"
+    input:
+      file: "mocks/meeting_44khz.wav"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+  
+  - id: WAV203
+    name: "WAV 48kHz - Professional quality"
+    priority: "low"
+    category: "wav_sample_rate"
+    input:
+      file: "mocks/meeting_48khz.wav"
+      file_type: "audio"
+      meeting_type: "meeting"
+      transcribe_lang: "vi"
+      output_lang: "vi"
+    expected:
+      status_code: 200
+      ai_validations:
+        - "len(result['transcript']) > 50"
+
+test_summary:
+  total_cases: 8
+  focus: "WAV audio transcription and AI analysis"
+  categories:
+    - "WAV transcription accuracy"
+    - "WAV quality handling"
+    - "WAV sample rate support"
