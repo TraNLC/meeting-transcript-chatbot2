@@ -5,7 +5,7 @@ Translation dictionaries for the application.
 translations = {
     "vi": {
         "title": "Akari AI - Trợ lý cuộc họp thông minh",
-        "home_title": "Tập trung vào điều quan trọng.",
+        "home_title": "Akari AI, thông minh thay, giải phóng tay !",
         "home_highlight": "AI sẽ ghi chép.",
         "home_subtitle": "Tự động chuyển đổi, phân tích và tóm tắt cuộc họp của bạn",
         "browser_record": "Ghi âm Browser",
@@ -20,7 +20,7 @@ translations = {
     },
     "en": {
         "title": "Akari AI - Smart Meeting Assistant",
-        "home_title": "Focus on what matters.",
+        "home_title": "Akari AI – Bright insight, hands take flight !",
         "home_highlight": "AI takes notes.",
         "home_subtitle": "Automatically transcribe, analyze, and summarize your meetings",
         "browser_record": "Browser Recording",
