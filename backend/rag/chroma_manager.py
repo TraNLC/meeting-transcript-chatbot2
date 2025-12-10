@@ -78,14 +78,19 @@ class ChromaManager:
         self.rag_graph = builder.compile()
 
     def store(self, text: str):
+        print(f"[ChromaManager] Storing document (chars={len(text)})")
         doc = Document(page_content=text)
         self.vectorstore.add_documents([doc])
         self.vectorstore.persist()
+        print("[ChromaManager] Document stored and persisted.")
 
     def retrieve(self, question: str) -> str:
+        print(f"[ChromaManager] Retrieving answer for question: {question}")
         state = RAGState(question=question)
         result = self.rag_graph.invoke(state.model_dump())
-        return result["answer"]
+        answer = result["answer"]
+        print(f"[ChromaManager] Retrieved answer {answer}")
+        return answer
 
 # Example usage:
 # manager = ChromaManager()
