@@ -239,7 +239,10 @@ def process_upload_file():
             # Check if status indicates an error
             if status.startswith('❌') or status.startswith('⚠️'):
                 return jsonify({'error': status}), 400
-            
+
+            chroma = ChromaManager()
+            chroma.store(transcript)
+
             # Return success response
 
             return jsonify({

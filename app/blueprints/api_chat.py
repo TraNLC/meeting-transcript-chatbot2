@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.handlers.meeting_processing import chat_with_ai, refresh_history, load_history
+from backend.rag.chroma_manager import ChromaManager
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -26,55 +27,9 @@ def chat():
     if not rate_limiter.wait_if_needed(key='ask_ai', max_wait=5):
         return jsonify({'error': '⚠️ Quá nhiều câu hỏi. Vui lòng đợi 1 phút.'}), 429
     
-    # Get context from request
-    context = data.get('context', {})
-    
-    # Validate: Must have context (scoped to meeting)
-    if not context or not any([context.get('summary'), context.get('transcript')]):
-        return jsonify({'error': 'Context is required. Please reload the page.'}), 400
-    
-    # Build scoped prompt
-    system_prompt = """Bạn là AI assistant chuyên phân tích meeting. 
-    
-QUAN TRỌNG:
-- CHỈ trả lời câu hỏi về meeting này
-- KHÔNG trả lời câu hỏi chung hoặc ngoài phạm vi meeting
-- Trả lời ngắn gọn, súc tích (2-3 câu)
-- Dựa trên context được cung cấp
-- Nếu không tìm thấy thông tin → Nói rõ "Không tìm thấy trong meeting"
-
-Context của meeting:"""
-    
-    context_parts = []
-    if context.get('summary'):
-        context_parts.append(f"Tóm tắt: {context['summary'][:800]}")
-    if context.get('topics'):
-        topics_str = str(context['topics'])[:500]
-        context_parts.append(f"Chủ đề: {topics_str}")
-    if context.get('actions'):
-        actions_str = str(context['actions'])[:500]
-        context_parts.append(f"Hành động: {actions_str}")
-    if context.get('decisions'):
-        decisions_str = str(context['decisions'])[:500]
-        context_parts.append(f"Quyết định: {decisions_str}")
-    if context.get('transcript'):
-        # Add transcript for full context (limit to 2000 chars to avoid token limit)
-        transcript_str = str(context['transcript'])[:2000]
-        context_parts.append(f"Transcript: {transcript_str}")
-    
-    full_prompt = f"{system_prompt}\n\n{chr(10).join(context_parts)}\n\nCâu hỏi: {message}"
-    
-    # Simple response for now
     try:
-        # Mock response based on message
-        if "deadline" in message.lower():
-            response_text = "Dựa trên meeting này, các deadline quan trọng cần theo dõi."
-        elif "ai" in message.lower() or "trách nhiệm" in message.lower():
-            response_text = "Các action items đã được phân công cho từng thành viên trong team."
-        elif "tóm tắt" in message.lower():
-            response_text = "Meeting tập trung vào việc thảo luận kế hoạch phát triển và phân công nhiệm vụ."
-        else:
-            response_text = f"Tôi hiểu câu hỏi của bạn về '{message}'. Dựa trên nội dung meeting, đây là thông tin liên quan."
+        chroma_manager = ChromaManager()
+        response_text = chroma_manager.retrieve(message)
         
         return jsonify({'response': response_text, 'answer': response_text})
     except Exception as e:
