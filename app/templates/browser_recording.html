@@ -20,8 +20,8 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Chọn ngôn ngữ</label>
-                <select id="languageSelect" class="form-select">
+                <label for="languageSelect" class="form-label">Chọn ngôn ngữ</label>
+                <select id="languageSelect" class="form-select" aria-label="Chọn ngôn ngữ">
                     <option value="vi-VN">🇻🇳 Tiếng Việt</option>
                     <option value="en-US">🇬🇧 English (US)</option>
                     <option value="ja-JP">🇯🇵 日本語</option>
@@ -31,8 +31,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Tiêu đề cuộc họp</label>
-                <input type="text" id="titleInput" class="form-control" placeholder="VD: Daily Meeting...">
+                <label for="titleInput" class="form-label">Tiêu đề cuộc họp</label>
+                <input type="text" id="titleInput" class="form-control" placeholder="VD: Daily Meeting..."
+                       aria-label="Tiêu đề cuộc họp">
             </div>
 
             <!-- Zero Cost Info -->
@@ -50,8 +51,9 @@
 
             <!-- Colab URL Input (Auto-Connect Support) -->
             <div class="form-group">
-                <label class="form-label">Colab WhisperX URL (Optional)</label>
-                <input type="text" id="colabUrlInput" class="form-control" placeholder="https://xxxx.ngrok-free.app">
+                <label for="colabUrlInput" class="form-label">Colab WhisperX URL (Optional)</label>
+                <input type="text" id="colabUrlInput" class="form-control" placeholder="https://xxxx.ngrok-free.app"
+                       aria-label="Colab WhisperX URL (Optional)">
                 <small class="text-muted d-block mt-1">
                     <a href="#" onclick="showColabGuide(); return false;">Hướng dẫn setup & Auto-Connect</a>
                 </small>
@@ -116,6 +118,7 @@
     let visInterval = null;
 
     document.getElementById('startBtn').addEventListener('click', async () => {
+        console.log('Starting Browser Recording...');
         const title = document.getElementById('titleInput').value || `Meeting ${new Date().toLocaleString('vi-VN')}`;
         const language = document.getElementById('languageSelect').value;
         const colabUrl = document.getElementById('colabUrlInput').value.trim();
@@ -130,24 +133,66 @@
                 }
             });
 
-            stream.getVideoTracks()[0].onended = () => {
-                stopRecording();
-            };
+            // Safely attach onended if there's a video track (display capture may include video)
+            const videoTracks = stream.getVideoTracks();
+            if (videoTracks && videoTracks.length > 0) {
+                videoTracks[0].onended = () => stopRecording();
+            }
 
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-                ? 'audio/webm;codecs=opus'
-                : 'audio/webm';
+            // Choose a mimeType that matches the captured tracks (video vs audio) and is supported
+            const hasVideo = stream.getVideoTracks().length > 0;
+            const candidates = hasVideo
+                    ? ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9,opus', 'video/webm']
+                    : ['audio/webm;codecs=opus', 'audio/webm'];
 
-            mediaRecorder = new MediaRecorder(stream, { mimeType });
+            let mimeType = '';
+            for (const c of candidates) {
+                try {
+                    if (MediaRecorder.isTypeSupported(c)) {
+                        mimeType = c;
+                        break;
+                    }
+                } catch (e) {
+                    // Some browsers may throw when checking unsupported strings; ignore and continue
+                    console.warn('isTypeSupported threw for', c, e);
+                }
+            }
+
+            // Construct MediaRecorder with a safe fallback and robust error handling
+            try {
+                mediaRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+            } catch (ctorErr) {
+                console.warn('MediaRecorder constructor failed with mimeType:', mimeType, ctorErr);
+                try {
+                    mediaRecorder = new MediaRecorder(stream);
+                } catch (ctorErr2) {
+                    console.error('MediaRecorder not available for this stream:', ctorErr2);
+                    showPopup('Lỗi: Trình duyệt không hỗ trợ ghi âm cho luồng này.', 'error');
+                    return;
+                }
+            }
+
             audioChunks = [];
 
             mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) audioChunks.push(event.data);
+                if (event.data && event.data.size > 0) audioChunks.push(event.data);
             };
 
             mediaRecorder.onstop = () => handleRecordingStopped(title, language, colabUrl);
 
-            mediaRecorder.start(1000);
+            try {
+                // Start with 1s timeslice if supported; some browsers may ignore the timeslice parameter
+                mediaRecorder.start(1000);
+            } catch (startErr) {
+                console.error('Failed to start MediaRecorder:', startErr);
+                showPopup('Lỗi: Không thể bắt đầu ghi âm trên trình duyệt này.', 'error');
+                // Clean up tracks
+                try {
+                    stream.getTracks().forEach(t => t.stop());
+                } catch (e) {
+                }
+                return;
+            }
 
             // UI Switch
             document.getElementById('setupSection').style.display = 'none';
@@ -198,7 +243,7 @@
     // 1. HANDLE STOP -> SHOW REVIEW UI
     function handleRecordingStopped(title, language, colabUrl) {
         clearInterval(visInterval);
-        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        recordedBlob = new Blob(audioChunks, {type: 'audio/webm'});
 
         // Hide Recording, Show Result Container
         document.getElementById('recordingSection').style.display = 'none';
@@ -218,7 +263,7 @@
                 <div class="card p-3 mb-4 border-0 shadow-sm bg-light">
                      <audio controls src="${URL.createObjectURL(recordedBlob)}" style="width: 100%;"></audio>
                 </div>
-                
+
                 <div class="d-flex justify-content-center gap-3">
                     <button id="analyzeBtn" class="btn btn-primary-gradient px-5 py-2">
                         <i class="bi bi-stars me-2"></i>Phân tích ngay
@@ -244,15 +289,27 @@
             formData.append('output_lang', language);
             formData.append('meeting_type', 'meeting');
             formData.append('file_type', 'audio');
-            // We could pass colabUrl as extra param if API supports it, 
+            // We could pass colabUrl as extra param if API supports it,
             // but respecting "Logic at Server", we send standard request.
+
+            // If user supplied a Colab/auto-connect URL, forward it to the server (optional)
+            if (colabUrl) {
+                formData.append('colab_url', colabUrl);
+            }
 
             const res = await fetch('/api/upload/process', {
                 method: 'POST',
                 body: formData
             });
 
-            if (!res.ok) throw new Error('Analysis Request Failed');
+            if (!res.ok) {
+                // include server response text in error when available for better debugging
+                const txt = await res.text().catch(() => '');
+                const msg = 'Analysis Request Failed: ' + (txt || res.status);
+                hideLoading();
+                showPopup(msg, 'error');
+                return;
+            }
 
             const data = await res.json();
 
@@ -325,37 +382,6 @@
         }
     }
 
-    function showColabGuide() {
-        alert("Tính năng đang phát triển.");
-    }
-            <div class="recording-header">
-                <div class="recording-icon" style="background: #10b981;">
-                    <i class="bi bi-check-lg"></i>
-                </div>
-                <h2>Phân tích hoàn tất</h2>
-                <p>Kết quả từ Zero Cost AI</p>
-            </div>
-            
-            <div class="result-summary p-4" style="background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; text-align: left;">
-                <h4 class="mb-3 text-primary"><i class="bi bi-stars"></i> Tóm tắt</h4>
-                <div class="mb-4 text-justify">${data.summary || 'Không có tóm tắt'}</div>
-                
-                <h4 class="mb-3 text-danger"><i class="bi bi-exclamation-circle"></i> Hành động</h4>
-                <div class="mb-4">${data.actions || 'Không có'}</div>
-                
-                <div class="text-center mt-4">
-                    <a href="/history" class="btn btn-primary-gradient">
-                        Xem chi tiết & Lịch sử
-                    </a>
-                     <button onclick="location.reload()" class="btn btn-outline-secondary ms-2" style="padding: 1rem 2rem; border-radius: 10px;">
-                        Quay lại
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    // Reuse helper from upload.html if possible, otherwise keep simple.
 
     // Auto-Connect Helper (Simplified Copy)
     function showColabGuide() {
