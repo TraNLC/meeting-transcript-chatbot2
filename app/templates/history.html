@@ -16,26 +16,94 @@
         <p class="text-muted mb-0">Xem lại các cuộc họp và phân tích đã thực hiện</p>
     </div>
 
-    <!-- AI Semantic Search Bar -->
-    <div class="search-section" style="margin-bottom: 1.5rem;">
+    <!-- Search Section -->
+    <div class="search-section" style="margin-bottom: 2rem;">
         <div class="search-bar"
             style="display: flex; gap: 0.5rem; align-items: center; background: white; padding: 0.75rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <i class="bi bi-search" style="color: #6366f1; font-size: 1.25rem;"></i>
-            <input id="searchInput" type="text"
-                placeholder="🤖 Tìm cuộc họp với AI... (VD: 'cuộc họp về kế hoạch ngân sách')"
+            <input id="searchInput" type="text" placeholder="Tìm cuộc họp (VD: 'workshop', 'interview')"
                 style="flex: 1; border: none; outline: none; font-size: 1rem; padding: 0.25rem;" />
             <button id="searchBtn" class="btn btn-primary" onclick="performSemanticSearch()"
-                style="padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; border-radius: 8px; color: white; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="bi bi-stars"></i>
-                Tìm kiếm AI
+                style="padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; border-radius: 8px; color: white; font-weight: 500;">
+                Tìm kiếm
             </button>
             <button id="clearSearchBtn" class="btn btn-outline-secondary" onclick="clearSearch()"
-                style="display: none; padding: 0.5rem 1rem; border-radius: 8px;">
+                style="display: none;">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
         <div id="searchStatus" style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;"></div>
     </div>
+
+    <!-- Additional Styles for Chat -->
+    <style>
+        .chat-message {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .chat-message.user-message {
+            flex-direction: row-reverse;
+        }
+
+        .chat-message .message-content {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .ai-message .message-content {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-top-left-radius: 0;
+            color: #1f2937;
+        }
+
+        .user-message .message-content {
+            background: #6366f1;
+            color: white;
+            border-top-right-radius: 0;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e0e7ff;
+            color: #6366f1;
+            flex-shrink: 0;
+        }
+
+        .user-message .message-avatar {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .source-citation {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #eee;
+            color: #6b7280;
+        }
+
+        .source-link {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .source-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 
     <div class="filter-section">
         <div class="filter-row">
@@ -73,18 +141,180 @@
             <p class="text-muted">Đang tải...</p>
         </div>
     </div>
+
+    <!-- Pagination -->
+    <div id="paginationContainer" style="display: none; margin-top: 2rem;">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center" id="paginationList">
+                <!-- Will be populated by JavaScript -->
+            </ul>
+        </nav>
+        <p class="text-center text-muted" id="paginationInfo" style="font-size: 0.9rem; margin-top: 1rem;"></p>
+    </div>
 </div>
+
+<!-- Floating Chatbox -->
+<div id="floatingChatbox" class="floating-chatbox minimized">
+    <!-- Minimized State -->
+    <div class="chatbox-minimized" onclick="toggleChatbox()">
+        <i class="bi bi-chat-dots-fill"></i>
+        <span class="chat-badge" id="chatBadge" style="display: none;">1</span>
+    </div>
+
+    <!-- Expanded State -->
+    <div class="chatbox-expanded">
+        <div class="chatbox-header">
+            <div class="chatbox-title">
+                <i class="bi bi-stars me-2"></i>
+                <span>Chat với AI</span>
+            </div>
+            <div class="chatbox-actions">
+                <button onclick="clearChatHistory()" title="Xóa lịch sử">
+                    <i class="bi bi-trash"></i>
+                </button>
+                <button onclick="toggleChatbox()" title="Thu nhỏ">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chatbox-messages" id="chatboxMessages">
+            <div class="chat-message ai-message">
+                <div class="message-avatar"><i class="bi bi-stars"></i></div>
+                <div class="message-content">
+                    Xin chào! Tôi có thể giúp bạn tìm hiểu về các cuộc họp. Hãy thử:
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        <li>"Tìm workshop về design"</li>
+                        <li>"Ai được phỏng vấn tuần này?"</li>
+                        <li>"Quyết định quan trọng là gì?"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="chatbox-input">
+            <input type="text" id="chatboxInput" placeholder="Hỏi gì đó..." onkeypress="handleChatboxEnter(event)">
+            <button onclick="sendChatboxMessage()">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
     // NO DATA STORAGE IN FRONTEND - all from backend!
-    let isSearchMode = false; // Track if we're showing search results
+    let currentMode = 'search';
 
     // Load history on page load
     document.addEventListener('DOMContentLoaded', () => {
         loadHistory();
     });
+
+    // Toggle Modes
+    function switchMode(mode) {
+        currentMode = mode;
+        if (mode === 'search') {
+            document.getElementById('searchModeContainer').style.display = 'block';
+            document.getElementById('chatModeContainer').style.display = 'none';
+            document.getElementById('modeSearchBtn').classList.add('active-mode');
+            document.getElementById('modeSearchBtn').classList.remove('btn-outline-primary');
+            document.getElementById('modeSearchBtn').classList.add('btn-primary');
+
+            document.getElementById('modeChatBtn').classList.remove('active-mode');
+            document.getElementById('modeChatBtn').classList.add('btn-outline-primary');
+            document.getElementById('modeChatBtn').classList.remove('btn-primary');
+        } else {
+            document.getElementById('searchModeContainer').style.display = 'none';
+            document.getElementById('chatModeContainer').style.display = 'block';
+            document.getElementById('modeChatBtn').classList.add('active-mode');
+            document.getElementById('modeChatBtn').classList.remove('btn-outline-primary');
+            document.getElementById('modeChatBtn').classList.add('btn-primary');
+
+            document.getElementById('modeSearchBtn').classList.remove('active-mode');
+            document.getElementById('modeSearchBtn').classList.add('btn-outline-primary');
+            document.getElementById('modeSearchBtn').classList.remove('btn-primary');
+        }
+    }
+
+    // --- CHAT LOGIC ---
+
+    function handleChatEnter(e) {
+        if (e.key === 'Enter') sendChatMessage();
+    }
+
+    async function sendChatMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        // 1. Add User Message
+        appendMessage('user', message);
+        input.value = '';
+        input.disabled = true;
+
+        // 2. Add Loading Message
+        appendMessage('ai', '<div class="loading-spinner" style="width: 20px; height: 20px;"></div> Đang suy nghĩ...');
+
+        try {
+            // 3. Call RAG API
+            const response = await fetch('/api/history/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+
+            // 4. Update with Real Answer
+            const messagesDiv = document.getElementById('chatMessages');
+            const loadingMsg = messagesDiv.lastElementChild;
+            loadingMsg.remove(); // Remove loading
+
+            if (data.error) {
+                appendMessage('ai', `⚠️ Lỗi: ${data.error}`);
+            } else {
+                let answerHtml = data.answer.replace(/\n/g, '<br>');
+
+                // Add sources
+                if (data.sources && data.sources.length > 0) {
+                    answerHtml += `<div class="source-citation"><strong>Nguồn tham khảo:</strong><br>`;
+                    data.sources.forEach(src => {
+                        answerHtml += `<span class="source-link" onclick="window.location.href='/history'">[${src.id}] ${src.name}</span> (độ tin cậy ${(src.score * 100).toFixed(0)}%)<br>`;
+                    });
+                    answerHtml += `</div>`;
+                }
+
+                appendMessage('ai', answerHtml);
+            }
+
+        } catch (error) {
+            console.error(error);
+            appendMessage('ai', '⚠️ Xin lỗi, có lỗi xảy ra khi kết nối với server.');
+        } finally {
+            input.disabled = false;
+            input.focus();
+        }
+    }
+
+    function appendMessage(role, htmlContent) {
+        const messagesDiv = document.getElementById('chatMessages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-message ${role}-message`;
+
+        const avatar = role === 'user' ? '<i class="bi bi-person"></i>' : '<i class="bi bi-robot"></i>';
+
+        msgDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content">${htmlContent}</div>
+        `;
+
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        return msgDiv.id;
+    }
 
     // Filter change listeners
     document.getElementById('filterType').addEventListener('change', filterMeetings);
@@ -237,13 +467,19 @@
             const sortBy = document.getElementById('filterSort').value;
 
             // Call backend API with params - ALL LOGIC IN BACKEND!
-            const response = await fetch(`/api/history/list?filter_type=${filterType}&sort_by=${sortBy}&limit=50`);
+            const response = await fetch(`/api/history/list?filter_type=${filterType}&sort_by=${sortBy}&limit=500`);
             const data = await response.json();
 
             if (data.history && data.history.length > 0) {
-                // Just render - no logic!
-                renderMeetings(data.history);
+                // Store all meetings for pagination
+                allMeetings = data.history;
+                currentPage = 1;
+
+                // Render first page
+                displayMeetingsForPage();
+                renderPagination();
             } else {
+                allMeetings = [];
                 showEmptyState();
             }
         } catch (error) {
@@ -254,39 +490,31 @@
 
     // NO FILTER LOGIC HERE - just reload with new params
     function filterMeetings() {
+        currentPage = 1;
         loadHistory(); // Backend does all filtering and sorting!
     }
 
-    function renderMeetings(meetings) {
-        const container = document.getElementById('meetingsContainer');
 
-        if (meetings.length === 0) {
-            showEmptyState();
-            return;
-        }
-
-        const html = `
-            <div class="meetings-grid">
-                ${meetings.map(meeting => createMeetingCard(meeting)).join('')}
-            </div>
-        `;
-
-        container.innerHTML = html;
-
-        // Add click listeners
-        document.querySelectorAll('.meeting-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const meetingId = card.dataset.meetingId;
-                window.location.href = `/meeting/${encodeURIComponent(meetingId)}`;
-            });
-        });
-    }
 
     function createMeetingCard(meeting) {
         const date = meeting.timestamp ? new Date(meeting.timestamp).toLocaleString('vi-VN') : 'N/A';
-        const duration = meeting.duration || '0:00';
-        const title = meeting.title || 'Cuộc họp';
-        const language = meeting.language || 'vi';
+        const duration = meeting.metadata?.duration || meeting.duration || '0:00';
+
+        // Extract title: priority order - title > original_file > summary
+        let title = meeting.title;
+        if (!title && meeting.original_file) {
+            title = meeting.original_file
+                .replace(/\.mp3$/i, '')
+                .replace(/_/g, ' ')
+                .split('.')[0]; // Get first part before extension
+            // Capitalize
+            title = title.charAt(0).toUpperCase() + title.slice(1);
+        }
+        if (!title) {
+            title = meeting.summary ? meeting.summary.substring(0, 60) + '...' : 'Cuộc họp';
+        }
+
+        const language = meeting.metadata?.language || meeting.language || 'vi';
 
         const languageFlags = {
             'vi': '🇻🇳',
@@ -341,6 +569,237 @@
                 </a>
             </div>
         `;
+    }
+
+    // ===== PAGINATION LOGIC =====
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let allMeetings = [];
+
+    function renderPagination() {
+        const totalPages = Math.ceil(allMeetings.length / itemsPerPage);
+        const container = document.getElementById('paginationContainer');
+        const list = document.getElementById('paginationList');
+        const info = document.getElementById('paginationInfo');
+
+        if (totalPages <= 1) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+
+        // Build pagination HTML dynamically
+        let html = '';
+
+        // Previous button
+        html += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+        `;
+
+        // Page numbers with smart ellipsis
+        const maxVisible = 7; // Show max 7 page numbers
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        // First page + ellipsis
+        if (startPage > 1) {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(1); return false;">1</a></li>`;
+            if (startPage > 2) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+
+        // Visible page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                </li>
+            `;
+        }
+
+        // Ellipsis + last page
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a></li>`;
+        }
+
+        // Next button
+        html += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        `;
+
+        list.innerHTML = html;
+
+        // Update info text
+        const start = (currentPage - 1) * itemsPerPage + 1;
+        const end = Math.min(currentPage * itemsPerPage, allMeetings.length);
+        info.textContent = `Hiển thị ${start}-${end} trong ${allMeetings.length} cuộc họp`;
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(allMeetings.length / itemsPerPage);
+        if (page < 1 || page > totalPages) return;
+
+        currentPage = page;
+        displayMeetingsForPage();
+        renderPagination();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function displayMeetingsForPage() {
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageItems = allMeetings.slice(start, end);
+
+        const container = document.getElementById('meetingsContainer');
+        const gridHtml = pageItems.map(meeting => createMeetingCard(meeting)).join('');
+
+        container.innerHTML = `<div class="meetings-grid">${gridHtml}</div>`;
+
+        // Add click listeners
+        document.querySelectorAll('.meeting-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const meetingId = card.dataset.meetingId;
+                window.location.href = `/meeting/${encodeURIComponent(meetingId)}`;
+            });
+        });
+    }
+
+    // Override filterMeetings to work with pagination
+    const originalFilterMeetings = filterMeetings;
+    filterMeetings = function () {
+        currentPage = 1;
+        originalFilterMeetings();
+        renderPagination();
+    };
+
+    // ===== FLOATING CHATBOX LOGIC =====
+    function toggleChatbox() {
+        const chatbox = document.getElementById('floatingChatbox');
+        chatbox.classList.toggle('minimized');
+    }
+
+    function clearChatHistory() {
+        const messagesDiv = document.getElementById('chatboxMessages');
+        messagesDiv.innerHTML = `
+            <div class="chat-message ai-message">
+                <div class="message-avatar"><i class="bi bi-stars"></i></div>
+                <div class="message-content">
+                    Xin chào! Tôi có thể giúp bạn tìm hiểu về các cuộc họp. Hãy thử:
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        <li>"Tìm workshop về design"</li>
+                        <li>"Ai được phỏng vấn tuần này?"</li>
+                        <li>"Quyết định quan trọng là gì?"</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+
+    function handleChatboxEnter(e) {
+        if (e.key === 'Enter') {
+            sendChatboxMessage();
+        }
+    }
+
+    async function sendChatboxMessage() {
+        const input = document.getElementById('chatboxInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        // Clear input
+        input.value = '';
+
+        // Append user message
+        appendChatboxMessage('user', message);
+
+        // Show typing indicator
+        appendChatboxMessage('ai', '<div class="typing-indicator">Đang suy nghĩ...</div>');
+
+        try {
+            const response = await fetch('/api/history/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+
+            // Remove typing indicator
+            const messagesDiv = document.getElementById('chatboxMessages');
+            messagesDiv.lastElementChild.remove();
+
+            if (data.error) {
+                appendChatboxMessage('ai', `⚠️ ${data.error}`);
+            } else {
+                let answerHtml = data.answer.replace(/\n/g, '<br>');
+
+                // Add sources
+                if (data.sources && data.sources.length > 0) {
+                    answerHtml += `<div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb; font-size: 0.875rem;">`;
+                    answerHtml += `<strong>📚 Nguồn:</strong><br>`;
+                    data.sources.slice(0, 3).forEach(src => {
+                        answerHtml += `<span style="color: #6366f1; cursor: pointer;" onclick="highlightMeeting('${src.name}')">[${src.id}] ${src.name}</span><br>`;
+                    });
+                    answerHtml += `</div>`;
+                }
+
+                appendChatboxMessage('ai', answerHtml);
+            }
+        } catch (error) {
+            const messagesDiv = document.getElementById('chatboxMessages');
+            messagesDiv.lastElementChild.remove();
+            appendChatboxMessage('ai', '⚠️ Lỗi kết nối server.');
+        }
+    }
+
+    function appendChatboxMessage(role, htmlContent) {
+        const messagesDiv = document.getElementById('chatboxMessages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-message ${role}-message`;
+
+        const avatar = role === 'user' ?
+            '<i class="bi bi-person-circle"></i>' :
+            '<i class="bi bi-stars"></i>';
+
+        msgDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content">${htmlContent}</div>
+        `;
+
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function highlightMeeting(filename) {
+        // Scroll to meeting and highlight
+        const cards = document.querySelectorAll('.meeting-card');
+        cards.forEach(card => {
+            if (card.textContent.includes(filename)) {
+                card.style.background = 'linear-gradient(135deg, #fef3c7, #fde68a)';
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => {
+                    card.style.background = '';
+                }, 2000);
+            }
+        });
     }
 </script>
 {% endblock %}

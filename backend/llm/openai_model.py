@@ -104,3 +104,38 @@ class OpenAIModel(BaseLLM):
         
         except Exception as e:
             raise RuntimeError(f"OpenAI API call failed: {str(e)}")
+    
+    def generate_stream(self, prompt: str, system_message: Optional[str] = None, **kwargs):
+        """Generate response using OpenAI API with streaming.
+        
+        Args:
+            prompt: User prompt
+            system_message: System message (optional)
+            **kwargs: Additional generation parameters
+            
+        Yields:
+            Text chunks as they are generated
+        """
+        try:
+            messages = []
+            
+            if system_message:
+                messages.append({"role": "system", "content": system_message})
+            
+            messages.append({"role": "user", "content": prompt})
+            
+            # Generate streaming response
+            stream = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=kwargs.get("temperature", self.temperature),
+                max_tokens=kwargs.get("max_tokens", self.max_tokens),
+                stream=True
+            )
+            
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+        
+        except Exception as e:
+            yield f"⚠️ Error: {str(e)}"

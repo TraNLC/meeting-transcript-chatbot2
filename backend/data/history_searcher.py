@@ -31,7 +31,7 @@ class HistorySearcher:
     
     _instance = None
     
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super(HistorySearcher, cls).__new__(cls)
             cls._instance.initialized = False
@@ -67,6 +67,7 @@ class HistorySearcher:
         
         # Model lazy loading/preloading
         self.model = None
+        self.model_lock = threading.Lock()
         self.initialized = True
         
         # Start preloading in background
@@ -83,32 +84,59 @@ class HistorySearcher:
     def _preload_model(self):
         """Load model into memory in background."""
         try:
-            print("🤖 [HistorySearcher] Preloading AI model (all-MiniLM-L6-v2)...")
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
-            print("✅ [HistorySearcher] AI Model loaded successfully!")
+            with self.model_lock:
+                if self.model is None:
+                    print("[HistorySearcher] Preloading AI model (all-MiniLM-L6-v2)...")
+                    self.model = SentenceTransformer('all-MiniLM-L6-v2')
+                    print("[HistorySearcher] AI Model loaded successfully!")
         except Exception as e:
-            print(f"❌ [HistorySearcher] Model load failed: {e}")
+            print(f"[HistorySearcher] Model load failed: {e}")
 
     def _get_model(self):
         """Get model, loading if likely not yet ready (fallback)."""
-        if self.model is None:
-            print("⚠️ [HistorySearcher] Model not ready/preloaded. Loading now (blocking)...")
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        with self.model_lock:
+            if self.model is None:
+                print("[HistorySearcher] Model not ready/preloaded. Loading now (blocking)...")
+                self.model = SentenceTransformer('all-MiniLM-L6-v2')
         return self.model
     
     def _create_search_document(self, meeting_data: Dict) -> str:
         """Create searchable document from meeting data."""
         parts = []
         if meeting_data.get('summary'): parts.append(f"Summary: {meeting_data['summary']}")
+        
+        # Topics: handle both list of strings and list of dicts
         if meeting_data.get('topics'):
-            topics_text = ", ".join([f"{t.get('topic', '')} - {t.get('description', '')}" for t in meeting_data['topics']])
-            parts.append(f"Topics: {topics_text}")
+            topics = meeting_data['topics']
+            if isinstance(topics, list) and topics:
+                if isinstance(topics[0], str):
+                    # List of strings
+                    topics_text = ", ".join(topics)
+                else:
+                    # List of dicts
+                    topics_text = ", ".join([f"{t.get('topic', '')} - {t.get('description', '')}" for t in topics])
+                parts.append(f"Topics: {topics_text}")
+        
+        # Action items: handle both formats
         if meeting_data.get('action_items'):
-            actions_text = ", ".join([f"{a.get('task', '')} ({a.get('assignee', '')})" for a in meeting_data['action_items']])
-            parts.append(f"Actions: {actions_text}")
+            actions = meeting_data['action_items']
+            if isinstance(actions, list) and actions:
+                if isinstance(actions[0], str):
+                    actions_text = ", ".join(actions)
+                else:
+                    actions_text = ", ".join([f"{a.get('task', '')} ({a.get('assignee', '')})" for a in actions])
+                parts.append(f"Actions: {actions_text}")
+        
+        # Decisions: handle both formats
         if meeting_data.get('decisions'):
-            decisions_text = ", ".join([f"{d.get('decision', '')} - {d.get('context', '')}" for d in meeting_data['decisions']])
-            parts.append(f"Decisions: {decisions_text}")
+            decisions = meeting_data['decisions']
+            if isinstance(decisions, list) and decisions:
+                if isinstance(decisions[0], str):
+                    decisions_text = ", ".join(decisions)
+                else:
+                    decisions_text = ", ".join([f"{d.get('decision', '')} - {d.get('context', '')}" for d in decisions])
+                parts.append(f"Decisions: {decisions_text}")
+        
         return " ".join(parts)
     
     def _extract_metadata(self, meeting_data: Dict) -> Dict:
