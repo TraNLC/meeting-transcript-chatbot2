@@ -109,6 +109,54 @@ class GeminiModel(BaseLLM):
         except Exception as e:
             raise RuntimeError(f"Gemini API call failed: {str(e)}")
     
+    def generate_stream(self, prompt: str, system_message: str = "", **kwargs):
+        """Generate text using Gemini with streaming.
+        
+        Args:
+            prompt: User prompt
+            system_message: System message for context
+            **kwargs: Additional parameters
+            
+        Yields:
+            Text chunks as they are generated
+            
+        Raises:
+            RuntimeError: If generation fails
+        """
+        try:
+            # Combine system message and prompt
+            full_prompt = prompt
+            if system_message:
+                full_prompt = f"{system_message}\n\n{prompt}"
+            
+            generation_config = genai.GenerationConfig(
+                temperature=self.temperature,
+                max_output_tokens=self.max_tokens,
+            )
+            
+            # Configure safety settings
+            safety_settings = [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+            ]
+            
+            # Stream response
+            response = self.client.generate_content(
+                full_prompt,
+                generation_config=generation_config,
+                safety_settings=safety_settings,
+                stream=True
+            )
+            
+            for chunk in response:
+                if chunk.text:
+                    yield chunk.text
+                    
+        except Exception as e:
+            yield f"⚠️ Error: {str(e)}"
+    
     def chat_completion(
         self, 
         messages: List[Dict[str, str]], 

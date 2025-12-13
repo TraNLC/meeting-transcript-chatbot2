@@ -124,10 +124,10 @@
     document.querySelectorAll('.content-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             const tabName = tab.dataset.tab;
-            
+
             document.querySelectorAll('.content-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
-            
+
             tab.classList.add('active');
             document.getElementById(tabName + 'Panel').classList.add('active');
         });
@@ -141,12 +141,12 @@
 
     async function loadMeetingDetail() {
         try {
-            const response = await fetch(`/api/recording/load/${encodeURIComponent(meetingId)}`);
+            const response = await fetch(`/api/history/get/${encodeURIComponent(meetingId)}`);
             const data = await response.json();
-            
+
             meetingData = data;
             displayMeetingDetail(data);
-            
+
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('contentState').style.display = 'block';
         } catch (error) {
@@ -161,11 +161,14 @@
     }
 
     function displayMeetingDetail(data) {
-        const info = data.info || {};
-        const title = info.title || data.filename || 'Cuộc họp';
-        const timestamp = info.timestamp ? new Date(info.timestamp).toLocaleString('vi-VN') : 'N/A';
-        const duration = info.duration || '0:00';
-        const language = info.language || 'vi';
+        // API returns {found: true, analysis: {...}}
+        const analysis = data.analysis || {};
+        const title = analysis.original_file ?
+            analysis.original_file.replace(/\.mp3$/i, '').replace(/_/g, ' ') :
+            'Cuộc họp';
+        const timestamp = analysis.timestamp ? new Date(analysis.timestamp).toLocaleString('vi-VN') : 'N/A';
+        const duration = '0:00'; // Not in API response
+        const language = 'VI';
 
         document.getElementById('meetingTitle').textContent = title;
         document.getElementById('meetingMeta').innerHTML = `
@@ -179,16 +182,62 @@
             </div>
             <div class="detail-meta-item">
                 <i class="bi bi-translate"></i>
-                <span>${language.toUpperCase()}</span>
+                <span>${language}</span>
             </div>
         `;
 
-        document.getElementById('summaryContent').innerHTML = data.summary || info.summary || 'Không có tóm tắt';
-        document.getElementById('topicsContent').innerHTML = data.topics || info.topics || 'Không có chủ đề';
-        document.getElementById('transcriptContent').textContent = data.transcript || 'Không có transcript';
-        document.getElementById('actionsContent').innerHTML = data.actions || info.actions || 'Không có hành động';
-        document.getElementById('decisionsContent').innerHTML = data.decisions || info.decisions || 'Không có quyết định';
-        document.getElementById('participantsContent').innerHTML = data.participants || info.participants || 'Không có thông tin';
+        // Summary
+        document.getElementById('summaryContent').innerHTML = analysis.summary || 'Không có tóm tắt';
+
+        // Topics - handle both string array and object array
+        const topics = analysis.topics || [];
+        if (topics.length > 0) {
+            const topicsHtml = topics.map(t => {
+                if (typeof t === 'string') {
+                    return `<li>${t}</li>`;
+                } else {
+                    return `<li>${t.topic || t.name || ''}</li>`;
+                }
+            }).join('');
+            document.getElementById('topicsContent').innerHTML = `<ul>${topicsHtml}</ul>`;
+        } else {
+            document.getElementById('topicsContent').innerHTML = 'Không có chủ đề';
+        }
+
+        // Transcript
+        document.getElementById('transcriptContent').textContent = analysis.transcript || 'Không có transcript';
+
+        // Actions - handle both string array and object array
+        const actions = analysis.actions || [];
+        if (actions.length > 0) {
+            const actionsHtml = actions.map(a => {
+                if (typeof a === 'string') {
+                    return `<li>${a}</li>`;
+                } else {
+                    return `<li><strong>${a.assignee || 'N/A'}:</strong> ${a.task || a.action || ''}</li>`;
+                }
+            }).join('');
+            document.getElementById('actionsContent').innerHTML = `<ul>${actionsHtml}</ul>`;
+        } else {
+            document.getElementById('actionsContent').innerHTML = 'Không có hành động';
+        }
+
+        // Decisions - handle both string array and object array
+        const decisions = analysis.decisions || [];
+        if (decisions.length > 0) {
+            const decisionsHtml = decisions.map(d => {
+                if (typeof d === 'string') {
+                    return `<li>${d}</li>`;
+                } else {
+                    return `<li>${d.decision || d.text || ''}</li>`;
+                }
+            }).join('');
+            document.getElementById('decisionsContent').innerHTML = `<ul>${decisionsHtml}</ul>`;
+        } else {
+            document.getElementById('decisionsContent').innerHTML = 'Không có quyết định';
+        }
+
+        document.getElementById('participantsContent').innerHTML = 'Không có thông tin';
     }
 
     function toggleChat() {

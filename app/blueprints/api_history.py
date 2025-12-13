@@ -22,6 +22,20 @@ except ImportError:
     def get_history_searcher():
         return None
 
+# Import RAGEngine
+try:
+    from backend.rag.rag_engine import RAGEngine
+    _rag_engine = None
+    
+    def get_rag_engine():
+        global _rag_engine
+        if _rag_engine is None:
+            _rag_engine = RAGEngine()
+        return _rag_engine
+except ImportError:
+    RAGEngine = None
+    def get_rag_engine(): return None
+
 history_bp = Blueprint('history', __name__)
 
 @history_bp.route('/search', methods=['POST'])
@@ -300,3 +314,141 @@ def reindex_history():
     except Exception as e:
         print(f"Error re-indexing: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+@history_bp.route('/chat', methods=['POST'])
+def chat_history():
+    """Chat with meeting history using RAG.
+    
+    Request:
+    {
+        "message": "What did we decide about the budget?"
+    }
+    
+    Response:
+    {
+        "answer": "...",
+        "sources": [{"id": 1, "name": "...", "text": "..."}]
+    }
+    """
+    try:
+        from backend.rag.conversation_manager import get_conversation_manager
+        
+        engine = get_rag_engine()
+        if engine is None:
+            return jsonify({'error': 'RAG Engine not available'}), 500
+            
+        data = request.json
+        query = data.get('message', '').strip()
+        
+        if not query:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        # Get or create session ID
+        session_id = data.get('session_id') or request.cookies.get('chat_session_id')
+        if not session_id:
+            import uuid
+            session_id = str(uuid.uuid4())
+        
+        # Get conversation manager
+        conv_manager = get_conversation_manager()
+        
+        # Get conversation history
+        history = conv_manager.get_history(session_id)
+        
+        # Chat with history
+        response = engine.chat(query, conversation_history=history)
+        
+        # Save to conversation history
+        conv_manager.add_message(session_id, "user", query)
+        conv_manager.add_message(session_id, "assistant", response['answer'])
+        
+        # Add session_id to response
+        response['session_id'] = session_id
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        print(f"Error in chat: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@history_bp.route('/chat-stream', methods=['POST'])
+def chat_history_stream():
+    """Stream chat with meeting history using RAG.
+    
+    Request:
+    {
+        "message": "What did we decide about the budget?",
+        "session_id": "optional_session_id"
+    }
+    
+    Response: Server-Sent Events (SSE) stream
+    - data: {"chunk": "text chunk"}
+    - data: {"sources": [...]}
+    - data: {"error": "..."}
+    - data: {" done": true}
+    """
+    from flask import Response, stream_with_context
+    from backend.rag.conversation_manager import get_conversation_manager
+    import json
+    
+    def generate():
+        try:
+            engine = get_rag_engine()
+            if engine is None:
+                yield f'data: {json.dumps({"error": "RAG Engine not available"})}\n\n'
+                return
+                
+            data = request.json
+            query = data.get('message', '').strip()
+            
+            if not query:
+                yield f'data: {json.dumps({"error": "Message is required"})}\n\n'
+                return
+            
+            # Get or create session ID
+            session_id = data.get('session_id') or request.cookies.get('chat_session_id')
+            if not session_id:
+                import uuid
+                session_id = str(uuid.uuid4())
+            
+            # Get conversation manager
+            conv_manager = get_conversation_manager()
+            
+            # Get conversation history
+            history = conv_manager.get_history(session_id)
+            
+            # Stream chat with history
+            full_answer = ""
+            for event_json in engine.chat_stream(query, conversation_history=history):
+                yield f'data: {event_json}\n\n'
+                
+                # Collect answer for saving
+                event = json.loads(event_json)
+                if "chunk" in event:
+                    full_answer += event["chunk"]
+            
+            # Save to conversation history
+            conv_manager.add_message(session_id, "user", query)
+            conv_manager.add_message(session_id, "assistant", full_answer)
+            
+            # Send session_id and done signal
+            yield f'data: {json.dumps({"session_id": session_id, "done": True})}\n\n'
+            
+        except Exception as e:
+            print(f"Error in streaming chat: {e}")
+            import traceback
+            traceback.print_exc()
+            yield f'data: {json.dumps({"error": str(e)})}\n\n'
+    
+    return Response(
+        stream_with_context(generate()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no'
+        }
+    )

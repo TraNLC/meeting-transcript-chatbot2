@@ -48,7 +48,7 @@
         <div class="upload-settings" id="settingsSection">
             <div class="settings-grid">
                 <div class="setting-item">
-                    <label>Ngôn ngữ</label>
+                    <label>Ngôn ngữ output</label>
                     <select id="languageSelect">
                         <option value="vi">🇻🇳 Tiếng Việt</option>
                         <option value="en">🇬🇧 English</option>
@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="setting-item">
-                    <label>Loại cuộc họp</label>
+                    <label>Loại nội dung</label>
                     <select id="meetingTypeSelect">
                         <option value="meeting">Cuộc họp</option>
                         <option value="interview">Phỏng vấn</option>
@@ -77,43 +77,18 @@
                 </div>
             </div>
 
-            <!-- Zero Cost Option -->
-            <div class="zero-cost-option" id="zeroCostOption" style="display: none;">
-                <div class="alert alert-success">
-                    <i class="bi bi-rocket-takeoff me-2"></i>
-                    <strong>🚀 Zero Cost Mode</strong>
-                    <p class="mb-2">Sử dụng Colab WhisperX (GPU miễn phí) để transcribe audio</p>
-                    <div class="form-group mb-0">
-                        <label class="form-label-sm">Colab WhisperX URL:</label>
-                        <input type="text" id="colabUrlInput" class="form-control form-control-sm"
-                            placeholder="https://xxxx.ngrok-free.app">
-                        <small class="text-muted">
-                            Để trống nếu muốn dùng server local (có phí).
-                            <a href="#" onclick="showColabGuide(); return false;">Hướng dẫn setup Colab</a>
-                        </small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Speaker Diarization (only for audio) -->
-            <div class="setting-item-checkbox" id="speakerDiarizationOption" style="display: none;">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="enableDiarization">
-                    <span>🎤 Phân biệt giọng nói (Speaker Diarization)</span>
-                    <small>Nhận diện và gán nhãn cho từng người nói trong audio</small>
-                </label>
-            </div>
-
-            <button id="uploadBtn" class="btn-upload">
-                <i class="bi bi-upload me-2"></i>Upload và phân tích
-            </button>
         </div>
-    </div>
 
-    <!-- Results (Dynamic Layout) -->
-    <div class="result-container hidden" id="resultContainer">
-        <!-- Content will be dynamically generated based on file type -->
+        <button id="uploadBtn" class="btn-upload">
+            <i class="bi bi-upload me-2"></i>Upload và phân tích
+        </button>
     </div>
+</div>
+
+<!-- Results (Dynamic Layout) -->
+<div class="result-container hidden" id="resultContainer">
+    <!-- Content will be dynamically generated based on file type -->
+</div>
 
 
 </div>
@@ -135,6 +110,10 @@
 
     let selectedFile = null;
     let selectedFileType = null; // 'audio' or 'text'
+
+    // Hardcoded Colab WhisperX URL (always used for audio files)
+    const COLAB_WHISPERX_URL = 'https://sanctuaried-siphonless-myrtle.ngrok-free.dev';
+    const ENABLE_DIARIZATION = true; // Always enable speaker diarization
 
     // File input change
     document.getElementById('fileInput').addEventListener('change', handleFileSelect);
@@ -174,17 +153,10 @@
         const fileName = file.name.toLowerCase();
         if (fileName.endsWith('.txt') || fileName.endsWith('.docx') || fileName.endsWith('.pdf')) {
             selectedFileType = 'text';
-            // Hide speaker diarization option for text files
-            document.getElementById('speakerDiarizationOption').style.display = 'none';
-            // Hide zero cost option for text files
-            document.getElementById('zeroCostOption').style.display = 'none';
         } else {
             selectedFileType = 'audio';
-            // Show speaker diarization option for audio files
-            document.getElementById('speakerDiarizationOption').style.display = 'block';
-            // Show zero cost option for audio files
-            document.getElementById('zeroCostOption').style.display = 'block';
         }
+        // Note: Zero Cost and Speaker Diarization options are always hidden (hardcoded)
 
         // Show file info
         document.getElementById('fileName').textContent = file.name;
@@ -237,8 +209,8 @@
 
         const language = document.getElementById('languageSelect').value;
         const meetingType = document.getElementById('meetingTypeSelect').value;
-        const aiModel = document.getElementById('aiModelSelect').value;
-        const colabUrl = document.getElementById('colabUrlInput')?.value.trim();
+        const aiModel = 'gemini-2.5-flash'; // Hardcoded
+        const colabUrl = COLAB_WHISPERX_URL; // Use hardcoded URL
 
         const fileName = selectedFile.name.toLowerCase();
         let fileType = 'audio';
@@ -280,12 +252,9 @@
 
 
         // Show loading
-        const fileSizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
         showLoading(
-            fileType === 'audio' && colabUrl
-                ? '🚀 Đang xử lý với Colab WhisperX + Gemini...'
-                : 'Đang xử lý file...',
-            `File: ${fileSizeMB}MB | Có thể mất 2-5 phút`
+            'Đang phân tích file...',
+            'Quá trình này có thể mất 3-5 phút. Vui lòng chờ...'
         );
 
         try {
@@ -414,10 +383,9 @@
             formData.append('output_lang', language);
             formData.append('ai_model', aiModel);
 
-            // Add speaker diarization option (only for audio)
+            // Add speaker diarization option (always enabled for audio)
             if (fileType === 'audio') {
-                const enableDiarization = document.getElementById('enableDiarization').checked;
-                formData.append('enable_diarization', enableDiarization);
+                formData.append('enable_diarization', ENABLE_DIARIZATION);
             }
 
             const response = await fetch('/api/upload/process', {
@@ -817,22 +785,32 @@ Chi tiết: Xem file ZERO_COST_GUIDE.md
         const lines = transcript.split('\n').filter(l => l.trim());
         let html = '';
 
-        const speakerColors = ['#e3f2fd', '#f3e5f5', '#e8f5e9', '#fff3e0', '#fce4ec', '#e0f2f1'];
+        // Track unique speakers and assign User numbers
+        const speakerMap = new Map(); // Map: "Unknown" -> "User 1", "Guest-1" -> "User 1"
+        let userCount = 0;
 
         lines.forEach(line => {
             // Match: [00:00] **Speaker**: text
             const match = line.match(/\[(\d{2}:\d{2})\]\s+\*\*(.*?)\*\*:\s+(.*)/);
 
             if (match) {
-                const [, time, speaker, text] = match;
-                const speakerNum = speaker.match(/\d+/);
-                const colorIdx = speakerNum ? parseInt(speakerNum[0]) % speakerColors.length : 0;
+                const [, time, originalSpeaker, text] = match;
+
+                // Map speaker to User X
+                if (!speakerMap.has(originalSpeaker)) {
+                    userCount++;
+                    speakerMap.set(originalSpeaker, `User ${userCount}`);
+                }
+
+                const displaySpeaker = speakerMap.get(originalSpeaker);
+                const speakerNum = userCount;
+                const speakerClass = `speaker-${((speakerNum - 1) % 5) + 1}`; // Cycle through 1-5
 
                 html += `
                     <div class="transcript-line">
                         <div class="transcript-time">${time}</div>
-                        <div class="transcript-speaker" style="background: ${speakerColors[colorIdx]}">
-                            ${speaker}
+                        <div class="transcript-speaker ${speakerClass}">
+                            ${displaySpeaker}
                         </div>
                         <div class="transcript-text">${text}</div>
                     </div>

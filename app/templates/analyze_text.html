@@ -1,0 +1,1602 @@
+{% extends "base.html" %}
+
+{% block title %}Upload & Phân tích - Akari AI{% endblock %}
+
+{% block page_styles %}
+<link href="{{ url_for('static', filename='css/upload.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-header">
+        <h1>Upload & Phân tích</h1>
+        <p>Upload file audio, video hoặc text để phân tích bằng AI</p>
+    </div>
+
+    <div class="upload-main-card">
+        <!-- Upload Zone -->
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">
+                <i class="bi bi-cloud-arrow-up"></i>
+            </div>
+            <h3>Kéo thả file vào đây</h3>
+            <p>hoặc</p>
+            <button type="button" class="btn-choose-file" onclick="document.getElementById('fileInput').click()">
+                Chọn file
+            </button>
+            <input type="file" id="fileInput" accept="audio/*,video/*,.txt,.docx,.pdf" style="display: none;">
+            <small>Hỗ trợ: MP3, WAV, MP4, TXT, DOCX, PDF (tối đa 100MB)</small>
+        </div>
+
+        <!-- File Selected Info -->
+        <div class="file-selected" id="fileSelected">
+            <div class="file-selected-icon">
+                <i class="bi bi-file-earmark-check"></i>
+            </div>
+            <div class="file-selected-info">
+                <div class="file-selected-name" id="fileName"></div>
+                <div class="file-selected-meta">
+                    <span id="fileSize"></span> • <span id="fileType"></span>
+                </div>
+            </div>
+            <button class="file-selected-remove" onclick="removeFile()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Settings -->
+        <div class="upload-settings" id="settingsSection">
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label>Ngôn ngữ</label>
+                    <select id="languageSelect">
+                        <option value="vi">🇻🇳 Tiếng Việt</option>
+                        <option value="en">🇬🇧 English</option>
+                        <option value="ja">🇯🇵 日本語</option>
+                        <option value="ko">🇰🇷 한국어</option>
+                        <option value="zh">🇨🇳 中文</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label>Loại cuộc họp</label>
+                    <select id="meetingTypeSelect">
+                        <option value="meeting">Cuộc họp</option>
+                        <option value="interview">Phỏng vấn</option>
+                        <option value="presentation">Thuyết trình</option>
+                        <option value="brainstorm">Brainstorming</option>
+                        <option value="training">Đào tạo</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label>🤖 AI Model</label>
+                    <select id="aiModelSelect">
+                        <option value="gpt-4o">GPT-4o (Azure) - Nhanh & Mạnh ⚡</option>
+                        <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash - Miễn phí 🆓</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro - Chất lượng cao 🌟</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Zero Cost Option -->
+            <div class="zero-cost-option" id="zeroCostOption" style="display: none;">
+                <div class="alert alert-success">
+                    <i class="bi bi-rocket-takeoff me-2"></i>
+                    <strong>🚀 Zero Cost Mode</strong>
+                    <p class="mb-2">Sử dụng Colab WhisperX (GPU miễn phí) để transcribe audio</p>
+                    <div class="form-group mb-0">
+                        <label class="form-label-sm">Colab WhisperX URL:</label>
+                        <input type="text" id="colabUrlInput" class="form-control form-control-sm"
+                            placeholder="https://xxxx.ngrok-free.app">
+                        <small class="text-muted">
+                            Để trống nếu muốn dùng server local (có phí).
+                            <a href="#" onclick="showColabGuide(); return false;">Hướng dẫn setup Colab</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speaker Diarization (only for audio) -->
+            <div class="setting-item-checkbox" id="speakerDiarizationOption" style="display: none;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="enableDiarization">
+                    <span>🎤 Phân biệt giọng nói (Speaker Diarization)</span>
+                    <small>Nhận diện và gán nhãn cho từng người nói trong audio</small>
+                </label>
+            </div>
+
+            <button id="uploadBtn" class="btn-upload">
+                <i class="bi bi-upload me-2"></i>Upload và phân tích
+            </button>
+        </div>
+    </div>
+
+    <!-- Results (Dynamic Layout) -->
+    <div class="result-container hidden" id="resultContainer">
+        <!-- Content will be dynamically generated based on file type -->
+    </div>
+
+
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // ============================================================================
+    // 🔥 VERSION CHECK - XEM SOURCE CŨ HAY MỚI
+    // ============================================================================
+    console.log('%c═══════════════════════════════════════════════════════', 'color: #4facfe; font-weight: bold');
+    console.log('%c🚀 UPLOAD.HTML LOADED - VERSION 2.0 (TWO COLUMN LAYOUT)', 'color: #00ff00; font-size: 16px; font-weight: bold');
+    console.log('%c⏰ Timestamp:', new Date().toISOString(), 'color: #ffaa00');
+    console.log('%c✅ Nếu thấy dòng này = đang dùng SOURCE MỚI', 'color: #00ff00; font-weight: bold');
+    console.log('%c❌ Nếu KHÔNG thấy = đang cache SOURCE CŨ', 'color: #ff0000; font-weight: bold');
+    console.log('%c═══════════════════════════════════════════════════════', 'color: #4facfe; font-weight: bold');
+
+    let selectedFile = null;
+    let selectedFileType = null; // 'audio' or 'text'
+
+    // File input change
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+    // Drag and drop
+    const uploadZone = document.getElementById('uploadZone');
+
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            handleFile(file);
+        }
+    }
+
+    function handleFile(file) {
+        selectedFile = file;
+
+        // Detect file type from extension
+        const fileName = file.name.toLowerCase();
+        if (fileName.endsWith('.txt') || fileName.endsWith('.docx') || fileName.endsWith('.pdf')) {
+            selectedFileType = 'text';
+            // Hide speaker diarization option for text files
+            document.getElementById('speakerDiarizationOption').style.display = 'none';
+            // Hide zero cost option for text files
+            document.getElementById('zeroCostOption').style.display = 'none';
+        } else {
+            selectedFileType = 'audio';
+            // Show speaker diarization option for audio files
+            document.getElementById('speakerDiarizationOption').style.display = 'block';
+            // Show zero cost option for audio files
+            document.getElementById('zeroCostOption').style.display = 'block';
+        }
+
+        // Show file info
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        document.getElementById('fileType').textContent = getFileType(file.name);
+        document.getElementById('fileSelected').classList.add('active');
+        document.getElementById('settingsSection').classList.add('active');
+        document.getElementById('uploadZone').style.display = 'none';
+    }
+
+    function removeFile() {
+        selectedFile = null;
+        selectedFileType = null;
+        document.getElementById('fileSelected').classList.remove('active');
+        document.getElementById('settingsSection').classList.remove('active');
+        document.getElementById('uploadZone').style.display = 'block';
+        document.getElementById('fileInput').value = '';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function getFileType(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const types = {
+            'mp3': 'Audio MP3',
+            'wav': 'Audio WAV',
+            'webm': 'Audio WebM',
+            'mp4': 'Video MP4',
+            'txt': 'Text',
+            'docx': 'Word Document',
+            'pdf': 'PDF Document'
+        };
+        return types[ext] || 'Unknown';
+    }
+
+    // Upload button
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+        console.log('%c🔵 UPLOAD BUTTON CLICKED - VERSION 2.0', 'color: #00ff00; font-size: 14px; font-weight: bold');
+
+        if (!selectedFile) {
+            showPopup('Vui lòng chọn file', 'error');
+            return;
+        }
+
+        const language = document.getElementById('languageSelect').value;
+        const meetingType = document.getElementById('meetingTypeSelect').value;
+        const aiModel = document.getElementById('aiModelSelect').value;
+        const colabUrl = document.getElementById('colabUrlInput')?.value.trim();
+
+        const fileName = selectedFile.name.toLowerCase();
+        let fileType = 'audio';
+        let fieldName = 'audio_file';
+
+        if (fileName.endsWith('.txt') || fileName.endsWith('.docx') || fileName.endsWith('.pdf')) {
+            fileType = 'text';
+            fieldName = 'text_file';
+        }
+
+        // DISABLED: History check - Always process files fresh to ensure transcript loads
+        // This prevents the "File đã được phân tích" popup and ensures data is fresh
+        /*
+        showLoading('🔍 Đang kiểm tra lịch sử...', 'Tìm kiếm phân tích cũ (2s)');
+        
+        try {
+            // Set timeout 2 seconds for history check
+            const existingAnalysis = await Promise.race([
+                checkExistingAnalysis(selectedFile.name),
+                new Promise((resolve) => setTimeout(() => resolve(null), 2000))
+            ]);
+            
+            if (existingAnalysis) {
+                hideLoading();
+                console.log('✅ Found existing analysis!', existingAnalysis);
+                
+                // Show custom popup with 2 options
+                showExistingAnalysisPopup(existingAnalysis, selectedFile.name);
+                return;
+            }
+            
+            console.log('ℹ️ No existing analysis found, proceeding with new analysis...');
+        } catch (error) {
+            console.warn('⚠️ History check failed:', error);
+            // Continue with normal processing
+        }
+        */
+        console.log('ℹ️ Processing file (history check disabled)...');
+
+
+        // Show loading
+        const fileSizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
+        showLoading(
+            fileType === 'audio' && colabUrl
+                ? '🚀 Đang xử lý với Colab WhisperX + Gemini...'
+                : 'Đang xử lý file...',
+            `File: ${fileSizeMB}MB | Có thể mất 2-5 phút`
+        );
+
+        try {
+            let transcriptResult = null;
+
+            // Option 1: Use Colab WhisperX for audio (Zero Cost)
+            if (fileType === 'audio' && colabUrl) {
+                transcriptResult = await processWithColab(selectedFile, colabUrl, language);
+            }
+
+            // Option 2: Use local server (fallback or for text files)
+            if (!transcriptResult) {
+                transcriptResult = await processWithLocalServer(
+                    selectedFile,
+                    fileType,
+                    fieldName,
+                    language,
+                    meetingType,
+                    aiModel
+                );
+            }
+
+            hideLoading();
+
+            console.log('%c✅ PROCESSING COMPLETE - VERSION 2.0', 'color: #00ff00; font-size: 14px; font-weight: bold');
+            console.log('📦 Result:', transcriptResult);
+
+            if (transcriptResult && transcriptResult.success) {
+                console.log('%c✅ Redirecting to /analysis page...', 'color: #00ff00; font-size: 14px; font-weight: bold');
+
+                // Save data to sessionStorage
+                sessionStorage.setItem('analysisData', JSON.stringify(transcriptResult));
+                sessionStorage.setItem('fileInfo', JSON.stringify({
+                    name: selectedFile.name,
+                    size: formatFileSize(selectedFile.size),
+                    type: getFileType(selectedFile.name)
+                }));
+
+                // Redirect to analysis page
+                window.location.href = '/analysis';
+            } else {
+                console.error('%c❌ PROCESSING FAILED', 'color: #ff0000; font-size: 14px; font-weight: bold');
+                console.error('Result:', transcriptResult);
+                throw new Error(transcriptResult?.error || 'Processing failed');
+            }
+
+        } catch (error) {
+            hideLoading();
+            showPopup('❌ Lỗi: ' + error.message, 'error');
+        }
+    });
+
+    async function processWithColab(file, colabUrl, language) {
+        try {
+            console.log('🚀 Processing with Colab WhisperX...');
+
+            // Step 1: Send to Colab for transcription
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const transcribeResponse = await fetch(`${colabUrl}/transcribe`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!transcribeResponse.ok) {
+                throw new Error('Colab transcription failed');
+            }
+
+            const transcriptData = await transcribeResponse.json();
+
+            // Step 2: Format transcript with speakers
+            let formattedTranscript = '';
+            if (transcriptData.segments) {
+                for (const segment of transcriptData.segments) {
+                    const timestamp = formatTimestamp(segment.start);
+                    const speaker = segment.speaker || 'Unknown';
+                    const text = segment.text;
+                    formattedTranscript += `[${timestamp}] **${speaker}**: ${text}\n`;
+                }
+            }
+
+            // Step 3: Send to Gemini for summary (via local server)
+            const aiModel = document.getElementById('aiModelSelect').value;
+            const meetingType = document.getElementById('meetingTypeSelect').value;
+
+            const summaryResponse = await fetch('/api/upload/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transcript: formattedTranscript,
+                    file_type: 'text',
+                    meeting_type: meetingType,
+                    output_lang: language,
+                    ai_model: aiModel
+                })
+            });
+
+            const summaryData = await summaryResponse.json();
+
+            return {
+                success: true,
+                transcript: formattedTranscript,
+                summary: summaryData.summary,
+                topics: summaryData.topics,
+                actions: summaryData.actions,
+                decisions: summaryData.decisions,
+                participants: summaryData.participants
+            };
+
+        } catch (error) {
+            console.error('Colab processing error:', error);
+            return null;
+        }
+    }
+
+    async function processWithLocalServer(file, fileType, fieldName, language, meetingType, aiModel) {
+        try {
+            console.log('🖥️ Processing with local server...');
+
+            const formData = new FormData();
+            formData.append(fieldName, file);
+            formData.append('transcribe_lang', language);
+            formData.append('file_type', fileType);
+            formData.append('meeting_type', meetingType);
+            formData.append('output_lang', language);
+            formData.append('ai_model', aiModel);
+
+            // Add speaker diarization option (only for audio)
+            if (fileType === 'audio') {
+                const enableDiarization = document.getElementById('enableDiarization').checked;
+                formData.append('enable_diarization', enableDiarization);
+            }
+
+            const response = await fetch('/api/upload/process', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('%c═══════════════════════════════════════════════════════', 'color: #00ffff; font-weight: bold');
+            console.log('%c📦 BACKEND RESPONSE - VERSION 2.0', 'color: #00ffff; font-size: 14px; font-weight: bold');
+            console.log('Data:', data);
+            console.log('Has transcript?', !!data.transcript);
+            console.log('Has summary?', !!data.summary);
+            console.log('%c═══════════════════════════════════════════════════════', 'color: #00ffff; font-weight: bold');
+
+            if (data.error) {
+                console.error('%c❌ Backend returned error:', 'color: #ff0000; font-weight: bold', data.error);
+                throw new Error(data.error);
+            }
+
+            // Check if we have the required data (transcript or summary)
+            if (data.transcript || data.summary) {
+                return {
+                    success: true,
+                    transcript: data.transcript || '',
+                    summary: data.summary || '',
+                    topics: data.topics || [],
+                    actions: data.actions || [],
+                    decisions: data.decisions || [],
+                    participants: data.participants || []
+                };
+            } else {
+                throw new Error(data.status || 'Processing failed - No data returned');
+            }
+
+        } catch (error) {
+            console.error('Local server error:', error);
+            return null;
+        }
+    }
+
+    function formatTimestamp(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function showColabGuide() {
+        const guide = `
+📚 Hướng dẫn setup Colab WhisperX:
+
+1. Mở file colab_whisperx_server.ipynb trong Google Colab
+2. Chọn Runtime > Change runtime type > GPU (T4)
+3. Lấy ngrok token tại: https://dashboard.ngrok.com/get-started/your-authtoken
+4. Lấy HuggingFace token tại: https://huggingface.co/settings/tokens
+5. Sửa Cell 2 với tokens của bạn
+6. Chạy Runtime > Run all
+7. Copy URL ngrok hiển thị
+8. Dán vào ô "Colab WhisperX URL" ở trên
+
+Chi tiết: Xem file ZERO_COST_GUIDE.md
+        `;
+        alert(guide);
+    }
+
+    // OLD FUNCTION REMOVED - Using new 2-column layout below
+
+    function exportNotes() {
+        exportFile('txt');
+    }
+
+    function copyContent() {
+        const text = document.getElementById('originalContent').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            showPopup('Đã copy nội dung!', 'success');
+        }).catch(() => {
+            showPopup('Không thể copy', 'error');
+        });
+    }
+
+    function searchContent() {
+        const searchTerm = prompt('Tìm kiếm trong nội dung:');
+        if (searchTerm) {
+            const content = document.getElementById('originalContent');
+            const text = content.textContent;
+            const regex = new RegExp(searchTerm, 'gi');
+            const highlighted = text.replace(regex, match => `<mark>${match}</mark>`);
+            content.innerHTML = highlighted;
+        }
+    }
+
+    function formatTranscript(transcript) {
+        // Check if transcript has speaker labels (format: [00:00] **Guest-1**: text)
+        const hasSpeakers = transcript.includes('**Guest-') || transcript.includes('**SPEAKER_');
+
+        if (hasSpeakers) {
+            // Format with speaker styling
+            const lines = transcript.split('\n');
+            let html = '<div class="transcript-with-speakers">';
+
+            for (const line of lines) {
+                if (line.trim() === '') continue;
+
+                // Match pattern: [00:00] **Guest-1**: text
+                const match = line.match(/\[(\d{2}:\d{2})\]\s+\*\*(.*?)\*\*:\s+(.*)/);
+
+                if (match) {
+                    const [, timestamp, speaker, text] = match;
+                    const speakerClass = getSpeakerClass(speaker);
+
+                    html += `
+                        <div class="transcript-line">
+                            <div class="transcript-timestamp">${timestamp}</div>
+                            <div class="transcript-speaker ${speakerClass}">${speaker}</div>
+                            <div class="transcript-text">${text}</div>
+                        </div>
+                    `;
+                } else {
+                    // Regular line without speaker
+                    html += `<div class="transcript-line-plain">${line}</div>`;
+                }
+            }
+
+            html += '</div>';
+            return html;
+        } else {
+            // Plain transcript without speakers
+            return `<pre>${transcript}</pre>`;
+        }
+    }
+
+    function getSpeakerClass(speaker) {
+        // Assign different colors to different speakers
+        const speakerNum = speaker.match(/\d+/);
+        if (speakerNum) {
+            const num = parseInt(speakerNum[0]);
+            return `speaker-${(num % 5) + 1}`; // Cycle through 5 colors
+        }
+        return 'speaker-1';
+    }
+
+    function searchTranscript() {
+        const searchTerm = prompt('Tìm kiếm trong transcript:');
+        if (searchTerm) {
+            const transcript = document.getElementById('transcriptContent');
+            const text = transcript.textContent;
+            const regex = new RegExp(searchTerm, 'gi');
+            const highlighted = text.replace(regex, match => `<mark>${match}</mark>`);
+            transcript.innerHTML = highlighted;
+        }
+    }
+
+    function exportFile(type) {
+        window.open(`/api/export/${type}`, '_blank');
+    }
+
+    function copyTranscript() {
+        const text = document.getElementById('transcriptText').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            showPopup('Đã copy transcript!', 'success');
+        }).catch(() => {
+            showPopup('Không thể copy', 'error');
+        });
+    }
+
+    // ============================================================================
+    // NEW: Display Results with Beautiful 2-Column Layout
+    // ============================================================================
+    function displayResults(data) {
+        console.log('%c═══════════════════════════════════════════════════════', 'color: #ff00ff; font-weight: bold');
+        console.log('%c🎨 DISPLAY RESULTS CALLED - VERSION 2.0 (TWO COLUMN)', 'color: #ff00ff; font-size: 16px; font-weight: bold');
+        console.log('%c📦 Data received:', 'color: #ffaa00; font-weight: bold');
+        console.log(data);
+        console.log('%c═══════════════════════════════════════════════════════', 'color: #ff00ff; font-weight: bold');
+        const resultContainer = document.getElementById('resultContainer');
+
+        // Parse data
+        const summary = data.summary || 'Không có tóm tắt';
+        const topics = Array.isArray(data.topics) ? data.topics : (data.topics ? data.topics.split('\n').filter(t => t.trim()) : []);
+        const actions = Array.isArray(data.actions) ? data.actions : (data.actions ? parseActionItems(data.actions) : []);
+        const decisions = Array.isArray(data.decisions) ? data.decisions : (data.decisions ? data.decisions.split('\n').filter(d => d.trim()) : []);
+        const transcript = data.transcript || '';
+
+        console.log('📊 Parsed:', { summary: summary.substring(0, 50), topics: topics.length, actions: actions.length, decisions: decisions.length });
+
+        // Build HTML (no header, using file-info-bar instead)
+        const html = `
+            <!-- 2 Column Grid -->
+            <div class="result-grid">
+                <!-- Left: Analysis -->
+                <div class="analysis-panel">
+                    <h2 class="panel-title"><i class="bi bi-journal-text"></i> Notes</h2>
+                    
+                    <!-- Summary -->
+                    <div class="analysis-section">
+                        <div class="section-title">
+                            <div class="section-icon-box icon-summary">📝</div>
+                            <h3>Tóm tắt cuộc họp</h3>
+                        </div>
+                        <div class="section-body">${formatText(summary)}</div>
+                    </div>
+
+                    <!-- Topics -->
+                    <div class="analysis-section">
+                        <div class="section-title">
+                            <div class="section-icon-box icon-agenda">📋</div>
+                            <h3>Chủ đề thảo luận</h3>
+                        </div>
+                        <div class="section-body">
+                            <ul class="agenda-items">
+                                ${topics.map(topic => `
+                                    <li class="agenda-item">
+                                        <span class="agenda-bullet">•</span>
+                                        <span>${formatText(topic)}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Action Items -->
+                    <div class="analysis-section">
+                        <div class="section-title">
+                            <div class="section-icon-box icon-actions">✅</div>
+                            <h3>Hành động cần làm</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="action-items-list">
+                                ${actions.map((action, idx) => `
+                                    <div class="action-item-card">
+                                        <div class="action-item-header">
+                                            <input type="checkbox" class="action-checkbox" id="action-${idx}">
+                                            <div class="action-assignee">
+                                                <div class="assignee-avatar">${getInitial(action.assignee)}</div>
+                                                <span class="assignee-name">${action.assignee || 'Chưa phân công'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="action-task">${formatText(action.task)}</div>
+                                        ${action.deadline ? `
+                                            <div class="action-deadline">
+                                                <i class="bi bi-calendar-event"></i> ${action.deadline}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Decisions -->
+                    <div class="analysis-section">
+                        <div class="section-title">
+                            <div class="section-icon-box icon-decisions">🎯</div>
+                            <h3>Quyết định quan trọng</h3>
+                        </div>
+                        <div class="section-body">
+                            <ul class="decision-items">
+                                ${decisions.map(decision => `
+                                    <li class="decision-item">
+                                        <span class="decision-dot"></span>
+                                        <span>${formatText(decision)}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Transcript -->
+                <div class="transcript-panel">
+                    <div class="transcript-panel-header">
+                        <h3><i class="bi bi-chat-left-text"></i> Transcript</h3>
+                        <div class="transcript-tools">
+                            <button class="transcript-tool-btn" onclick="searchInTranscript()" title="Tìm kiếm">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            <button class="transcript-tool-btn" onclick="copyFullTranscript()" title="Copy">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                            <button class="transcript-tool-btn" onclick="downloadTranscriptTxt()" title="Download">
+                                <i class="bi bi-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="transcript-body" id="transcriptBody">
+                        ${formatTranscriptWithSpeakers(transcript)}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Expand container for results view
+        const container = document.querySelector('.upload-container');
+        container.classList.add('results-mode');
+
+        // ẨN header và upload card hoàn toàn
+        const uploadHeader = document.querySelector('.upload-header');
+        const uploadCard = document.querySelector('.upload-main-card');
+
+        if (uploadHeader) uploadHeader.style.display = 'none';
+        if (uploadCard) uploadCard.style.display = 'none';
+
+        // Tạo file info bar mới ở trên cùng
+        let fileInfoBar = document.getElementById('fileInfoBar');
+        if (!fileInfoBar) {
+            fileInfoBar = document.createElement('div');
+            fileInfoBar.id = 'fileInfoBar';
+            fileInfoBar.className = 'file-info-bar';
+            container.insertBefore(fileInfoBar, resultContainer);
+        }
+
+        const fileName = selectedFile ? selectedFile.name : 'Unknown';
+        const fileSize = selectedFile ? formatFileSize(selectedFile.size) : '';
+        const fileType = selectedFile ? getFileType(selectedFile.name) : '';
+
+        fileInfoBar.innerHTML = `
+            <div class="file-info-content">
+                <div class="file-info-left">
+                    <div class="file-info-icon">
+                        <i class="bi bi-file-earmark-check"></i>
+                    </div>
+                    <div class="file-info-details">
+                        <div class="file-info-name">
+                            <i class="bi bi-check-circle-fill" style="color: #10b981; margin-right: 0.5rem;"></i>
+                            ${fileName}
+                        </div>
+                        <div class="file-info-meta">
+                            ${fileSize} • ${fileType} • Phân tích hoàn tất
+                        </div>
+                    </div>
+                </div>
+                <div class="file-info-actions">
+                    <button onclick="downloadAllNotes()" class="file-action-btn primary">
+                        <i class="bi bi-download"></i>
+                        <span>Download</span>
+                    </button>
+                    <button onclick="location.reload()" class="file-action-btn secondary">
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span>File mới</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Render results
+        resultContainer.innerHTML = html;
+        resultContainer.classList.remove('hidden');
+
+        // Smooth scroll to results
+        setTimeout(() => {
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+
+        // Setup action checkboxes
+        setupActionCheckboxes();
+    }
+
+    function parseActionItems(text) {
+        if (!text) return [];
+
+        const lines = text.split('\n').filter(l => l.trim());
+        return lines.map(line => {
+            // Try to parse format: "- [Person] Task (Deadline)"
+            const match = line.match(/[-•*]\s*(?:\[(.*?)\])?\s*(.*?)(?:\((.*?)\))?$/);
+            if (match) {
+                return {
+                    assignee: match[1] || '',
+                    task: match[2] || line,
+                    deadline: match[3] || ''
+                };
+            }
+            return { assignee: '', task: line.replace(/^[-•*]\s*/, ''), deadline: '' };
+        });
+    }
+
+    function formatText(text) {
+        if (!text) return '';
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>');
+    }
+
+    function getInitial(name) {
+        if (!name) return '?';
+        return name.charAt(0).toUpperCase();
+    }
+
+    function formatTranscriptWithSpeakers(transcript) {
+        if (!transcript) return '<p class="text-muted">Không có transcript</p>';
+
+        const lines = transcript.split('\n').filter(l => l.trim());
+        let html = '';
+
+        const speakerColors = ['#e3f2fd', '#f3e5f5', '#e8f5e9', '#fff3e0', '#fce4ec', '#e0f2f1'];
+
+        lines.forEach(line => {
+            // Match: [00:00] **Speaker**: text
+            const match = line.match(/\[(\d{2}:\d{2})\]\s+\*\*(.*?)\*\*:\s+(.*)/);
+
+            if (match) {
+                const [, time, speaker, text] = match;
+                const speakerNum = speaker.match(/\d+/);
+                const colorIdx = speakerNum ? parseInt(speakerNum[0]) % speakerColors.length : 0;
+
+                html += `
+                    <div class="transcript-line">
+                        <div class="transcript-time">${time}</div>
+                        <div class="transcript-speaker" style="background: ${speakerColors[colorIdx]}">
+                            ${speaker}
+                        </div>
+                        <div class="transcript-text">${text}</div>
+                    </div>
+                `;
+            } else if (line.trim()) {
+                html += `<div class="transcript-line"><div class="transcript-text">${line}</div></div>`;
+            }
+        });
+
+        return html || '<p class="text-muted">Không có transcript</p>';
+    }
+
+    function setupActionCheckboxes() {
+        document.querySelectorAll('.action-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                const card = this.closest('.action-item-card');
+                if (this.checked) {
+                    card.style.opacity = '0.6';
+                    card.querySelector('.action-task').style.textDecoration = 'line-through';
+                } else {
+                    card.style.opacity = '1';
+                    card.querySelector('.action-task').style.textDecoration = 'none';
+                }
+            });
+        });
+    }
+
+    function searchInTranscript() {
+        const query = prompt('Tìm kiếm trong transcript:');
+        if (!query) return;
+
+        const body = document.getElementById('transcriptBody');
+        const text = body.innerHTML;
+        const regex = new RegExp(`(${query})`, 'gi');
+        const highlighted = text.replace(regex, '<mark>$1</mark>');
+        body.innerHTML = highlighted;
+    }
+
+    function copyFullTranscript() {
+        const body = document.getElementById('transcriptBody');
+        const text = body.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            showPopup('✅ Đã copy transcript!', 'success');
+        }).catch(() => {
+            showPopup('❌ Không thể copy', 'error');
+        });
+    }
+
+    function downloadTranscriptTxt() {
+        const body = document.getElementById('transcriptBody');
+        const text = body.innerText;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `transcript_${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function downloadAllNotes() {
+        // Show download menu
+        const menu = `
+            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                        background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 9999;">
+                <h3 style="margin: 0 0 1rem 0;">Download Meeting Notes</h3>
+                <button onclick="window.open('/api/export/txt', '_blank'); this.parentElement.remove();" 
+                        style="display: block; width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+                    <i class="bi bi-file-text"></i> TXT
+                </button>
+                <button onclick="window.open('/api/export/docx', '_blank'); this.parentElement.remove();" 
+                        style="display: block; width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+                    <i class="bi bi-file-word"></i> DOCX
+                </button>
+                <button onclick="this.parentElement.remove();" 
+                        style="display: block; width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; background: #f3f4f6;">
+                    Hủy
+                </button>
+            </div>
+            <div onclick="this.nextElementSibling.remove(); this.remove();" 
+                 style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998;"></div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', menu);
+    }
+
+    // ============================================================================
+    // Check if file was already analyzed
+    // ============================================================================
+    async function checkExistingAnalysis(filename) {
+        try {
+            const response = await fetch('/api/upload/check-history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: filename })
+            });
+
+            if (!response.ok) return null;
+
+            const data = await response.json();
+
+            if (data.found && data.data) {
+                return data.data;
+            }
+
+            return null;
+        } catch (error) {
+            console.warn('Failed to check history:', error);
+            return null;
+        }
+    }
+
+    function showExistingAnalysisPopup(analysis, filename) {
+        const timestamp = new Date(analysis.timestamp).toLocaleString('vi-VN');
+        const summaryPreview = analysis.summary ? analysis.summary.substring(0, 150) + '...' : 'Không có tóm tắt';
+
+        const popup = `
+            <div class="existing-analysis-overlay" onclick="closeExistingAnalysisPopup()">
+                <div class="existing-analysis-popup" onclick="event.stopPropagation()">
+                    <div class="popup-header">
+                        <div class="popup-icon">📋</div>
+                        <h3>File đã được phân tích</h3>
+                        <button class="popup-close" onclick="closeExistingAnalysisPopup()">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="popup-body">
+                        <div class="file-info">
+                            <div class="info-row">
+                                <span class="info-label">📄 File:</span>
+                                <span class="info-value">${filename}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">⏰ Phân tích lúc:</span>
+                                <span class="info-value">${timestamp}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-preview">
+                            <div class="preview-label">Tóm tắt:</div>
+                            <div class="preview-text">${summaryPreview}</div>
+                        </div>
+                        
+                        <div class="popup-message">
+                            File này đã được phân tích trước đó. Bạn muốn làm gì?
+                        </div>
+                    </div>
+                    
+                    <div class="popup-actions">
+                        <button class="popup-btn primary" onclick="viewExistingAnalysis()">
+                            <i class="bi bi-eye"></i>
+                            Xem lại kết quả
+                        </button>
+                        <button class="popup-btn secondary" onclick="reAnalyzeFile()">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Phân tích lại
+                        </button>
+                        <button class="popup-btn secondary" onclick="closeExistingAnalysisPopup()">
+                            <i class="bi bi-arrow-left"></i>
+                            Chọn file khác
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', popup);
+
+        // Store analysis data for later use
+        window.currentExistingAnalysis = analysis;
+    }
+
+    function closeExistingAnalysisPopup() {
+        const overlay = document.querySelector('.existing-analysis-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+        window.currentExistingAnalysis = null;
+
+        // Reset file selection
+        removeFile();
+    }
+
+    function viewExistingAnalysis() {
+        const analysis = window.currentExistingAnalysis;
+        if (!analysis) return;
+
+        // Close popup
+        const overlay = document.querySelector('.existing-analysis-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+
+        console.log('📂 Loading existing analysis from history...');
+
+        // Save to sessionStorage and redirect
+        sessionStorage.setItem('analysisData', JSON.stringify({
+            success: true,
+            transcript: analysis.transcript || '',
+            summary: analysis.summary || '',
+            topics: analysis.topics || [],
+            actions: analysis.action_items || analysis.actions || [],
+            decisions: analysis.decisions || [],
+            participants: analysis.participants || []
+        }));
+
+        sessionStorage.setItem('fileInfo', JSON.stringify({
+            name: analysis.original_file || selectedFile?.name || 'Unknown',
+            size: selectedFile ? formatFileSize(selectedFile.size) : '',
+            type: selectedFile ? getFileType(selectedFile.name) : ''
+        }));
+
+        // Redirect to analysis page
+        window.location.href = '/analysis';
+    }
+
+    function reAnalyzeFile() {
+        // Close popup and proceed with new analysis
+        const overlay = document.querySelector('.existing-analysis-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+
+        console.log('🔄 Re-analyzing file...');
+
+        // Continue with normal upload process (skip history check)
+        proceedWithAnalysis();
+    }
+
+    async function proceedWithAnalysis() {
+        if (!selectedFile) return;
+
+        const language = document.getElementById('languageSelect').value;
+        const meetingType = document.getElementById('meetingTypeSelect').value;
+        const aiModel = document.getElementById('aiModelSelect').value;
+
+        const fileName = selectedFile.name.toLowerCase();
+        let fileType = 'audio';
+        let fieldName = 'audio_file';
+
+        if (fileName.endsWith('.txt') || fileName.endsWith('.docx') || fileName.endsWith('.pdf')) {
+            fileType = 'text';
+            fieldName = 'text_file';
+        }
+
+        // Show loading
+        const fileSizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
+        showLoading('🔄 Đang phân tích lại...', `File: ${fileSizeMB}MB`);
+
+        try {
+            const transcriptResult = await processWithLocalServer(
+                selectedFile,
+                fileType,
+                fieldName,
+                language,
+                meetingType,
+                aiModel
+            );
+
+            hideLoading();
+
+            if (transcriptResult && transcriptResult.success) {
+                // Save data to sessionStorage
+                sessionStorage.setItem('analysisData', JSON.stringify(transcriptResult));
+                sessionStorage.setItem('fileInfo', JSON.stringify({
+                    name: selectedFile.name,
+                    size: formatFileSize(selectedFile.size),
+                    type: getFileType(selectedFile.name)
+                }));
+
+                // Redirect to analysis page
+                window.location.href = '/analysis';
+            } else {
+                throw new Error(transcriptResult?.error || 'Processing failed');
+            }
+
+        } catch (error) {
+            hideLoading();
+            showPopup('❌ Lỗi: ' + error.message, 'error');
+        }
+    }
+
+</script>
+
+<style>
+    /* Existing Analysis Popup */
+    .existing-analysis-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .existing-analysis-popup {
+        background: white;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .popup-header {
+        padding: 2rem 2rem 1rem 2rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .popup-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .popup-header h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .popup-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: #f3f4f6;
+        border-radius: 50%;
+        color: #6b7280;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .popup-close:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+
+    .popup-body {
+        padding: 0 2rem 1.5rem 2rem;
+    }
+
+    .file-info {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+    }
+
+    .info-label {
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .info-value {
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .summary-preview {
+        background: #fffbeb;
+        border-left: 3px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .preview-label {
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+    }
+
+    .preview-text {
+        color: #78350f;
+        line-height: 1.6;
+        font-size: 0.9rem;
+    }
+
+    .popup-message {
+        text-align: center;
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-top: 1rem;
+    }
+
+    .popup-actions {
+        padding: 1.5rem 2rem 2rem 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .popup-btn {
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .popup-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .popup-btn.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .popup-btn.secondary {
+        background: white;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+
+    .popup-btn.secondary:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+    }
+
+    @media (max-width: 768px) {
+        .existing-analysis-popup {
+            width: 95%;
+            max-width: none;
+        }
+
+        .popup-header {
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+        }
+
+        .popup-body {
+            padding: 0 1.5rem 1rem 1.5rem;
+        }
+
+    }
+    }
+    }
+
+    </script><style>
+
+    /* Existing Analysis Popup */
+    .existing-analysis-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .existing-analysis-popup {
+        background: white;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .popup-header {
+        padding: 2rem 2rem 1rem 2rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .popup-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .popup-header h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .popup-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: #f3f4f6;
+        border-radius: 50%;
+        color: #6b7280;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .popup-close:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+
+    .popup-body {
+        padding: 0 2rem 1.5rem 2rem;
+    }
+
+    .file-info {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+    }
+
+    .info-label {
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .info-value {
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .summary-preview {
+        background: #fffbeb;
+        border-left: 3px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .preview-label {
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+    }
+
+    .preview-text {
+        color: #78350f;
+        line-height: 1.6;
+        font-size: 0.9rem;
+    }
+
+    .popup-message {
+        text-align: center;
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-top: 1rem;
+    }
+
+    .popup-actions {
+        padding: 1.5rem 2rem 2rem 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .popup-btn {
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .popup-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .popup-btn.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .popup-btn.secondary {
+        background: white;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+
+    .popup-btn.secondary:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+    }
+
+    @media (max-width: 768px) {
+        .existing-analysis-popup {
+            width: 95%;
+            max-width: none;
+        }
+
+        .popup-header {
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+        }
+
+        .popup-body {
+            padding: 0 1.5rem 1rem 1.5rem;
+        }
+
+        .popup-actions {
+            padding: 1rem 1.5rem 1.5rem 1.5rem;
+        }
+    }
+</style>
+<script>
+    // ============================================================================
+    // 🔗 AUTO-CONNECT LOGIC (Zero Cost Automation)
+    // ============================================================================
+    let sessionWorkerId = 'akari-worker-' + Math.random().toString(36).substring(2, 9);
+    let autoConnectInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setupAutoConnect();
+    });
+
+    function setupAutoConnect() {
+        // Update Guide Button to Smart Launch Button
+        const guideBtn = document.querySelector('a[onclick*="showColabGuide"]');
+        if (guideBtn) {
+            guideBtn.innerHTML = '<i class="bi bi-magic me-1"></i>Mở Colab (Auto)';
+            guideBtn.className = 'text-primary fw-bold ml-2';
+            guideBtn.style.textDecoration = 'none';
+            guideBtn.onclick = (e) => {
+                e.preventDefault();
+                openSmartColab();
+            };
+
+            // Add status indicator near input
+            const inputContainer = document.getElementById('colabUrlInput').closest('.form-group');
+            if (inputContainer) {
+                const statusDiv = document.createElement('div');
+                statusDiv.id = 'colabStatusIndicator';
+                statusDiv.className = 'mt-1 small';
+                statusDiv.style.fontSize = '0.85rem';
+                statusDiv.innerHTML = `<span class="text-muted"><i class="bi bi-circle-fill" style="font-size: 8px;"></i> Waiting for signal... (ID: ${sessionWorkerId})</span>`;
+                inputContainer.appendChild(statusDiv);
+            }
+
+            // Start Polling (Disabled to prevent dweet.io network errors)
+            // startPolling();
+        }
+    }
+
+    function openSmartColab() {
+        // NOTE: Default link to repo
+        const repoUrl = "https://colab.research.google.com/github/tuantvk/meeting-transcript-chatbot2/blob/main/colab_whisperx_server.ipynb";
+
+        // Append Session Hash
+        const smartLink = `${repoUrl}#session=${sessionWorkerId}`;
+
+        // Show guidance toast
+        showPopup('🚀 Đang mở Colab...', 'success');
+
+        setTimeout(() => {
+            alert("Lưu ý: Khi Colab mở ra:\n1. Bấm menu 'Runtime' -> 'Change runtime type' -> chọn 'T4 GPU'\n2. Bấm 'Runtime' -> 'Run all'\n3. Đợi khoảng 2 phút, App sẽ tự kết nối!");
+            window.open(smartLink, '_blank');
+        }, 500);
+    }
+
+    function startPolling() {
+        if (autoConnectInterval) clearInterval(autoConnectInterval);
+        console.log('📡 Listening for Colab Signal:', sessionWorkerId);
+
+        autoConnectInterval = setInterval(async () => {
+            try {
+                // Using dweet.io for signaling (Free, Public, No Auth)
+                // This allows the Colab server to broadcast its URL to this specific session ID
+                const res = await fetch(`https://dweet.io/get/latest/dweet/for/${sessionWorkerId}`);
+                const data = await res.json();
+
+                if (data.this === 'succeeded' && data.with && data.with.length > 0) {
+                    const content = data.with[0].content;
+                    if (content.url && content.status === 'ready') {
+                        // Check freshness (2 mins)
+                        const lastDate = new Date(data.with[0].created);
+                        const now = new Date();
+                        if ((now - lastDate) > 120000) return;
+
+                        // FOUND IT!
+                        const url = content.url;
+                        const input = document.getElementById('colabUrlInput');
+
+                        if (input && input.value !== url) {
+                            input.value = url;
+
+                            // Visual Update
+                            const indicator = document.getElementById('colabStatusIndicator');
+                            if (indicator) {
+                                indicator.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Đã kết nối: ${url}</span>`;
+                            }
+
+                            showPopup('✅ Colab đã kết nối thành công!', 'success');
+
+                            // Stop polling
+                            clearInterval(autoConnectInterval);
+                        }
+                    }
+                }
+            } catch (e) {
+                // Ignore errors
+            }
+        }, 4000);
+    }
+</script>
+{% endblock %}

@@ -107,3 +107,61 @@ def save_recording():
             'status': f'Error: {str(e)}',
             'recording_id': None
         }), 500
+
+@recording_bp.route('/save-only', methods=['POST'])
+def save_recording_only():
+    """Save recording to history WITHOUT transcription/analysis"""
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'error': 'No audio file'}), 400
+        
+        audio_file = request.files['audio']
+        rec_type = request.form.get('type', 'mic')
+        
+        # Save audio file
+        import time
+        from datetime import datetime
+        
+        recordings_dir = Path('data/history')
+        recordings_dir.mkdir(parents=True, exist_ok=True)
+        
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}_{rec_type}_recording.mp3"
+        audio_path = recordings_dir / filename
+        audio_file.save(str(audio_path))
+        
+        # Create minimal history entry (no transcription)
+        history_data = {
+            "id": f"{timestamp}_{rec_type}_recording",
+            "timestamp": datetime.now().isoformat(),
+            "original_file": filename,
+            "title": f"Ghi âm {rec_type}",
+            "summary": "Ghi âm chưa được phân tích",
+            "topics": [],
+            "action_items": [],
+            "decisions": [],
+            "metadata": {
+                "duration": "0:00",
+                "meeting_type": "recording",
+                "language": "vi",
+                "source": rec_type
+            }
+        }
+        
+        # Save to history
+        history_file = recordings_dir / f"{history_data['id']}.json"
+        with open(history_file, 'w', encoding='utf-8') as f:
+            json.dump(history_data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            'success': True,
+            'filename': filename,
+            'id': history_data['id']
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+

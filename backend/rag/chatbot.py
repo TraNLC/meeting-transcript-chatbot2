@@ -81,13 +81,13 @@ class Chatbot:
 
     def ask_question(self, question: str) -> Dict[str, Any]:
         """
-        Trả lời câu hỏi về cuộc họp.
-
+        Trả lời câu hỏi về cuộc họp with conversation memory.
+        
         Args:
             question: Câu hỏi của user
-
+        
         Returns:
-            Dict chứa answer
+            Dict chứa answer với context từ conversation history
         """
         if not self.transcript:
             msg = "Chưa có transcript để trả lời câu hỏi." if self.language == "vi" else "No transcript to answer questions."
@@ -96,12 +96,57 @@ class Chatbot:
                 "source": ""
             }
 
-        prompt = PromptTemplates.get_qa_prompt(self.transcript, question, self.language)
+        # ✅ NEW: Build context from conversation history
+        history_text = ""
+        if self.conversation_history:
+            history_lines = []
+            # Get last 4 messages (2 exchanges)
+            recent_history = self.conversation_history[-4:] if len(self.conversation_history) > 4 else self.conversation_history
+            
+            for msg in recent_history:
+                role = msg.get("role", "")
+                content = msg.get("content", "")
+                if role == "user":
+                    label = "User" if self.language == "en" else "User"
+                    history_lines.append(f"{label}: {content}")
+                elif role == "assistant":
+                    label = "AI" if self.language == "en" else "AI"
+                    history_lines.append(f"{label}: {content}")
+            
+            if history_lines:
+                history_text = "\n".join(history_lines)
+        
+        # Get base prompt
+        base_prompt = PromptTemplates.get_qa_prompt(self.transcript, question, self.language)
+        
+        # ✅ NEW: Prepend conversation history if exists
+        if history_text:
+            if self.language == "vi":
+                prompt = f"""LỊCH SỬ HỘI THOẠI GẦN ĐÂY:
+{history_text}
+
+---
+
+{base_prompt}
+
+LƯU Ý: Sử dụng lịch sử hội thoại để hiểu ngữ cảnh câu hỏi hiện tại (ví dụ: "nó", "đó", "họ" có thể refer to previous context)."""
+            else:
+                prompt = f"""RECENT CONVERSATION HISTORY:
+{history_text}
+
+---
+
+{base_prompt}
+
+NOTE: Use conversation history to understand context of current question (e.g., "it", "that", "they" may refer to previous context)."""
+        else:
+            prompt = base_prompt
+        
         system_message = PromptTemplates.get_system_message_for_task("qa", self.language)
         
         answer = self.llm_manager.generate(prompt, system_message)
 
-        # Add to conversation history in correct format for Gradio/LLM
+        # Add to conversation history
         self.conversation_history.append({
             "role": "user",
             "content": question

@@ -37,6 +37,21 @@ def history_page():
     """Meeting history page"""
     return render_template('history.html')
 
+@main_bp.route('/record')
+def record_page():
+    """Record audio only (save to history, no analysis)"""
+    return render_template('record.html')
+
+@main_bp.route('/analyze-audio')
+def analyze_audio_page():
+    """Upload and analyze audio file"""
+    return render_template('analyze_audio.html')
+
+@main_bp.route('/analyze-text')
+def analyze_text_page():
+    """Upload and analyze text/docx/PDF file"""
+    return render_template('analyze_text.html')
+
 @main_bp.route('/meeting/<meeting_id>')
 def meeting_detail(meeting_id):
     """Meeting detail page"""
