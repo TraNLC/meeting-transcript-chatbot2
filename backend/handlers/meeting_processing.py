@@ -4,6 +4,10 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import logging
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -122,14 +126,8 @@ def process_file(file, meeting_type, output_language):
         logger.debug(f"Initializing LLM: provider={provider}, model={model}")
         
         # Get API key based on provider
-        if provider == "gemini":
-            api_key = Settings.GEMINI_API_KEY
-            llm_kwargs = {}
-        elif provider == "openai":
-            api_key = Settings.OPENAI_API_KEY
-            llm_kwargs = {"base_url": Settings.OPENAI_BASE_URL} if Settings.OPENAI_BASE_URL else {}
-        else:
-            raise ValueError(f"Unsupported LLM provider: {provider}")
+        api_key = os.getenv('AZURE_OPENAI_LLM_API_KEY')
+        llm_kwargs = {"base_url": os.getenv('AZURE_OPENAI_LLM_ENDPOINT')} if Settings.OPENAI_BASE_URL else {}
         
         llm_manager = LLMManager(
             provider=provider,

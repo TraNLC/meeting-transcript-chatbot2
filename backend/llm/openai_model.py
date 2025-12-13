@@ -3,6 +3,7 @@
 from typing import Optional
 from openai import OpenAI
 from .base import BaseLLM
+import os
 
 
 class OpenAIModel(BaseLLM):
@@ -11,10 +12,10 @@ class OpenAIModel(BaseLLM):
     def __init__(
         self,
         api_key: str,
-        model: str = "gpt-3.5-turbo",
+        model: str = os.getenv("AZURE_OPENAI_LLM_MODEL"),
         temperature: float = 0.7,
         max_tokens: int = 4000,
-        base_url: Optional[str] = None,
+        base_url: Optional[str] = os.getenv("AZURE_OPENAI_LLM_ENDPOINT"),
         **kwargs
     ):
         """Initialize OpenAI model.
@@ -71,7 +72,7 @@ class OpenAIModel(BaseLLM):
             
             # Generate response
             response = self.client.chat.completions.create(
-                model=self.model,
+                model="GPT-4.1",
                 messages=messages,
                 temperature=kwargs.get("temperature", self.temperature),
                 max_tokens=kwargs.get("max_tokens", self.max_tokens)
