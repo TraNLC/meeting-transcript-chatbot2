@@ -6,8 +6,6 @@
 <link href="{{ url_for('static', filename='css/home.css') }}" rel="stylesheet">
 {% endblock %}
 
-
-
 {% block content %}
 <section class="hero-section">
     <h1 class="hero-title">{{ t['home_title'] }}</h1>
@@ -15,39 +13,43 @@
 </section>
 
 <section class="action-cards-grid">
-    <a href="/recording/browser" class="action-card">
-        <div class="action-card-icon">
-            <i class="bi bi-laptop"></i>
-        </div>
-        <div class="action-card-content">
-            <h3 class="action-card-title">{{ t['browser_record'] }}</h3>
-            <p class="action-card-description">{{ t['browser_desc'] }}</p>
-        </div>
-        <i class="bi bi-arrow-right action-card-arrow"></i>
-    </a>
-
-    <a href="/recording/mic" class="action-card">
+    <!-- Button 1: Ghi âm (Record only, save to history) -->
+    <a href="/record" class="action-card">
         <div class="action-card-icon">
             <i class="bi bi-mic-fill"></i>
         </div>
         <div class="action-card-content">
-            <h3 class="action-card-title">{{ t['mic_record'] }}</h3>
-            <p class="action-card-description">{{ t['mic_desc'] }}</p>
+            <h3 class="action-card-title">Ghi âm</h3>
+            <p class="action-card-description">Ghi âm cuộc họp và lưu vào lịch sử</p>
         </div>
         <i class="bi bi-arrow-right action-card-arrow"></i>
     </a>
 
-    <a href="/upload" class="action-card">
+    <!-- Button 2: Phân tích ghi âm (Upload audio → analyze) -->
+    <a href="/analyze-audio" class="action-card">
         <div class="action-card-icon">
-            <i class="bi bi-cloud-upload"></i>
+            <i class="bi bi-soundwave"></i>
         </div>
         <div class="action-card-content">
-            <h3 class="action-card-title">{{ t['upload'] }}</h3>
-            <p class="action-card-description">{{ t['upload_desc'] }}</p>
+            <h3 class="action-card-title">Phân tích ghi âm</h3>
+            <p class="action-card-description">Upload file audio để phân tích</p>
         </div>
         <i class="bi bi-arrow-right action-card-arrow"></i>
     </a>
 
+    <!-- Button 3: Phân tích văn bản (Upload txt/docx/PDF → analyze) -->
+    <a href="/analyze-text" class="action-card">
+        <div class="action-card-icon">
+            <i class="bi bi-file-earmark-text"></i>
+        </div>
+        <div class="action-card-content">
+            <h3 class="action-card-title">Phân tích văn bản</h3>
+            <p class="action-card-description">Upload file .txt, .docx, .pdf để phân tích</p>
+        </div>
+        <i class="bi bi-arrow-right action-card-arrow"></i>
+    </a>
+
+    <!-- Button 4: Lịch sử (unchanged) -->
     <a href="/history" class="action-card">
         <div class="action-card-icon">
             <i class="bi bi-clock-history"></i>

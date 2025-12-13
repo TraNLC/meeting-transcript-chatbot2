@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+
+{% block title %}Ghi âm - Akari AI{% endblock %}
+
+{% block page_styles %}
+<link href="{{ url_for('static', filename='css/recording.css') }}" rel="stylesheet">
+<style>
+    .record-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .record-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .record-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .record-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .record-tab {
+        padding: 1rem 2rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .record-tab.active {
+        color: #4285f4;
+        border-bottom-color: #4285f4;
+    }
+
+    .record-panel {
+        display: none;
+    }
+
+    .record-panel.active {
+        display: block;
+    }
+
+    .record-controls {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .record-button {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 3rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .record-button:hover {
+        transform: scale(1.05);
+    }
+
+    .record-button.recording {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    .record-status {
+        margin-top: 1.5rem;
+        font-size: 1.1rem;
+        color: #666;
+    }
+
+    .record-timer {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+        margin-top: 1rem;
+    }
+
+    .save-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .save-section.show {
+        display: block;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: #4285f4;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #357ae8;
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+    }
+
+    .success-message {
+        text-align: center;
+        padding: 2rem;
+        display: none;
+    }
+
+    .success-message.show {
+        display: block;
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        color: #34a853;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="record-container">
+    <div class="record-header">
+        <h1>🎙️ Ghi âm cuộc họp</h1>
+        <p>Chọn nguồn ghi âm và bắt đầu</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="record-tabs">
+        <button class="record-tab active" data-tab="mic">
+            <i class="bi bi-mic-fill"></i> Micro
+        </button>
+        <button class="record-tab" data-tab="browser">
+            <i class="bi bi-laptop"></i> Trình duyệt
+        </button>
+    </div>
+
+    <!-- Mic Recording Panel -->
+    <div class="record-panel active" id="micPanel">
+        <div class="record-controls">
+            <button class="record-button" id="micRecordBtn">
+                <i class="bi bi-mic-fill"></i>
+            </button>
+
+            <!-- Audio Visualizer -->
+            <div class="audio-visualizer" id="audioVisualizer">
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+            </div>
+
+            <div class="record-status" id="micStatus">Nhấn để bắt đầu ghi âm</div>
+            <div class="record-timer" id="micTimer">00:00</div>
+        </div>
+
+        <div class="save-section" id="micSaveSection">
+            <h3>Ghi âm hoàn tất!</h3>
+            <p>File đã được lưu thành công</p>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="micSaveBtn">
+                    <i class="bi bi-check-circle"></i> Đã lưu
+                </button>
+                <button class="btn btn-secondary" id="micDiscardBtn">
+                    <i class="bi bi-x-circle"></i> Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browser Recording Panel -->
+    <div class="record-panel" id="browserPanel">
+        <div class="record-controls">
+            <button class="record-button" id="browserRecordBtn">
+                <i class="bi bi-laptop"></i>
+            </button>
+            <div class="record-status" id="browserStatus">Nhấn để chọn tab ghi âm</div>
+            <div class="record-timer" id="browserTimer">00:00</div>
+        </div>
+
+        <div class="save-section" id="browserSaveSection">
+            <h3>Ghi âm hoàn tất!</h3>
+            <p>Lưu vào lịch sử để xem lại sau</p>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="browserSaveBtn">
+                    <i class="bi bi-save"></i> Lưu vào lịch sử
+                </button>
+                <button class="btn btn-secondary" id="browserDiscardBtn">
+                    <i class="bi bi-x-circle"></i> Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+        <div class="success-icon">✅</div>
+        <h2>Đã lưu file thành công!</h2>
+        <p>File ghi âm đã được lưu. Bạn có thể upload file này để phân tích.</p>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Ghi âm mới
+            </button>
+            <button class="btn btn-secondary" onclick="location.href='/'">
+                <i class="bi bi-house-door"></i> Trang chủ
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Tab switching
+    document.querySelectorAll('.record-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.record-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.record-panel').forEach(p => p.classList.remove('active'));
+
+            tab.classList.add('active');
+            const panelId = tab.dataset.tab === 'mic' ? 'micPanel' : 'browserPanel';
+            document.getElementById(panelId).classList.add('active');
+        });
+    });
+
+    // Mic Recording
+    let micRecorder = null;
+    let micStream = null;
+    let micChunks = [];
+    let micTimer = null;
+    let micSeconds = 0;
+    let audioContext = null;
+    let analyser = null;
+    let dataArray = null;
+    let animationId = null;
+
+    document.getElementById('micRecordBtn').addEventListener('click', async () => {
+        if (!micRecorder || micRecorder.state === 'inactive') {
+            await startMicRecording();
+        } else {
+            stopMicRecording();
+        }
+    });
+
+    async function startMicRecording() {
+        try {
+            micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            micRecorder = new MediaRecorder(micStream);
+            micChunks = [];
+
+            // Setup Web Audio API for visualization
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(micStream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+
+            micRecorder.ondataavailable = (e) => micChunks.push(e.data);
+            micRecorder.onstop = () => {
+                document.getElementById('micSaveSection').classList.add('show');
+            };
+
+            micRecorder.start();
+            document.getElementById('micRecordBtn').classList.add('recording');
+            document.getElementById('micStatus').textContent = 'Đang ghi âm...';
+
+            // Show and animate visualizer
+            const visualizer = document.getElementById('audioVisualizer');
+            visualizer.classList.add('active');
+            const bars = visualizer.querySelectorAll('.visualizer-bar');
+            bars.forEach(bar => bar.classList.add('recording'));
+
+            startVisualization(bars);
+
+            micSeconds = 0;
+            micTimer = setInterval(() => {
+                micSeconds++;
+                const mins = Math.floor(micSeconds / 60).toString().padStart(2, '0');
+                const secs = (micSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('micTimer').textContent = `${mins}:${secs}`;
+            }, 1000);
+        } catch (error) {
+            alert('Không thể truy cập micro: ' + error.message);
+        }
+    }
+
+    function startVisualization(bars) {
+        function updateBars() {
+            if (!analyser || !bars) return;
+
+            analyser.getByteFrequencyData(dataArray);
+
+            // Update each bar height based on frequency data
+            bars.forEach((bar, index) => {
+                // Sample different parts of the frequency spectrum
+                const dataIndex = Math.floor(index * dataArray.length / bars.length);
+                const value = dataArray[dataIndex];
+                // Scale from 10px (min) to 70px (max)
+                const height = 10 + (value / 255) * 60;
+                bar.style.height = `${height}px`;
+            });
+
+            animationId = requestAnimationFrame(updateBars);
+        }
+
+        updateBars();
+    }
+
+    function stopMicRecording() {
+        if (micRecorder && micRecorder.state === 'recording') {
+            micRecorder.stop();
+            micStream.getTracks().forEach(track => track.stop());
+            clearInterval(micTimer);
+
+            // Stop visualization
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            // Hide visualizer
+            const visualizer = document.getElementById('audioVisualizer');
+            const bars = visualizer.querySelectorAll('.visualizer-bar');
+            bars.forEach(bar => {
+                bar.classList.remove('recording');
+                bar.style.height = '10px';
+            });
+            visualizer.classList.remove('active');
+
+            document.getElementById('micRecordBtn').classList.remove('recording');
+            document.getElementById('micStatus').textContent = 'Ghi âm hoàn tất';
+        }
+    }
+
+    document.getElementById('micSaveBtn').addEventListener('click', async () => {
+        const blob = new Blob(micChunks, { type: 'audio/webm' });
+        await saveRecording(blob, 'mic');
+    });
+
+    document.getElementById('micDiscardBtn').addEventListener('click', () => {
+        micChunks = [];
+        document.getElementById('micSaveSection').classList.remove('show');
+        document.getElementById('micTimer').textContent = '00:00';
+        document.getElementById('micStatus').textContent = 'Nhấn để bắt đầu ghi âm';
+    });
+
+    // Browser Recording
+    let browserRecorder = null;
+    let browserStream = null;
+    let browserChunks = [];
+    let browserTimer = null;
+    let browserSeconds = 0;
+
+    document.getElementById('browserRecordBtn').addEventListener('click', async () => {
+        if (!browserRecorder || browserRecorder.state === 'inactive') {
+            await startBrowserRecording();
+        } else {
+            stopBrowserRecording();
+        }
+    });
+
+    async function startBrowserRecording() {
+        try {
+            browserStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true
+            });
+
+            const audioTrack = browserStream.getAudioTracks()[0];
+            if (!audioTrack) {
+                alert('Tab được chọn không có âm thanh');
+                browserStream.getTracks().forEach(track => track.stop());
+                return;
+            }
+
+            const audioStream = new MediaStream([audioTrack]);
+            browserRecorder = new MediaRecorder(audioStream);
+            browserChunks = [];
+
+            browserRecorder.ondataavailable = (e) => browserChunks.push(e.data);
+            browserRecorder.onstop = () => {
+                document.getElementById('browserSaveSection').classList.add('show');
+            };
+
+            browserRecorder.start();
+            document.getElementById('browserRecordBtn').classList.add('recording');
+            document.getElementById('browserStatus').textContent = 'Đang ghi âm tab...';
+
+            browserSeconds = 0;
+            browserTimer = setInterval(() => {
+                browserSeconds++;
+                const mins = Math.floor(browserSeconds / 60).toString().padStart(2, '0');
+                const secs = (browserSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('browserTimer').textContent = `${mins}:${secs}`;
+            }, 1000);
+
+            browserStream.getVideoTracks()[0].addEventListener('ended', () => {
+                stopBrowserRecording();
+            });
+        } catch (error) {
+            alert('Không thể ghi âm tab: ' + error.message);
+        }
+    }
+
+    function stopBrowserRecording() {
+        if (browserRecorder && browserRecorder.state === 'recording') {
+            browserRecorder.stop();
+            browserStream.getTracks().forEach(track => track.stop());
+            clearInterval(browserTimer);
+            document.getElementById('browserRecordBtn').classList.remove('recording');
+            document.getElementById('browserStatus').textContent = 'Ghi âm hoàn tất';
+        }
+    }
+
+    document.getElementById('browserSaveBtn').addEventListener('click', async () => {
+        const blob = new Blob(browserChunks, { type: 'audio/webm' });
+        await saveRecording(blob, 'browser');
+    });
+
+    document.getElementById('browserDiscardBtn').addEventListener('click', () => {
+        browserChunks = [];
+        document.getElementById('browserSaveSection').classList.remove('show');
+        document.getElementById('browserTimer').textContent = '00:00';
+        document.getElementById('browserStatus').textContent = 'Nhấn để chọn tab ghi âm';
+    });
+
+    // Save recording to server (simplified - just save, no redirect)
+    async function saveRecording(blob, type) {
+        const formData = new FormData();
+        formData.append('audio', blob, `recording_${type}_${Date.now()}.webm`);
+        formData.append('type', type);
+
+        try {
+            const response = await fetch('/api/recording/save-only', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Hide all panels and show success message
+                document.querySelectorAll('.record-panel, .save-section').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.getElementById('successMessage').classList.add('show');
+            } else {
+                alert('Lỗi lưu file: ' + result.error);
+            }
+        } catch (error) {
+            alert('Lỗi kết nối: ' + error.message);
+        }
+    }
+</script>
+{% endblock %}

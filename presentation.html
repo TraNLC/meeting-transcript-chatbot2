@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Transcript Chatbot - Presentation</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&family=Inter:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a15;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            scroll-snap-align: start;
+        }
+
+        .slide-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+        }
+
+        /* Title Slide */
+        .title-slide {
+            background: linear-gradient(135deg, #0a0a15 0%, #1a1a35 50%, #0a0a15 100%);
+        }
+
+        .title-slide h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5rem;
+            font-weight: 900;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
+            margin-bottom: 2rem;
+        }
+
+        .title-slide p {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2rem;
+            text-align: center;
+            color: #a0a0c0;
+            font-weight: 600;
+        }
+
+        /* Table of Contents */
+        .toc-slide {
+            background: #0a0a15;
+            background-image:
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+        }
+
+        .toc-container {
+            max-width: 1200px;
+            padding: 3rem;
+        }
+
+        .toc-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: 0.3rem;
+            border: 4px solid #667eea;
+            padding: 1.5rem 2rem;
+            display: inline-block;
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-item {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .toc-item:hover {
+            transform: translateX(20px);
+        }
+
+        .toc-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            width: 80px;
+            color: white;
+        }
+
+        .toc-bullet {
+            color: #667eea;
+            font-size: 2rem;
+            margin: 0 1.5rem;
+        }
+
+        .toc-text {
+            color: white;
+        }
+
+        .toc-item.highlight .toc-text {
+            color: #64b5f6;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
+        }
+
+        /* Feature Slide */
+        .feature-slide {
+            background: #0a0a15;
+            padding: 3rem;
+        }
+
+        .feature-container {
+            max-width: 1600px;
+            width: 100%;
+        }
+
+        .feature-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 3rem;
+            margin-bottom: 3rem;
+            justify-content: center;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 2rem 3rem;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+            min-width: 200px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            color: #a0a0c0;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .content-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            letter-spacing: 0.2rem;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .workflow-step {
+            background: rgba(30, 30, 50, 0.5);
+            border-left: 4px solid #667eea;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.2rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-step:hover {
+            background: rgba(40, 40, 60, 0.8);
+            transform: translateX(10px);
+        }
+
+        .step-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .tech-item {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .tech-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(255, 200, 0, 0.1), rgba(255, 150, 0, 0.1));
+            border: 2px solid #ffc800;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            color: #ffd700;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slide-container">
+        <!-- Slide 1: Title -->
+        <div class="slide title-slide">
+            <div class="animate-in">
+                <h1>MEETING TRANSCRIPT<br>CHATBOT</h1>
+                <p>Hệ thống phân tích cuộc họp thông minh với AI</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Table of Contents -->
+        <div class="slide toc-slide">
+            <div class="toc-container">
+                <div class="toc-title">TABLE OF CONTENTS</div>
+                <ul class="toc-list">
+                    <li class="toc-item">
+                        <span class="toc-number">01</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">Giới Thiệu Dự Án</span>
+                    </li>
+                    <li class="toc-item">
+                        <span class="toc-number">02</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">Kiến Trúc Hệ Thống</span>
+                    </li>
+                    <li class="toc-item">
+                        <span class="toc-number">03</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">Tính Năng Chính</span>
+                    </li>
+                    <li class="toc-item highlight">
+                        <span class="toc-number">04</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">🎙️ Ghi Âm & Transcription</span>
+                    </li>
+                    <li class="toc-item highlight">
+                        <span class="toc-number">05</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">📤 Upload & Phân Tích AI</span>
+                    </li>
+                    <li class="toc-item highlight">
+                        <span class="toc-number">06</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">💬 Chat với AI (RAG)</span>
+                    </li>
+                    <li class="toc-item highlight">
+                        <span class="toc-number">07</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">🔍 Tìm Kiếm Ngữ Nghĩa</span>
+                    </li>
+                    <li class="toc-item">
+                        <span class="toc-number">08</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">Demo Trực Tiếp</span>
+                    </li>
+                    <li class="toc-item">
+                        <span class="toc-number">09</span>
+                        <span class="toc-bullet">•</span>
+                        <span class="toc-text">Q&A</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 3: Feature 1 -->
+        <div class="slide feature-slide">
+            <div class="feature-container">
+                <h2 class="feature-header">🎙️ GHI ÂM & TRANSCRIPTION</h2>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value">92%</div>
+                        <div class="stat-label">Độ chính xác</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">50+</div>
+                        <div class="stat-label">Ngôn ngữ</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3x</div>
+                        <div class="stat-label">Realtime</div>
+                    </div>
+                </div>
+
+                <div class="content-row">
+                    <div>
+                        <h3 class="section-title">WORKFLOW</h3>
+                        <div class="workflow-step">
+                            <div class="step-title">1. WebRTC Capture</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">2. WhisperX Transcription</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">3. Speaker Diarization</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">4. Real-time Display</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="section-title">TECH STACK</h3>
+                        <div class="tech-item">
+                            <div class="tech-name">WhisperX</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">PyAnnote 3.1</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">WebRTC + WebSocket</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">FFmpeg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    💡 DiarizationPipeline wrapper
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Feature 2 -->
+        <div class="slide feature-slide">
+            <div class="feature-container">
+                <h2 class="feature-header">📤 UPLOAD & PHÂN TÍCH</h2>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value">100MB</div>
+                        <div class="stat-label">Max Size</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Formats</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">30s</div>
+                        <div class="stat-label">Avg Time</div>
+                    </div>
+                </div>
+
+                <div class="content-row">
+                    <div>
+                        <h3 class="section-title">WORKFLOW</h3>
+                        <div class="workflow-step">
+                            <div class="step-title">1. Upload & Validation</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">2. Content Extraction</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">3. Gemini AI Analysis</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">4. Vectorization</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="section-title">TECH STACK</h3>
+                        <div class="tech-item">
+                            <div class="tech-name">Gemini 2.5 Flash</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">Prompt Engineering</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">python-docx</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">ChromaDB</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    💡 Structured Output với JSON schema
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Feature 3 -->
+        <div class="slide feature-slide">
+            <div class="feature-container">
+                <h2 class="feature-header">💬 CHAT VỚI AI (RAG)</h2>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value">384</div>
+                        <div class="stat-label">Embed Dims</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Top-K</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">10</div>
+                        <div class="stat-label">History</div>
+                    </div>
+                </div>
+
+                <div class="content-row">
+                    <div>
+                        <h3 class="section-title">WORKFLOW</h3>
+                        <div class="workflow-step">
+                            <div class="step-title">1. Query Embedding</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">2. Similarity Search</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">3. Context Assembly</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">4. LLM Generation</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="section-title">TECH STACK</h3>
+                        <div class="tech-item">
+                            <div class="tech-name">ChromaDB</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">LangChain</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">sentence-transformers</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">Conversation Memory</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    💡 RAG + Memory
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Feature 4 -->
+        <div class="slide feature-slide">
+            <div class="feature-container">
+                <h2 class="feature-header">🔍 TÌM KIẾM NGỮ NGHĨA</h2>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value">384</div>
+                        <div class="stat-label">Dims</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">95%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">100ms</div>
+                        <div class="stat-label">Speed</div>
+                    </div>
+                </div>
+
+                <div class="content-row">
+                    <div>
+                        <h3 class="section-title">WORKFLOW</h3>
+                        <div class="workflow-step">
+                            <div class="step-title">1. Query Embedding</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">2. Vector Search</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">3. Ranking</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-title">4. Display Results</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="section-title">TECH STACK</h3>
+                        <div class="tech-item">
+                            <div class="tech-name">ChromaDB Advanced</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">Cosine Similarity</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">Metadata Filters</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-name">Analytics</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    💡 Vector search + metadata filtering
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scroll navigation
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    slides[currentSlide].scrollIntoView({ behavior: 'smooth' });
+                }
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    slides[currentSlide].scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

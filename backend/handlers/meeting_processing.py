@@ -591,6 +591,16 @@ def process_upload(file_type, audio_file=None, text_file=None, transcribe_lang='
     try:
         # A. Audio Processing
         if file_type == 'audio' and audio_file:
+            # ✅ NEW: Validate audio quality first
+            from backend.audio.audio_validator import validate_audio_quality
+            
+            is_valid, validation_msg = validate_audio_quality(audio_file)
+            if not is_valid:
+                logger.warning(f"Audio validation failed: {validation_msg}")
+                return validation_msg, "", "", "", "", "", ""
+            
+            logger.info(f"Audio validation passed: {validation_msg}")
+            
             transcript = ""
             
             # 1. Priority: Colab Server (Zero Cost Model)

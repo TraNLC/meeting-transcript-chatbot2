@@ -51,6 +51,7 @@ logs/
 
 # Colab notebooks with filled tokens (keep template only)
 *_filled.ipynb
+colab_whisperx_server.ipynb
 
 # Test/Upload files
 data/uploads/

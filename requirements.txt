@@ -1,4 +1,5 @@
 # Core
+numpy<2.0
 python-dotenv>=1.0.0
 
 # LLM SDK
@@ -24,15 +25,15 @@ gTTS>=2.5.0
 pydub>=0.25.1
 
 # HuggingFace Transformers (STT with Whisper)
-transformers>=4.35.0
-torch>=2.0.0
-torchaudio>=2.0.0
+transformers==4.38.2
+torch==2.1.0
+torchaudio==2.1.0
 accelerate>=0.24.0
 librosa>=0.10.0
 faster-whisper>=1.0.0
 
 # Speaker Diarization
-pyannote.audio>=3.1.0
+pyannote.audio==3.1.1
 speechbrain>=0.5.16
 
 # LangChain & Advanced RAG

@@ -277,14 +277,17 @@ class AdvancedRAG:
         self,
         query: str,
         k: int = 5,
-        filter_metadata: Optional[Dict] = None
+        filter_metadata: Optional[Dict] = None,
+        diversity: bool = True  # ✅ NEW: Enable MMR for diverse results
     ) -> List[Dict[str, Any]]:
-        """Semantic search across all meetings.
+        """
+        Semantic search across all meetings with optional diversity (MMR).
         
         Args:
             query: Search query
             k: Number of results
             filter_metadata: Filter by metadata (e.g., meeting_type, language)
+            diversity: If True, use MMR for diverse results; if False, standard similarity
             
         Returns:
             List of relevant chunks with metadata
@@ -303,15 +306,33 @@ class AdvancedRAG:
             except:
                 pass
             
-            # Perform similarity search
-            if filter_metadata:
-                results = self.vector_store.similarity_search(
-                    query,
-                    k=k,
-                    filter=filter_metadata
-                )
-            else:
-                results = self.vector_store.similarity_search(query, k=k)
+            # ✅ NEW: MMR search for diverse results
+            if diversity:
+                try:
+                    results = self.vector_store.max_marginal_relevance_search(
+                        query,
+                        k=k,
+                        fetch_k=k * 4,  # Fetch 4x, return k diverse ones
+                        lambda_mult=0.5,  # 0=max diversity, 1=max relevance
+                        filter=filter_metadata
+                    )
+                    print(f"[OK] MMR search found {len(results)} diverse results")
+                except AttributeError:
+                    # Fallback if MMR not supported
+                    print("[WARN] MMR not supported, falling back to standard search")
+                    diversity = False
+            
+            # Standard similarity search
+            if not diversity:
+                if filter_metadata:
+                    results = self.vector_store.similarity_search(
+                        query,
+                        k=k,
+                        filter=filter_metadata
+                    )
+                else:
+                    results = self.vector_store.similarity_search(query, k=k)
+                print(f"[OK] Standard search found {len(results)} results")
             
             # Format results
             formatted_results = []
@@ -322,7 +343,6 @@ class AdvancedRAG:
                     "score": getattr(doc, 'score', None)
                 })
             
-            print(f"[OK] Found {len(formatted_results)} results")
             return formatted_results
         except Exception as e:
             print(f"[ERROR] Search error: {e}")
