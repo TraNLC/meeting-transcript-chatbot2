@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 from backend.handlers.meeting_processing import process_upload, process_file
 from backend.audio.huggingface_stt import transcribe_audio_huggingface
 from backend.audio.speaker_diarization import transcribe_with_speakers
+from backend.rag.chroma_manager import ChromaManager
 
 upload_bp = Blueprint('upload', __name__)
 
@@ -239,7 +240,10 @@ def process_upload_file():
             # Check if status indicates an error
             if status.startswith('❌') or status.startswith('⚠️'):
                 return jsonify({'error': status}), 400
-            
+
+            chroma = ChromaManager()
+            chroma.store(transcript)
+
             # Return success response
 
             return jsonify({

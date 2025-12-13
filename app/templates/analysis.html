@@ -893,14 +893,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: message,
-                    context: {
-                        summary: analysisData.summary,
-                        topics: analysisData.topics,
-                        actions: analysisData.actions,
-                        decisions: analysisData.decisions,
-                        transcript: analysisData.transcript
-                    }
+                    message: message
                 })
             });
 

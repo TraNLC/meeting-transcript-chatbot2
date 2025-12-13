@@ -34,27 +34,11 @@ class LLMFactory:
             ValueError: If provider is not supported
         """
         provider = provider.lower()
+
+        model = model or "GPT-4.1"
+        return OpenAIModel(api_key=api_key, model=model, **kwargs)
         
-        if provider == "gemini":
-            model = model or "gemini-2.5-flash"
-            return GeminiModel(api_key=api_key, model=model, **kwargs)
-        
-        elif provider == "openai":
-            model = model or "gpt-3.5-turbo"
-            return OpenAIModel(api_key=api_key, model=model, **kwargs)
-        
-        elif provider == "llama":
-            # Sprint 2: Will implement Llama 3
-            raise NotImplementedError(
-                "Llama provider will be implemented in Sprint 2 workshop"
-            )
-        
-        else:
-            raise ValueError(
-                f"Unsupported provider: {provider}. "
-                f"Supported providers: gemini, openai (Sprint 2), llama (Sprint 2)"
-            )
-    
+
     @staticmethod
     def get_supported_providers() -> list:
         """Get list of supported providers.
